@@ -1,0 +1,51 @@
+@mixin hover {
+  background-color: #a8a8a8;
+}
+
+@mixin button {
+  border: none;
+  background-color: #f1f1f1;
+  box-sizing: inherit;
+  text-align: center;
+
+  &:hover {
+    background-color: #d2d2d2;
+  }
+
+  &:active {
+    background-color: #d2d2d2;
+  }
+}
+
+.list-sbar {
+  background-color: #f1f1f1;
+  box-sizing: border-box;
+
+  .thumb {
+    border: 1px solid #f1f1f1;
+    background-color: #c1c1c1;
+    box-sizing: inherit;
+
+    &:hover {
+      @include hover;
+    }
+
+    &:active {
+      @include hover;
+    }
+  }
+
+  .b-up {
+    @include button;
+    &:before {
+      content: "\f0d8"
+    }
+  }
+
+  .b-down {
+    @include button;
+    &:before {
+      content: "\f0d7";
+    }
+  }
+}

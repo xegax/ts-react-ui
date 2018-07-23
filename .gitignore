@@ -1,0 +1,8 @@
+/node_modules
+/build
+/storybook-static
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+src/**/*.css
+styles/**/*.css

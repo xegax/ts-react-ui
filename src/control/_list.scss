@@ -1,0 +1,57 @@
+.list-ctrl {
+  display: flex;
+  overflow: hidden;
+
+  .list-ctrl-content {
+    display: flex;
+    flex-grow: 1;
+    background-color: silver;
+  }
+
+  .list-ctrl-column {
+    flex-grow: 1;
+    min-width: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .list-ctrl-row {
+    position: relative;
+    box-sizing: border-box;
+    background-color: white;
+  }
+
+  .list-ctrl-selrow {
+    background-color: #cce8ff;
+  }
+
+  .list-ctrl-cell {
+    cursor: default;
+    position: absolute;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 3px;
+    padding-right: 3px;
+  }
+}
+
+$list-ctrl-border-color: silver;
+.list-ctrl.list-ctrl-border {
+  .list-ctrl-content {
+    border: 1px solid $list-ctrl-border-color;
+  }
+
+  .list-ctrl-row {
+    border-bottom: 1px solid $list-ctrl-border-color;
+    border-right: 1px solid $list-ctrl-border-color;
+  }
+
+  .list-ctrl-column {
+    &:last-child {
+      .list-ctrl-row {
+        border-right: none;
+      }
+    }
+  }
+}

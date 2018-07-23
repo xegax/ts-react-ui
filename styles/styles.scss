@@ -1,0 +1,18 @@
+$fa-font-path : '../node_modules/font-awesome/fonts';
+@import "../node_modules/font-awesome/scss/font-awesome";
+
+body {
+  overflow: hidden;
+}
+
+body * {
+  font-family: 'FontAwesome';
+}
+
+div#root {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+}
