@@ -21,7 +21,7 @@ model.setLoader((from, count) => {
 model.setColumns([
   {
     name: '1',
-    width: 50,
+    width: 100,
     render: (data: Row) => '[' + data.label + ']'
   }, {
     name: '2',
@@ -37,7 +37,7 @@ storiesOf('list', module)
   .add('with text', () => {
     return (
       <div style={{position: 'absolute', left: 0, top: 0, right: 0, bottom: 0}}>
-        <FitToParent><List model={model}/></FitToParent>
+        <FitToParent><List border model={model}/></FitToParent>
       </div>
     );
   });

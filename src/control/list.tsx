@@ -14,6 +14,7 @@ const classes = {
   content: 'list-ctrl-content',
   column: 'list-ctrl-column',
   row: 'list-ctrl-row',
+  header: 'list-ctrl-header',
   selRow: 'list-ctrl-selrow',
   cell: 'list-ctrl-cell'
 };
@@ -28,10 +29,12 @@ function inRange(tgt: Range, src: Range): boolean {
 }
 
 type Loader<T> = (from: number, count: number) => Promise<Array<T>>;
+
 export interface Column {
   name: string;
   width?: number;
-  render: (row: Object, col: Column) => JSX.Element | string;
+  render?(row: Object, col: Column): JSX.Element | string;
+  renderHeader?(jsx: JSX.Element | string, col: Column): JSX.Element;
 }
 
 export class ListModel<T = Object> extends Publisher<EventType> {
@@ -85,7 +88,7 @@ export class ListModel<T = Object> extends Publisher<EventType> {
 
     console.log('loading', JSON.stringify(this.loadingRange));
     this.cancelable = cancelable(this.loader(this.loadingRange.from, this.loadingRange.count));
-    this.cancelable.promise.then(data => {
+    this.cancelable.then(data => {
       this.cancelable = null;
 
       this.cacheRange = {
@@ -124,10 +127,23 @@ export class RenderListModel extends ListModel {
   private size: number = 0;
   private itemSize: number = 50;
   private selRow: number = -1;
+  private headerSize: number = 40;
 
   constructor(count: number, itemSize: number = 50) {
     super(count);
     this.itemSize = itemSize;
+  }
+
+  getHeaderSize(): number {
+    return this.headerSize;
+  }
+
+  setHeaderSize(size: number): void {
+    if (this.headerSize == size)
+      return;
+
+    this.headerSize = size;
+    this.setSize(this.size);
   }
 
   getSelRow(): number {
@@ -154,7 +170,7 @@ export class RenderListModel extends ListModel {
 
   setSize(size: number): void {
     this.size = size;
-    const visItems = this.size / this.itemSize;
+    const visItems = (this.size - this.headerSize) / this.itemSize;
     this.fullVisItems = Math.floor(visItems);
     this.partVisItems = Math.ceil(visItems);
 
@@ -239,10 +255,35 @@ export class List extends React.Component<Props, State> {
     this.state.model.unsubscribe(this.subscriber);
   }
 
-  renderRow(args: RenderRow): RenderRow {
+  renderHeader(col: Column): JSX.Element {
+    const model = this.state.model;
+    const height = model.getHeaderSize();
+    let row: JSX.Element | string = col.name;
+    if (col.renderHeader)
+      row = col.renderHeader(row, col);
+    
+    row = (
+      <div className={classes.cell}>
+        {row}
+      </div>
+    );
+
+    row = (
+      <div
+        className={classes.header}
+        key={'hdr-' + col.name}
+        style={{height, lineHeight: height + 'px'}}>
+          {row}
+      </div>
+    );
+
+    return row;
+  }
+
+  renderRow(args: RenderRow) {
     const model = this.state.model;
     const height = model.getItemSize();
-    let row: JSX.Element | string = (args.data || '?').toString();
+    let row: JSX.Element | string = (args.data || '...').toString();
     
     if (args.column && args.data)
       row = args.column.render(args.data, args.column);
@@ -255,7 +296,7 @@ export class List extends React.Component<Props, State> {
       );
 
     const className = cn(classes.row, model.getSelRow() == args.rowIdxAbs && classes.selRow);
-    args.jsx = (
+    return (
       <div
         onClick={() => {
           model.setSelRow(args.rowIdxAbs);
@@ -266,8 +307,6 @@ export class List extends React.Component<Props, State> {
           {row}
       </div>
     );
-
-    return args;
   }
 
   renderRows(): JSX.Element {
@@ -282,17 +321,20 @@ export class List extends React.Component<Props, State> {
       const column: Column = columns[c];
 
       let rows = Array<JSX.Element>();
+      if (model.getHeaderSize()) {
+        rows.push(this.renderHeader(column));
+      }
+
       for (let n = 0; n < model.getVisibleCount(); n++) {
         let data: Object = arr ? arr[n] : null;
 
-        const args = this.renderRow({
+        rows.push(this.renderRow({
           column,
           data,
           colIdx: c,
           rowIdxRel: n,
           rowIdxAbs: n + model.getSelectFirst()
-        });
-        rows.push(args.jsx);
+        }));
       }
 
       let colStyle: React.CSSProperties = {};
@@ -322,7 +364,8 @@ export class List extends React.Component<Props, State> {
   }
 
   componentWillReceiveProps(props: Props) {
-    this.state.model.setSize(props.height);
+    if (props.height != this.state.model.getSize())
+      this.state.model.setSize(props.height);
   }
 
   onKeyDown = (event: React.KeyboardEvent<any>) => {
@@ -364,6 +407,7 @@ export class List extends React.Component<Props, State> {
           itemsCount = {model.getItemsCount()}
           itemHeight = {model.getItemSize()}
           height={height}
+          itemsHeight={height - model.getHeaderSize()}
           firstItem = {model.getSelectFirst()}
           setSelectFirst={first => model.setSelectFirst(first)}
         />

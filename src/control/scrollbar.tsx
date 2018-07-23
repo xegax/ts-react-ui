@@ -6,6 +6,7 @@ import './_scrollbar.scss';
 
 interface Props {
   height: number;
+  itemsHeight: number;
 
   itemsCount: number;
   itemHeight: number;
@@ -46,6 +47,7 @@ export class Scrollbar extends React.Component<Props, {offset?: number}> {
 
   render() {
     const props = this.props;
+    const itemsSize = props.itemHeight;
 
     const className = props.className || 'list-sbar';
     const extClassName = props.extClassName;
@@ -53,7 +55,7 @@ export class Scrollbar extends React.Component<Props, {offset?: number}> {
     const buttons = props.buttons != null ? props.buttons : true;
     let sbSize = props.minThumbSize || 20;
     let size = props.height;
-    const hiddenRows = props.itemsCount - Math.floor(size / props.itemHeight);
+    const hiddenRows = props.itemsCount - Math.floor(itemsSize / props.itemHeight);
 
     const style: React.CSSProperties = {
       display: hiddenRows <= 0 ? 'none' : null,
@@ -108,7 +110,7 @@ export class Scrollbar extends React.Component<Props, {offset?: number}> {
     sbSize = pps > 1 ? size - pps * hiddenRows : sbSize;
     const bottomPos = size - sbSize;
     const scroll = pps > 1 ? pps * props.firstItem : (props.firstItem / hiddenRows) * bottomPos;
-    let top = this.state.offset || scroll;
+    let top = this.state.offset || scroll || 0;
     if (buttonUp)
       top += buttonSize;
 
