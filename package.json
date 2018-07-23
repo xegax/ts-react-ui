@@ -13,9 +13,6 @@
     "build-storybook": "build-storybook"
   },
   "devDependencies": {
-	"@types/storybook__addon-actions": "^3.0.3",
-    "@types/storybook__addon-links": "^3.3.1",
-    "@types/storybook__react": "^3.0.8",
     "@storybook/addon-actions": "^3.4.8",
     "@storybook/addon-links": "^3.4.8",
     "@storybook/addons": "^3.4.8",
@@ -24,10 +21,14 @@
     "@types/node": "^10.5.2",
     "@types/react": "^16.4.6",
     "@types/react-dom": "^16.0.6",
+    "@types/storybook__addon-actions": "^3.0.3",
+    "@types/storybook__addon-links": "^3.3.1",
+    "@types/storybook__react": "^3.0.8",
     "babel-core": "^6.26.3",
     "babel-runtime": "^6.26.0",
     "node-sass": "^4.9.2",
     "sass-loader": "^7.0.3",
+    "ts-loader": "^3.5",
     "typescript": "^2.9.2",
     "url-loader": "^1.0.1"
   }
