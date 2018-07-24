@@ -30,11 +30,17 @@ function inRange(tgt: Range, src: Range): boolean {
 
 type Loader<T> = (from: number, count: number) => Promise<Array<T>>;
 
-export interface Column {
+export interface RenderArgs<TRow = Object, TColumn extends ListColumn = ListColumn> {
+  item: TRow;
+  column: TColumn;
+  idx: number;
+}
+
+export interface ListColumn {
   name: string;
   width?: number;
-  render?(row: Object, col: Column): JSX.Element | string;
-  renderHeader?(jsx: JSX.Element | string, col: Column): JSX.Element;
+  render?(args: RenderArgs): JSX.Element | string;
+  renderHeader?(jsx: JSX.Element | string, col: ListColumn): JSX.Element;
 }
 
 export class ListModel<T = Object> extends Publisher<EventType> {
@@ -43,7 +49,7 @@ export class ListModel<T = Object> extends Publisher<EventType> {
   private loadingRange: Range = null; // null = nothing is loading
   private cache = Array<T>();
   private cancelable: Cancelable;
-  private columns = Array<Column>();
+  protected columns = Array<ListColumn>();
 
   private loader: Loader<T> = () => {
     throw 'loadItems not implemented';
@@ -54,7 +60,7 @@ export class ListModel<T = Object> extends Publisher<EventType> {
     this.itemsCount = count;
   }
 
-  setColumns(columns: Array<Column>) {
+  setColumns(columns: Array<ListColumn>) {
     if (JSON.stringify(columns) == JSON.stringify(this.columns))
       return;
 
@@ -62,8 +68,14 @@ export class ListModel<T = Object> extends Publisher<EventType> {
     this.delayedNotify();
   }
 
-  getColumns(): Array<Column> {
+  getColumns(): Array<ListColumn> {
     return this.columns;
+  }
+
+  reload(): void {
+    this.cache = [];
+    this.cacheRange = null;
+    this.delayedNotify();
   }
 
   getItems(from: number, count: number): Array<T> | null {
@@ -115,7 +127,7 @@ export class ListModel<T = Object> extends Publisher<EventType> {
     return this.itemsCount;
   }
 
-  setLoader(loader: Loader<T>) {
+  setLoader(loader: Loader<T>): void {
     this.loader = loader;
   }
 }
@@ -127,7 +139,8 @@ export class RenderListModel extends ListModel {
   private size: number = 0;
   private itemSize: number = 50;
   private selRow: number = -1;
-  private headerSize: number = 40;
+  private headerSize: number = 25;
+  private header: boolean = true;
 
   constructor(count: number, itemSize: number = 50) {
     super(count);
@@ -135,6 +148,9 @@ export class RenderListModel extends ListModel {
   }
 
   getHeaderSize(): number {
+    if (!this.header || this.columns.length == 0)
+      return 0;
+
     return this.headerSize;
   }
 
@@ -144,6 +160,15 @@ export class RenderListModel extends ListModel {
 
     this.headerSize = size;
     this.setSize(this.size);
+  }
+
+  setHeader(hdr: boolean): void {
+    this.header = hdr;
+    this.delayedNotify();
+  }
+
+  getHeader(): boolean {
+    return this.header;
   }
 
   getSelRow(): number {
@@ -170,7 +195,7 @@ export class RenderListModel extends ListModel {
 
   setSize(size: number): void {
     this.size = size;
-    const visItems = (this.size - this.headerSize) / this.itemSize;
+    const visItems = (this.size - this.getHeaderSize()) / this.itemSize;
     this.fullVisItems = Math.floor(visItems);
     this.partVisItems = Math.ceil(visItems);
 
@@ -225,15 +250,17 @@ interface State {
 }
 
 interface RenderRow {
-  column?: Column;
+  column?: ListColumn;
   jsx?: JSX.Element;
   rowIdxAbs: number;
   rowIdxRel: number;
   colIdx: number;
-  data: Object;
+  data: JSX.Element | Object| string;
 }
 
 export class List extends React.Component<Props, State> {
+  private ctrl: React.RefObject<HTMLDivElement> = React.createRef();
+
   constructor(props: Props) {
     super(props);
 
@@ -255,7 +282,7 @@ export class List extends React.Component<Props, State> {
     this.state.model.unsubscribe(this.subscriber);
   }
 
-  renderHeader(col: Column): JSX.Element {
+  renderHeader(col: ListColumn): JSX.Element {
     const model = this.state.model;
     const height = model.getHeaderSize();
     let row: JSX.Element | string = col.name;
@@ -283,10 +310,10 @@ export class List extends React.Component<Props, State> {
   renderRow(args: RenderRow) {
     const model = this.state.model;
     const height = model.getItemSize();
-    let row: JSX.Element | string = (args.data || '...').toString();
+    let row: JSX.Element | Object | string = args.data || '...';
     
-    if (args.column && args.data)
-      row = args.column.render(args.data, args.column);
+    if (args.column && args.data && args.column.render)
+      row = args.column.render({item: args.data, column: args.column, idx: args.rowIdxAbs});
 
     if (args.column && args.column.width != -1)
       row = (
@@ -318,15 +345,15 @@ export class List extends React.Component<Props, State> {
 
     let cols = Array<JSX.Element>();
     for (let c = 0; c < Math.max(1, columns.length); c++) {
-      const column: Column = columns[c];
+      const column: ListColumn = columns[c];
 
       let rows = Array<JSX.Element>();
-      if (model.getHeaderSize()) {
+      if (column && model.getHeaderSize()) {
         rows.push(this.renderHeader(column));
       }
 
       for (let n = 0; n < model.getVisibleCount(); n++) {
-        let data: Object = arr ? arr[n] : null;
+        let data = arr ? arr[n] : null;
 
         rows.push(this.renderRow({
           column,
@@ -369,6 +396,9 @@ export class List extends React.Component<Props, State> {
   }
 
   onKeyDown = (event: React.KeyboardEvent<any>) => {
+    if (this.ctrl.current != document.activeElement)
+      return;
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -396,6 +426,7 @@ export class List extends React.Component<Props, State> {
     const {width, height, model} = this.props;
     return (
       <div
+        ref={this.ctrl}
         tabIndex={1}
         className={cn(classes.list, this.props.border && classes.border)}
         style={{width, height}}

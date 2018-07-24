@@ -59,7 +59,7 @@ $list-ctrl-padding: 3px;
 
   .list-ctrl-column {
     &:last-child {
-      .list-ctrl-row {
+      .list-ctrl-row, .list-ctrl-header {
         border-right: none;
       }
     }

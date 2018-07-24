@@ -7,7 +7,11 @@ interface State {
   height?: number;
 }
 
-export class FitToParent extends React.Component<React.HTMLProps<any>, State> {
+interface Props extends React.HTMLProps<any> {
+  absolute?: boolean;
+}
+
+export class FitToParent extends React.Component<Props, State> {
   private parent: HTMLElement;
   static timer = new Timer();
 
@@ -68,9 +72,17 @@ export class FitToParent extends React.Component<React.HTMLProps<any>, State> {
   }
 
   render() {
+    let el = this.getChildren();
+    if (this.props.absolute)
+      el = (
+        <div style={{position: 'absolute', left: 0, top: 0, right: 0, bottom: 0}}>
+          {el}
+        </div>
+      );
+
     return (
       <React.Fragment>
-        {this.getChildren()}
+        {el}
       </React.Fragment>
     );
   }
