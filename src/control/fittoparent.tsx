@@ -8,7 +8,7 @@ interface State {
 }
 
 interface Props extends React.HTMLProps<any> {
-  absolute?: boolean;
+  wrapToFlex?: boolean;
 }
 
 export class FitToParent extends React.Component<Props, State> {
@@ -57,9 +57,13 @@ export class FitToParent extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    let parent = ReactDOM.findDOMNode(this);
-    if (parent)
-      this.parent = parent.parentElement;
+    let parent = ReactDOM.findDOMNode(this) as HTMLElement;
+    if (parent) {
+      if (this.props.wrapToFlex)
+        this.parent = parent.children.item(0) as HTMLElement;
+      else
+        this.parent = parent.parentElement;
+    }
 
     this.updateSize();
     FitToParent.timer.addUniqueCallback(this.updateSize);
@@ -72,18 +76,16 @@ export class FitToParent extends React.Component<Props, State> {
   }
 
   render() {
-    let el = this.getChildren();
-    if (this.props.absolute)
+    let el = <React.Fragment>{this.getChildren()}</React.Fragment>;
+    if (this.props.wrapToFlex)
       el = (
-        <div style={{position: 'absolute', left: 0, top: 0, right: 0, bottom: 0}}>
-          {el}
+        <div style={{position: 'relative', flexGrow: 1, ...this.props.style}}>
+          <div style={{position: 'absolute', left: 0, top: 0, right: 0, bottom: 0}}>
+            {el}
+          </div>
         </div>
       );
 
-    return (
-      <React.Fragment>
-        {el}
-      </React.Fragment>
-    );
+    return el;
   }
 }
