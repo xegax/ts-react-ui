@@ -1,6 +1,6 @@
 {
   "name": "ts-react-ui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "dependencies": {
     "font-awesome": "^4.7.0",
     "react": "^16.4.1",
@@ -13,7 +13,7 @@
     "dev": "npm run prepare",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
-    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map common"
+    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map *.js *.js.map *.d.ts *.scss common"
   },
   "devDependencies": {
     "@storybook/addon-actions": "^3.4.8",

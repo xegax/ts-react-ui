@@ -11,7 +11,11 @@
 		".gitignore": true,
 		"**/*.js": true,
 		"**/*.js.map": true,
-		"**/*.d.ts": true
+		"**/*.d.ts": true,
+		"*.d.ts": true,
+		"*.js": true,
+		"*.scss": true,
+		"*.js.map": true
 	}
 ,
 "typescript.check.workspaceVersion": false
