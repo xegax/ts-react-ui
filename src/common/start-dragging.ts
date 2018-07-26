@@ -1,13 +1,13 @@
 import { isLeftDown } from './event-helpers';
 import { Point } from './point';
 
-interface Params {
+export interface Params {
   x: number;
   y: number;
   minDist?: number;
 }
 
-interface HandlerArgs {
+export interface HandlerArgs {
   x: number;
   y: number;
   event: MouseEvent | TouchEvent;

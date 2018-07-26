@@ -1,13 +1,13 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Timer } from '../common/timer';
+import { Timer } from './common/timer';
 
-interface State {
+export interface State {
   width?: number;
   height?: number;
 }
 
-interface Props extends React.HTMLProps<any> {
+export interface Props extends React.HTMLProps<any> {
   wrapToFlex?: boolean;
 }
 

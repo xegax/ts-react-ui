@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { className as cn, clamp } from '../common/common';
-import { Publisher } from '../common/publisher';
+import { className as cn, clamp } from './common/common';
+import { Publisher } from './common/publisher';
 import { Scrollbar } from './scrollbar';
-import { cancelable, Cancelable } from '../common/promise';
-import { KeyCode } from '../common/keycode';
+import { cancelable, Cancelable } from './common/promise';
+import { KeyCode } from './common/keycode';
 import './_list.scss';
 
 export type EventType = 'select-row';
@@ -325,18 +325,18 @@ export class RenderListModel extends ListModel {
   }
 }
 
-interface Props extends React.HTMLProps<any> {
+export interface Props extends React.HTMLProps<any> {
   width?: number;
   height?: number;
   model: RenderListModel;
   border?: boolean;
 }
 
-interface State {
+export interface State {
   model?: RenderListModel;
 }
 
-interface RenderRow {
+export interface RenderRow {
   column?: ListColumn;
   jsx?: JSX.Element;
   rowIdxAbs: number;

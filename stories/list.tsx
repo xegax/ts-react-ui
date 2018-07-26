@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { FitToParent } from '../src/control/fittoparent';
+import { FitToParent } from '../src/fittoparent';
 import { storiesOf } from '@storybook/react';
-import { List, RenderListModel, RenderArgs } from '../src/control/list';
+import { List, RenderListModel, RenderArgs } from '../src/list';
 import '../styles/styles.scss';
 import { timer } from '../src/common/promise';
 import { KeyCode } from '../src/common/keycode';

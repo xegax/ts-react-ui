@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { startDragging } from '../common/start-dragging';
-import { className as cn } from '../common/common';
-import { Timer } from '../common/timer';
+import { startDragging } from './common/start-dragging';
+import { className as cn } from './common/common';
+import { Timer } from './common/timer';
 import './_scrollbar.scss';
 
-interface Props {
+export interface Props {
   height: number;
   itemsHeight: number;  // excluding header
 
