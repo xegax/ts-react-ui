@@ -63,6 +63,13 @@ export class ListModel<T = Object> extends Publisher<EventType> {
     this.itemsCount = count;
   }
 
+  clearCache(notify?: boolean): void {
+    this.cache = [];
+    this.cacheRange = null;
+
+    notify && this.delayedNotify();
+  }
+
   setBufferSize(size: number): void {
     this.bufferSize = size;
   }
