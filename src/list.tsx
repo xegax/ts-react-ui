@@ -43,7 +43,7 @@ export interface ListColumn {
 }
 
 export interface ListModelHandler<T = Object> {
-  loadItems(from: number, count: number): Promise<Array<T>>;
+  loadItems(from: number, count: number): Promise<Array<T>> | Array<T>;
   getItemID?(item: T): string;
 }
 
@@ -121,8 +121,8 @@ export class ListModel<T = Object> extends Publisher<EventType> {
       this.cancelable.cancel();
 
     console.log('loading', JSON.stringify(this.loadingRange));
-    this.cancelable = cancelable(this.handler.loadItems(this.loadingRange.from, this.loadingRange.count));
-    this.cancelable.then(data => {
+    const task = this.handler.loadItems(this.loadingRange.from, this.loadingRange.count);
+    const updateData = (data => {
       this.cancelable = null;
 
       this.cacheRange = {
@@ -134,7 +134,14 @@ export class ListModel<T = Object> extends Publisher<EventType> {
       this.delayedNotify();
     });
 
-    return null;
+    if (task instanceof Promise) {
+      this.cancelable = cancelable(task);
+      this.cancelable.then(updateData);
+      return null;
+    }
+
+    updateData(task);
+    return this.getItems(from, count);
   }
 
   setItemsCount(count: number): void {
@@ -337,6 +344,8 @@ export interface Props extends React.HTMLProps<any> {
   height?: number;
   model: RenderListModel;
   border?: boolean;
+  className?: string;
+  extraClass?: string;
 }
 
 export interface State {
@@ -549,12 +558,17 @@ export class List extends React.Component<Props, State> {
   }
 
   render() {
-    const {width, height, model} = this.props;
+    const { width, height, model } = this.props;
+    const className = cn(
+      this.props.className || classes.list,
+      this.props.extraClass,
+      this.props.border && classes.border
+    );
     return (
       <div
         ref={this.ctrl}
         tabIndex={1}
-        className={cn(classes.list, this.props.border && classes.border)}
+        className={className}
         style={{width, height}}
         onKeyDown={this.onKeyDown}
         onWheel={this.onWheel}

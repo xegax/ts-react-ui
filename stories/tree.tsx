@@ -1,32 +1,25 @@
 import * as React from 'react';
 import { FitToParent } from '../src/fittoparent';
 import { storiesOf } from '@storybook/react';
-import { Tree, TreeModel } from '../src/tree';
+import { Tree, TreeItem, TreeModel } from '../src/tree';
 import '../styles/styles.scss';
+
+function makeItems(count: number, cb: (n: number) => TreeItem): Array<TreeItem> {
+  let arr = Array<TreeItem>();
+  while (arr.length < count)
+    arr.push(cb(arr.length));
+  return arr;
+}
 
 let model = new TreeModel();
 model.setItems([
   {
     label: 'root',
-    children: [
-      {
-        label: 'item 1'
-      }, {
-        label: 'item 2'
-      }, {
-        label: 'item 3'
-      }, {
-        label: 'item 4'
-      }
-    ]
+    children: makeItems(10, (i) => ({ label: 'item ' + i }))
   },
   {
     label: 'root2',
-    children: [
-      {
-        label: 'item 5'
-      }
-    ]
+    children: makeItems(10, (i) => ({ label: 'item ' + i }))
   }
 ])
 

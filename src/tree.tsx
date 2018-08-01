@@ -1,6 +1,17 @@
 import * as React from 'react';
 import { List, RenderListModel } from './list';
 import { Publisher } from './common/publisher';
+import { className as cn } from './common/common';
+import './_tree.scss';
+
+const classes = {
+  open: 'fa fa-minus-square-o',
+  close: 'fa fa-plus-square-o',
+  tree: 'tree-ctrl',
+  item: 'tree-ctrl-item',
+  opened: 'tree-ctrl-opened',
+  closed: 'tree-ctrl-closed'
+};
 
 interface TreeCtrlData {
   level: number;
@@ -47,23 +58,32 @@ export class TreeModel extends Publisher {
     this.items = items;
     
     this.render.setHandler({
-      loadItems: (from: number, count: number): Promise<Array<JSX.Element>> => {
+      loadItems: (from: number, count: number): Array<JSX.Element> => {
         const items = this.rows.slice(from, count);
         const jsx = items.map(item => {
           return this.renderItem(item);
         });
 
-        return Promise.resolve( jsx );
+        return jsx;
       }
     });
 
     this.rebuildTree();
   }
 
+  isOpenable(item: TreeItem): boolean {
+    return item.children != null;
+  }
+
   renderItem(item: TreeItem): JSX.Element {
     const levelOffs = 10;
+    const className = cn(
+      classes.item,
+      this.isOpenable(item) ? item.ctrlData.open && classes.opened || classes.closed : false
+    );
     return (
       <div
+        className={className}
         style={{ marginLeft: item.ctrlData.level * levelOffs, cursor: item.children ? 'pointer' : 'default' }}
         onClick={() => {
           if (!item.children)
@@ -75,6 +95,8 @@ export class TreeModel extends Publisher {
           this.render.notify();
         }}
       >
+        {this.isOpenable(item) ?
+          <i className={cn(item.ctrlData.open && classes.open || classes.close)}/> : null }
         {item.label}
       </div>
     );
@@ -92,12 +114,10 @@ export interface Props {
 }
 
 export class Tree extends React.Component<Props, {}> {
-  componentWillMount() {
-  }
-
   render() {
     return (
       <List
+        extraClass={classes.tree}
         width={this.props.width}
         height={this.props.height}
         border={false}
