@@ -405,8 +405,6 @@ export class List extends React.Component<Props, State> {
     const model = this.state.model;
     const height = model.getItemHeight();
     let row: JSX.Element | Object | string = args.data || '...';
-    if (row instanceof Object)
-      row = row.toString();
     
     if (args.column && args.data && args.column.render)
       row = args.column.render({
@@ -507,8 +505,8 @@ export class List extends React.Component<Props, State> {
     event.preventDefault();
     event.stopPropagation();
 
-    const selRow = model.getSelRow();
-    const selFirst = model.getSelectFirst();
+    let selRow = model.getSelRow();
+    let selFirst = model.getSelectFirst();
 
     let dir = 0;
     if (event.keyCode == KeyCode.ARROW_UP) {
@@ -522,6 +520,16 @@ export class List extends React.Component<Props, State> {
         model.setSelectFirst(selFirst + dir);
       else
         model.setSelRow(selRow + dir);
+    }
+
+    if (event.keyCode == KeyCode.PAGE_UP) {
+      selFirst -= model.getFullVisibleCount();
+      model.setSelectFirst(selFirst);
+      model.setSelRow(selFirst);
+    } else if (event.keyCode == KeyCode.PAGE_DOWN) {
+      selFirst += model.getFullVisibleCount();
+      model.setSelectFirst(selFirst);
+      model.setSelRow(selFirst);
     }
 
     this.props.onKeyDown && this.props.onKeyDown(event);
