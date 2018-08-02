@@ -11,9 +11,9 @@
     "build": "tsc --declaration",
     "copy": "copyfiles -u 1 src/**/*.scss src/**/*.d.ts src/**/*.js src/**/*.js.map .",
     "dev": "npm run prepare",
-    "storybook": "start-storybook -p 6006",
+    "storybook": "start-storybook -p 6006 -s ./public",
     "build-storybook": "build-storybook",
-    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map *.js *.js.map *.d.ts *.scss common"
+    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map *.js *.js.map *.d.ts *.scss  common"
   },
   "devDependencies": {
     "@storybook/addon-actions": "^3.4.8",

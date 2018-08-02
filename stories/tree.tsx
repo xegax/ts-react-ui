@@ -15,7 +15,7 @@ let model = new TreeModel();
 model.setItems([
   {
     label: 'root',
-    children: makeItems(10, (i) => ({ label: 'item ' + i }))
+    children: makeItems(10, (i) => ({ label: 'item ' + i, imgIcon: 'alien.png' }))
   },
   {
     label: 'root2',

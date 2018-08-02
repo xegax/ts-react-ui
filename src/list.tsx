@@ -141,7 +141,7 @@ export class ListModel<T = Object> extends Publisher<EventType> {
     }
 
     updateData(task);
-    return this.getItems(from, count);
+    return this.cache.slice(from - this.cacheRange.from, from - this.cacheRange.from + count);
   }
 
   setItemsCount(count: number): void {

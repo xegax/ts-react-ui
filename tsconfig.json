@@ -7,7 +7,7 @@
     "sourceMap": true,
     "jsx": "react",
     "moduleResolution": "node",
-    "rootDirs": ["src", "stories"],
+    "rootDirs": ["src"],
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": false,
     "noImplicitThis": false,
@@ -17,6 +17,7 @@
     "noUnusedLocals": true
   },
   "exclude": [
+	"stories",
     "node_modules",
     "build"
   ]

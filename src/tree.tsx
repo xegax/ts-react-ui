@@ -10,7 +10,9 @@ const classes = {
   tree: 'tree-ctrl',
   item: 'tree-ctrl-item',
   opened: 'tree-ctrl-opened',
-  closed: 'tree-ctrl-closed'
+  closed: 'tree-ctrl-closed',
+  imgIcon: 'tree-ctrl-imgicon',
+  emptyIcon: 'tree-ctrl-emptyicon'
 };
 
 interface TreeCtrlData {
@@ -22,6 +24,8 @@ interface TreeCtrlData {
 
 export interface TreeItem {
   label: string;
+  faIcon?: string;
+  imgIcon?: string;
   children?: Array<TreeItem>;
   getChildren?(): Promise<Array<TreeItem>>;
 
@@ -32,6 +36,21 @@ export class TreeModel extends Publisher {
   private render = new RenderListModel(0, 20);
   private rows = Array<TreeItem>();
   private items: Array<TreeItem>;
+
+  constructor() {
+    super();
+
+    this.render.setHandler({
+      loadItems: (from: number, count: number): Array<JSX.Element> => {
+        const items = this.rows.slice(from, count);
+        const jsx = items.map(item => {
+          return this.renderItem(item);
+        });
+
+        return jsx;
+      }
+    });
+  }
 
   private walkTree(item: TreeItem, level: number) {
     item.ctrlData = item.ctrlData || { level: 0, rowIdx: 0, nextParentIdx: -1, open: false };
@@ -56,18 +75,6 @@ export class TreeModel extends Publisher {
 
   setItems(items: Array<TreeItem>): void {
     this.items = items;
-    
-    this.render.setHandler({
-      loadItems: (from: number, count: number): Array<JSX.Element> => {
-        const items = this.rows.slice(from, count);
-        const jsx = items.map(item => {
-          return this.renderItem(item);
-        });
-
-        return jsx;
-      }
-    });
-
     this.rebuildTree();
   }
 
@@ -81,6 +88,17 @@ export class TreeModel extends Publisher {
       classes.item,
       this.isOpenable(item) ? item.ctrlData.open && classes.opened || classes.closed : false
     );
+
+    let icon: JSX.Element;
+    if (this.isOpenable(item))
+      icon = <i className={cn(item.ctrlData.open && classes.open || classes.close)}/>;
+    else if (item.faIcon)
+      icon = <i className={`fa fa-${item.faIcon}`}/>;
+    else if (item.imgIcon)
+      icon = <div className={classes.imgIcon} style={{ backgroundImage: `url(${item.imgIcon})`}}/>;
+    else
+      icon = <div className={classes.emptyIcon}/>;
+
     return (
       <div
         className={className}
@@ -95,8 +113,7 @@ export class TreeModel extends Publisher {
           this.render.notify();
         }}
       >
-        {this.isOpenable(item) ?
-          <i className={cn(item.ctrlData.open && classes.open || classes.close)}/> : null }
+        {icon}
         {item.label}
       </div>
     );
