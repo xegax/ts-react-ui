@@ -329,7 +329,12 @@ export class RenderListModel extends ListModel {
   }
 
   setSelectFirst(first: number): boolean {
-    let newFirst = Math.min(Math.max(0, first), this.itemsCount - this.partVisItems + 1);
+    if (this.itemsCount < this.partVisItems)
+      return false;
+
+    const min = 0;
+    const max = this.itemsCount - this.partVisItems + 1;
+    let newFirst = clamp(first, [min, max]);
     if (newFirst == this.firstSelItem)
       return false;
 
