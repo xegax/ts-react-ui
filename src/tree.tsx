@@ -19,17 +19,23 @@ interface TreeCtrlData {
   level: number;
   rowIdx: number;
   nextParentIdx: number;
-  open: boolean;
 }
 
 export interface TreeItem {
-  label: string;
+  label: string | JSX.Element;
+  open?: boolean;
+  itemWrap?(item: JSX.Element): JSX.Element;
+
   faIcon?: string;
   imgIcon?: string;
   children?: Array<TreeItem>;
   getChildren?(): Promise<Array<TreeItem>>;
 
   ctrlData?: TreeCtrlData;  //  Tree will store his data here
+}
+
+function EmptyWraper<T>(data: T) {
+  return data;
 }
 
 export class TreeModel extends Publisher {
@@ -53,12 +59,12 @@ export class TreeModel extends Publisher {
   }
 
   private walkTree(item: TreeItem, level: number) {
-    item.ctrlData = item.ctrlData || { level: 0, rowIdx: 0, nextParentIdx: -1, open: false };
+    item.ctrlData = item.ctrlData || { level: 0, rowIdx: 0, nextParentIdx: -1 };
     item.ctrlData = { ...item.ctrlData, level, rowIdx: this.rows.length, nextParentIdx: -1 };
     this.rows.push(item);
 
     const items = item.children || [];
-    if (item.ctrlData.open) {
+    if (item.open) {
       items.forEach(child => {
         this.walkTree(child, level + 1);
       });
@@ -73,7 +79,7 @@ export class TreeModel extends Publisher {
     this.render.clearCache();
   }
 
-  setItems(items: Array<TreeItem>): void {
+  setItems<T>(items: Array<TreeItem & T>): void {
     this.items = items;
     this.rebuildTree();
   }
@@ -86,12 +92,12 @@ export class TreeModel extends Publisher {
     const levelOffs = 10;
     const className = cn(
       classes.item,
-      this.isOpenable(item) ? item.ctrlData.open && classes.opened || classes.closed : false
+      this.isOpenable(item) ? item.open && classes.opened || classes.closed : false
     );
 
     let icon: JSX.Element;
     if (this.isOpenable(item))
-      icon = <i className={cn(item.ctrlData.open && classes.open || classes.close)}/>;
+      icon = <i className={cn(item.open && classes.open || classes.close)}/>;
     else if (item.faIcon)
       icon = <i className={`fa fa-${item.faIcon}`}/>;
     else if (item.imgIcon)
@@ -99,6 +105,7 @@ export class TreeModel extends Publisher {
     else
       icon = <div className={classes.emptyIcon}/>;
 
+    const itemWrap = item.itemWrap || EmptyWraper;
     return (
       <div
         className={className}
@@ -107,14 +114,13 @@ export class TreeModel extends Publisher {
           if (!item.children)
             return;
 
-          item.ctrlData.open = !item.ctrlData.open;
+          item.open = !item.open;
           this.rebuildTree();
           this.render.clearCache(true);
           this.render.notify();
         }}
       >
-        {icon}
-        {item.label}
+        {itemWrap(<div>{icon}{item.label}</div>)}
       </div>
     );
   }
