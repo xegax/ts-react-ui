@@ -1,0 +1,23 @@
+.tree-ctrl {
+  user-select: none;
+  .tree-ctrl-item {
+    i {
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+  }
+
+  .tree-ctrl-imgicon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .tree-ctrl-emptyicon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+}

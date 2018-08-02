@@ -6,6 +6,7 @@
 *.js.map
 *.d.ts
 *.scss
+!src/**/*.scss
 src/**/*.js
 src/**/*.js.map
 src/**/*.d.ts
