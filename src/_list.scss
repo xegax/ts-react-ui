@@ -4,6 +4,7 @@ $list-ctrl-padding: 3px;
 .list-ctrl {
   display: flex;
   overflow: hidden;
+  outline: none;
 
   .list-ctrl-content {
     display: flex;

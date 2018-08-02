@@ -438,7 +438,7 @@ export class List extends React.Component<Props, State> {
     const className = cn(classes.row, model.isSelect(args.rowIdxAbs) && classes.selRow);
     return (
       <div
-        onClick={event => {
+        onMouseDown={event => {
           model.setSelRow(args.rowIdxAbs, event.ctrlKey, event.shiftKey);
         }}
         className={className}

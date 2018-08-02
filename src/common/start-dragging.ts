@@ -101,8 +101,8 @@ export function startDragging(args: Params, handler: DragHandler) {
       window.addEventListener('mouseup', onMouseUp);
     }
     
-    event.preventDefault();
-    event.stopPropagation();
+    // event.preventDefault();
+    // event.stopPropagation();
   };
 
   return (e: MouseEvent | TouchEvent) => {

@@ -158,6 +158,7 @@ class DropModel extends Publisher {
         relPos: this.getRelPoint(event, this.currDrop)
       });
 
+    this.showDrop = false;
     this.currDrop = null;
     this.dropList = [];
     this.delayedNotify();

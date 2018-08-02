@@ -1,5 +1,10 @@
 .tree-ctrl {
   user-select: none;
+
+  .list-ctrl-content {
+    background-color: white;
+  }
+
   .tree-ctrl-item {
     i {
       margin-right: 5px;
