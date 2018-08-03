@@ -71,6 +71,7 @@ class Canvas extends React.Component<Props, {}> {
         <div style={{flexGrow: 1, position: 'relative'}}>
           {this.props.model.items.map((item, i) => {
             return (
+              <Droppable>
               <img
                 key={i}
                 src={item.url}
@@ -83,6 +84,7 @@ class Canvas extends React.Component<Props, {}> {
                   border: '1px solid gray'
                 }}
               />
+              </Droppable>
             );
           })}
         </div>

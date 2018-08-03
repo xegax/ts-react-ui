@@ -112,7 +112,7 @@ class DropModel extends Publisher {
   }
 
   checkDragEvent(event: MouseEvent, data: any): void {
-    const drop = this.dropList.find(drop => {
+    const drop = this.dropList.slice().reverse().find(drop => {
       return findParent(event.srcElement as HTMLElement, drop.getElement())
     });
 
@@ -151,7 +151,7 @@ class DropModel extends Publisher {
   }
 
   drop(drag: Draggable, event: MouseEvent): void {
-    if (this.currDrop)
+    if (this.currDrop && this.currDrop.props.onDropOver)
       this.currDrop.props.onDropOver({
         event,
         data: drag.props.data,
