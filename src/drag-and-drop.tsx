@@ -127,16 +127,26 @@ class DropModel extends Publisher {
     }
   }
 
-  onDragEnter(dp: Droppable, event: MouseEvent, data: any): void {
-    const args = { event, data, relPos: this.getRelPoint(event, this.currDrop) };
+  onDragEnter(dp: Droppable, event: MouseEvent, dragData: any): void {
+    const args = {
+      event,
+      dragData,
+      dropData: dp.props.dropData,
+      relPos: this.getRelPoint(event, this.currDrop)
+    };
     try {
       dp.props.onDragEnter && dp.props.onDragEnter(args);
     } catch(e) {
     }
   }
 
-  onDragOver(dp: Droppable, event: MouseEvent, data: any): void {
-    const args = { event, data, relPos: this.getRelPoint(event, this.currDrop) };
+  onDragOver(dp: Droppable, event: MouseEvent, dragData: any): void {
+    const args = {
+      event,
+      dragData,
+      dropData: dp.props.dropData,
+      relPos: this.getRelPoint(event, this.currDrop)
+    };
     try {
       dp.props.onDragOver && dp.props.onDragOver(args);
     } catch(e) {
@@ -154,7 +164,8 @@ class DropModel extends Publisher {
     if (this.currDrop && this.currDrop.props.onDropOver)
       this.currDrop.props.onDropOver({
         event,
-        data: drag.props.data,
+        dragData: drag.props.data,
+        dropData: this.currDrop.props.dropData,
         relPos: this.getRelPoint(event, this.currDrop)
       });
 
@@ -172,14 +183,16 @@ const dropClasses = {
   dropOver: 'drop-over'
 };
 
-export interface DropArgs<T = Object> {
+export interface DropArgs<TDrag = Object, TDrop = Object> {
   event: MouseEvent;
   relPos: Point;
-  data: T;
+  dragData: TDrag;
+  dropData: TDrop;
 }
 
 export interface DropProps {
   types?: Array<string>;
+  dropData?: any;
 
   onDragEnter?(args: DropArgs): void;
   onDragLeave?(): void;

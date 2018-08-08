@@ -62,7 +62,7 @@ class Canvas extends React.Component<Props, {}> {
   }
 
   onDrop = (drag: DropArgs<ImgItem>) => {
-    this.props.model.add(drag.data, drag.relPos);
+    this.props.model.add(drag.dragData, drag.relPos);
   }
 
   render() {

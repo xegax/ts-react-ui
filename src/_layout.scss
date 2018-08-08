@@ -1,0 +1,54 @@
+.layout-ctrl {
+  display: flex;
+  flex-grow: 1;
+}
+
+.layout-ctrl-row {
+  position: relative;
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row;
+}
+
+.layout-ctrl-col {
+  position: relative;
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+}
+
+.layout-ctrl-item {
+  position: relative;
+  display: flex;
+  flex-grow: 1;
+}
+
+.layout-ctrl-rows-spliter {
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  width: 4px;
+  background-color: blue;
+  opacity: 0;
+  cursor: e-resize;
+
+  &:hover {
+    opacity: 0.5;
+  }
+}
+
+.layout-ctrl-cols-spliter {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  height: 4px;
+  background-color: blue;
+  opacity: 0;
+  cursor: n-resize;
+
+  &:hover {
+    opacity: 0.5;
+  }
+}
