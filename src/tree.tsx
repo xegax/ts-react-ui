@@ -24,6 +24,7 @@ export interface Props {
   model: TreeModel;
   width?: number;
   height?: number;
+  renderItem?: (item: TreeItem, jsx: JSX.Element) => JSX.Element;
 }
 
 function EmptyWraper<T>(data: T) {
@@ -50,6 +51,10 @@ export class Tree extends React.Component<Props, {}> {
       icon = <div className={classes.emptyIcon}/>;
 
     const itemWrap = item.itemWrap || EmptyWraper;
+    let element = itemWrap(<div>{icon}{item.label}</div>);
+    if (this.props.renderItem)
+      element = this.props.renderItem(item, element);
+
     return (
       <div
         className={className}
@@ -64,7 +69,7 @@ export class Tree extends React.Component<Props, {}> {
           model.getRender().notify();
         }}
       >
-        {itemWrap(<div>{icon}{item.label}</div>)}
+        {element}
       </div>
     );
   }

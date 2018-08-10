@@ -189,9 +189,11 @@ class DroppableLayout {
 
     const dragData = {...args.dragData};
     const model = this.getModel();
+
     if (!args.dropData && model.getLayout().items.length == 0) {
       model.getLayout().items.push(dragData);
-      return model.notify();
+      model.setLastDrop(dragData);
+      return model.delayedNotify({type: 'change'});
     } else if (this.dropZone) {
       const parent = model.findParent(this.dropZone.item);
       const idx = parent ? parent.items.indexOf(this.dropZone.item) : -1;
@@ -218,9 +220,10 @@ class DroppableLayout {
         else
           model.setLayout(cont);
       }
+      model.setLastDrop(dragData);
     }
 
-    this.getModel().notify();
+    model.delayedNotify({type: 'change'});
   };
 
   droppableItem(item: JSX.Element, data?: LayoutItem | LayoutCont, key?: string): JSX.Element {
@@ -304,6 +307,7 @@ export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {
       onDragEnd: () => {
         spliter.remove();
         this.setState({phase: null});
+        this.props.model.delayedNotify({type: 'change'});
       }
     })(event.nativeEvent);
   }
@@ -367,10 +371,15 @@ export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {
     const { width, height } = this.props;
     const model = this.props.model;
     const layout = model.getLayout();
-    return this.droppable.droppableItem(
+    const el = (
       <div className={classes.layout} style={{width, height}}>
         {this.renderCont(layout)}
       </div>
     );
+
+    if (layout.items.length != 0)
+      return el;
+
+    return this.droppable.droppableItem(el);
   }
 }
