@@ -317,7 +317,7 @@ export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {
       return null;
 
     return (
-      <div
+      <div key={'split-' + idx}
         onMouseDown={evt => this.dragSplitter(evt, cont, idx)}
         className={cn(cont.type == 'row' && classes.rowsSplit || classes.colsSplit)}
       />
