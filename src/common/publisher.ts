@@ -36,12 +36,12 @@ export class Publisher<T = string> {
   }
 
   delayedNotify(args?: {ms?: number, type?: T}): void {
-    if (this.timer.isRunning())
-      return;
-
     args = args || {
       ms: 10
     };
+
+    if (this.timer.isRunning() && this.delayedTypes.has(args.type))
+      return;
 
     this.delayedTypes.add(args.type);
     this.timer.run(args.ms || 10);
