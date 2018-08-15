@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Timer } from './common/timer';
+import { Timer } from 'objio/common/timer';
 
 export interface State {
   width?: number;

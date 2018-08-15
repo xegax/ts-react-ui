@@ -1,24 +1,17 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "module": "commonjs",
     "target": "es5",
     "lib": ["es6", "dom"],
-    "sourceMap": true,
-    "jsx": "react",
     "moduleResolution": "node",
-    "rootDirs": ["src"],
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitReturns": false,
-    "noImplicitThis": false,
     "noImplicitAny": false,
-    "strictNullChecks": false,
-    "suppressImplicitAnyIndexErrors": true,
-    "noUnusedLocals": true
+    "sourceMap": true,
+    "declaration": true,
+    "jsx": "react",
+    "rootDirs": ["src"]
   },
   "exclude": [
-	"stories",
-    "node_modules",
-    "build"
+    "stories",
+    "test"
   ]
 }

@@ -23,7 +23,7 @@ const classes = {
   colsSplit: 'layout-ctrl-cols-spliter'
 };
 
-interface Props {
+export interface Props {
   model: LayoutModel;
   width?: number;
   height?: number;

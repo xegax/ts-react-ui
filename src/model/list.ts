@@ -1,4 +1,4 @@
-import { Publisher } from '../common/publisher';
+import { Publisher } from 'objio/common/publisher';
 import { Cancelable, cancelable } from '../common/promise';
 import { clamp } from '../common/common';
 

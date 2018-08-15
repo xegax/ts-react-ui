@@ -4,7 +4,7 @@ import { storiesOf } from '@storybook/react';
 import { Draggable, Droppable, DropArgs } from '../src/drag-and-drop';
 import { Tree, TreeModel } from '../src/tree';
 import { FitToParent } from '../src/fittoparent';
-import { Publisher } from '../src/common/publisher';
+import { Publisher } from 'objio/common/publisher';
 import { Point } from '../src/common/point';
 
 interface ImgItem {

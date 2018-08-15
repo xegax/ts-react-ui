@@ -1,19 +1,19 @@
 {
   "name": "ts-react-ui",
-  "version": "0.1.2",
+  "version": "0.1.8",
   "dependencies": {
     "font-awesome": "^4.7.0",
     "react": "^16.4.1",
-    "react-dom": "^16.4.1"
+    "react-dom": "^16.4.1",
+    "objio": "^0.0.28"
   },
   "scripts": {
-    "prepare": "npm run build && npm run copy",
-    "build": "tsc --declaration",
-    "copy": "copyfiles -u 1 src/**/*.scss src/**/*.d.ts src/**/*.js src/**/*.js.map .",
+    "prepare": "npm run clean && tsc -p tsconfig.json -outDir . && npm run copy",
+    "copy": "copyfiles -u 1 src/**/*.scss .",
     "dev": "npm run prepare",
     "storybook": "start-storybook -p 6006 -s ./public",
     "build-storybook": "build-storybook",
-    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map *.js *.js.map *.d.ts *.scss  common"
+    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map *.js *.js.map *.d.ts *.scss  common model"
   },
   "devDependencies": {
     "@storybook/addon-actions": "^3.4.8",
@@ -32,7 +32,7 @@
     "node-sass": "^4.9.2",
     "sass-loader": "^7.0.3",
     "ts-loader": "^3.5",
-    "typescript": "^2.9.2",
+    "typescript": "^3.0.1",
     "url-loader": "^1.0.1"
   }
 }

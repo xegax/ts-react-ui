@@ -1,9 +1,9 @@
-import { Publisher } from '../common/publisher';
+import { Publisher } from 'objio/common/publisher';
 import { RenderListModel } from './list';
 
 export type EventType = 'select';
 
-interface TreeCtrlData {
+export interface TreeCtrlData {
   level: number;
   rowIdx: number;
   nextParentIdx: number;

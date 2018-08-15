@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { startDragging } from './common/start-dragging';
 import { ContainerModel, ContItem } from './container';
-import { Publisher } from './common/publisher';
+import { Publisher } from 'objio/common/publisher';
 import { className as cn } from './common/common';
 import { Point } from './common/point';
 import { findParent } from './common/dom';

@@ -1,4 +1,4 @@
-import { Publisher } from '../common/publisher';
+import { Publisher } from 'objio/common/publisher';
 
 export type EventType = 'change' | 'drop';
 export type LayoutType = 'row' | 'col';

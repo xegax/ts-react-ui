@@ -1,4 +1,4 @@
-import { Timer } from './timer';
+import { Timer } from 'objio/common/timer';
 
 export function timer(ms: number): Promise<void> {
   return new Promise(resolve => {

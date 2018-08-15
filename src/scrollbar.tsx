@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { startDragging } from './common/start-dragging';
 import { className as cn } from './common/common';
-import { Timer } from './common/timer';
+import { Timer } from 'objio/common/timer';
 import './_scrollbar.scss';
 
 export interface Props {

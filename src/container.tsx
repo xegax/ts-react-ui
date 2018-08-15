@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Publisher } from './common/publisher';
+import { Publisher } from 'objio/common/publisher';
 
 let idCounter = 0;
 export class ContItem {
@@ -34,7 +34,7 @@ export class ContItem {
   }
 }
 
-interface ContainerModelArgs {
+export interface ContainerModelArgs {
   className: string;
   style: Partial<CSSStyleDeclaration>;
 }
@@ -84,7 +84,7 @@ export class ContainerModel extends Publisher {
   }
 }
 
-interface Props {
+export interface Props {
   model: ContainerModel;
 }
 
