@@ -4522,9 +4522,9 @@ object.values@^1.0.4:
     function-bind "^1.1.0"
     has "^1.0.1"
 
-objio@^0.0.26:
-  version "0.0.26"
-  resolved "https://registry.yarnpkg.com/objio/-/objio-0.0.26.tgz#67faecad54b28f4c2df4dbd5fb22fa8955a04081"
+objio@^0.0.28:
+  version "0.0.28"
+  resolved "https://registry.yarnpkg.com/objio/-/objio-0.0.28.tgz#991f8ded799783b8ad964176b07595bf5e1d7454"
   dependencies:
     axios "^0.18.0"
     lodash "^4.17.4"
@@ -6381,6 +6381,10 @@ type-is@~1.6.15, type-is@~1.6.16:
 typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
+
+typescript@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.0.1.tgz#43738f29585d3a87575520a4b93ab6026ef11fdb"
 
 ua-parser-js@^0.7.18:
   version "0.7.18"
