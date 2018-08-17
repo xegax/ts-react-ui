@@ -84,6 +84,7 @@ export class LayoutModel extends Publisher<EventType> {
       cont.items.splice(idx, 1);
       removeEmpty(cont);
       this.delayedNotify();
+      this.delayedNotify({type: 'change'});
       return true;
     }
 
