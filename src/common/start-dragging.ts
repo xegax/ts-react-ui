@@ -35,7 +35,7 @@ try {
 } catch(e) {
 }
 
-let tgtElement: HTMLElement = null;
+let touchElement: HTMLElement = null;
 export function startDragging(args: Params, handler: DragHandler) {
   let touch = false;
   let onDragHandler = (event: MouseEvent | TouchEvent) => {
@@ -68,8 +68,8 @@ export function startDragging(args: Params, handler: DragHandler) {
 
     let onMouseUp = (event: MouseEvent) => {
       if (touch) {
-        tgtElement.removeEventListener('touchmove', onMouseMove);
-        tgtElement.removeEventListener('touchend', onMouseUp);
+        touchElement.removeEventListener('touchmove', onMouseMove);
+        touchElement.removeEventListener('touchend', onMouseUp);
       } else {
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
@@ -77,7 +77,7 @@ export function startDragging(args: Params, handler: DragHandler) {
         window.top.removeEventListener('mousemove', onMouseMove);
         window.top.removeEventListener('mouseup', onMouseUp);
       }
-      tgtElement = null;
+      touchElement = null;
       
       if (!started)
         return;
@@ -91,8 +91,8 @@ export function startDragging(args: Params, handler: DragHandler) {
       onMouseMove(event);
 
     if (touch) {
-      tgtElement.addEventListener('touchmove', onMouseMove);
-      tgtElement.addEventListener('touchend', onMouseUp);
+      touchElement.addEventListener('touchmove', onMouseMove);
+      touchElement.addEventListener('touchend', onMouseUp);
     } else {
       window.top && window.top.addEventListener('mousemove', onMouseMove);
       window.top && window.top.addEventListener('mouseup', onMouseUp);
@@ -106,16 +106,20 @@ export function startDragging(args: Params, handler: DragHandler) {
   };
 
   return (e: MouseEvent | TouchEvent) => {
+    const isTouch = (e as TouchEvent).touches && (e as TouchEvent).touches.length > 0;
     if (touchDevice && e.type == 'mousedown')
       return false;
 
-    if (tgtElement)
+    if (touchDevice && (touchElement || !isTouch))
       return false;
 
-    tgtElement = e.target as HTMLElement;
-    touch = (e as TouchEvent).touches && (e as TouchEvent).touches.length > 0;
-    if (touch || isLeftDown(e as MouseEvent))
-      onDragHandler(e);
+    if (e.type == 'mousedown' && !isLeftDown(e as MouseEvent))
+      return false;
+
+    touchElement = e.target as HTMLElement;
+    touch = isTouch;
+    
+    onDragHandler(e);
     return true;
   };
 }
