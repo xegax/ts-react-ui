@@ -3,6 +3,7 @@ import { className as cn } from './common/common';
 import { Scrollbar } from './scrollbar';
 import { KeyCode } from './common/keycode';
 import { RenderListModel, ListColumn } from './model/list';
+import { startDragging } from './common/start-dragging';
 import './_list.scss';
 
 export {
@@ -44,6 +45,7 @@ export interface RenderRow {
 
 export class List extends React.Component<Props, State> {
   private ctrl: React.RefObject<HTMLDivElement> = React.createRef();
+  private content: React.RefObject<HTMLDivElement> = React.createRef();
 
   constructor(props: Props) {
     super(props);
@@ -85,6 +87,29 @@ export class List extends React.Component<Props, State> {
         key={'hdr-' + col.name}
         style={{height, lineHeight: height + 'px'}}>
           {row}
+          <div
+            onMouseDown={evt => {
+              const fullSz = this.props.width;
+              const colLeft = evt.currentTarget.parentElement.parentElement;
+              const colRight = colLeft.nextSibling as HTMLElement;
+              const sizeLeft = colLeft.offsetWidth;
+              const sizeRight = colRight.offsetWidth;
+              const cols = model.getColumns();
+              const colIdx = cols.indexOf(col);
+              const col2 = cols[colIdx + 1];
+
+              const summOfSize = sizeLeft + sizeRight;
+              startDragging({x: sizeLeft, y: 0}, {
+                onDragging: evt => {
+                  const newSizes = [ evt.x, summOfSize - evt.x];
+                  col.grow = newSizes[0] * cols.length / fullSz;
+                  col2.grow = newSizes[1] * cols.length / fullSz;
+                  this.setState({});
+                }
+              })(evt.nativeEvent);
+            }}
+            style={{position: 'absolute', width: 5, height, right: 0, cursor: 'w-resize'}}
+          />
       </div>
     );
 
@@ -161,6 +186,11 @@ export class List extends React.Component<Props, State> {
         colStyle.flexGrow = 0;
       }
 
+      if (column && column.grow) {
+        delete colStyle.width;
+        colStyle.flexGrow = column.grow;
+      }
+
       cols.push(
         <div
           className={classes.column}
@@ -173,7 +203,7 @@ export class List extends React.Component<Props, State> {
     }
 
     return (
-      <div className={classes.content}>
+      <div className={classes.content} ref={this.content}>
         {cols}
       </div>
     );

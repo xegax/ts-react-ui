@@ -1,0 +1,14 @@
+.range-slider-ctrl {
+  background-color: silver;
+  position: relative;
+  height: 20px;
+
+  &-slider {
+    position: absolute;
+    background-color: gray;
+    width: 10px;
+    height: 20px;
+    border: 1px solid black;
+    box-sizing: border-box;
+  }
+}

@@ -64,7 +64,6 @@ export class LayoutModel extends Publisher<EventType> {
     updateParents(this.layout);
 
     this.delayedNotify({type: 'change'});
-    this.delayedNotify();
   }
 
   setLastDrop(drop: LayoutItem): void {
@@ -83,7 +82,6 @@ export class LayoutModel extends Publisher<EventType> {
     if (idx != -1) {
       cont.items.splice(idx, 1);
       removeEmpty(cont);
-      this.delayedNotify();
       this.delayedNotify({type: 'change'});
       return true;
     }
@@ -124,6 +122,5 @@ export class LayoutModel extends Publisher<EventType> {
   setMap(map: MapType): void {
     this.map = {...map};
     this.delayedNotify({type: 'change'});
-    this.delayedNotify();
   }
 }

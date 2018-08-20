@@ -23,6 +23,7 @@ export interface RenderArgs<TRow = Object, TColumn extends ListColumn = ListColu
 export interface ListColumn {
   name: string;
   width?: number;
+  grow?: number;
   render?(args: RenderArgs): JSX.Element | string;
   renderHeader?(jsx: JSX.Element | string, col: ListColumn): JSX.Element;
 }
