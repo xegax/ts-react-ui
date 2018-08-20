@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Publisher } from 'objio/common/publisher';
+import { Subscriber } from './subscriber';
 
 let idCounter = 0;
 export class ContItem {
@@ -88,19 +89,7 @@ export interface Props {
   model: ContainerModel;
 }
 
-export class Container extends React.Component<Props, {}> {
-  private subscriber = () => {
-    this.setState({});
-  }
-
-  componentWillMount() {
-    this.props.model.subscribe(this.subscriber);
-  }
-
-  componentWillUnmount() {
-    this.props.model.unsubscribe(this.subscriber);
-  }
-
+export class Container extends Subscriber<Props> {
   render() {
     return (
       this.props.model.getItems().map(item => {

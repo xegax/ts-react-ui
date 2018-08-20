@@ -4,6 +4,8 @@ import { Scrollbar } from './scrollbar';
 import { KeyCode } from './common/keycode';
 import { RenderListModel, ListColumn } from './model/list';
 import { startDragging } from './common/start-dragging';
+import { Subscriber } from './subscriber';
+
 import './_list.scss';
 
 export {
@@ -43,7 +45,7 @@ export interface RenderRow {
   data: JSX.Element | Object| string;
 }
 
-export class List extends React.Component<Props, State> {
+export class List extends Subscriber<Props, State> {
   private ctrl: React.RefObject<HTMLDivElement> = React.createRef();
   private content: React.RefObject<HTMLDivElement> = React.createRef();
 
@@ -55,17 +57,9 @@ export class List extends React.Component<Props, State> {
     };
   }
 
-  subscriber = () => {
-    this.setState({});
-  };
-
   componentDidMount() {
-    this.state.model.subscribe(this.subscriber);
+    super.componentDidMount();
     this.state.model.setHeight(this.props.height);
-  }
-
-  componentWillUnmount() {
-    this.state.model.unsubscribe(this.subscriber);
   }
 
   renderHeader(col: ListColumn): JSX.Element {

@@ -74,7 +74,7 @@ export class Tree extends React.Component<Props, {}> {
     );
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.props.model.setHandler({
       renderItem: this.renderItem
     });

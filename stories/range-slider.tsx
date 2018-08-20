@@ -5,11 +5,53 @@ import { RangeSlider, RangeSliderModel } from '../src/range-slider';
 import { FitToParent } from '../src/fittoparent';
 
 const model = new RangeSliderModel();
-model.setRange({from: 0.5, to: 0.5});
+model.setRange({from: 0.1, to: 0.5});
+
+class Test extends React.Component<{}, {}> {
+  subscriber = () => {
+    this.setState({});
+  }
+
+  componentDidMount() {
+    model.subscribe(this.subscriber, 'changed');
+  }
+
+  componentWillUnmount() {
+    model.unsubscribe(this.subscriber, 'changed');
+  }
+
+  render() {
+    return (
+      <div style={{display: 'flex', flexDirection: 'column'}}>
+        <div>
+          from: {model.getRange().from}
+        </div>
+        <div>
+          to: {model.getRange().to}
+        </div>
+        <div style={{marginLeft: 50, marginRight: 50, height: 20}}>
+          <RangeSlider model={model}/>
+        </div>
+        <div style={{height: 15}}>
+          <RangeSlider model={model}/>
+        </div>
+        <div style={{display: 'flex'}}>
+          <div style={{flexGrow: 1}}>
+            <RangeSlider model={model}/>
+          </div>
+          <div style={{flexGrow: 1}}>
+            <RangeSlider model={model}/>
+          </div>
+          <div style={{flexGrow: 1}}>
+            <RangeSlider model={model}/>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
 
 storiesOf('range slider', module)
-  .add('with some emoji', () => (
-    <div>
-      <FitToParent><RangeSlider model={model}/></FitToParent>
-    </div>
+  .add('slider', () => (
+    <Test/>
   ));

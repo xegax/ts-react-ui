@@ -2,6 +2,7 @@
   background-color: silver;
   position: relative;
   height: 20px;
+  user-select: none;
 
   &-slider {
     position: absolute;
@@ -10,5 +11,19 @@
     height: 20px;
     border: 1px solid black;
     box-sizing: border-box;
+
+    &.slider-active {
+      background-color: rgb(87, 87, 87);
+    }
+  }
+
+  &-thumb {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    background-color: gray;
+    &.slider-active {
+      background-color: rgb(87, 87, 87);
+    }
   }
 }

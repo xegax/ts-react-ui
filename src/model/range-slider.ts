@@ -1,15 +1,30 @@
 import { Publisher } from 'objio/common/publisher';
 
-interface Range {
+export interface Range {
   from: number;
   to: number;
 }
 
-export type EventType = 'changed';
+export type EventType = 'changing' | 'changed';
+export type LastDrag = 'from' | 'to' | 'thumb';
 
 export class RangeSliderModel extends Publisher<EventType> {
   private minMaxRange: Range = { from: 0, to: 1 };
   private range: Range = { from: 0, to: 1};
+  private sliderSize: number = 10;
+  private lastDrag: LastDrag;
+
+  getSliderSize() {
+    return this.sliderSize;
+  }
+
+  getLastDrag(): LastDrag {
+    return this.lastDrag;
+  }
+
+  setLastDrag(drag: LastDrag): void {
+    this.lastDrag = drag;
+  }
 
   getMinMax(): Range {
     return {...this.minMaxRange};
@@ -22,7 +37,7 @@ export class RangeSliderModel extends Publisher<EventType> {
     };
 
     this.range = {...range};
-    this.delayedNotify({type: 'changed'});
+    this.delayedNotify({type: 'changing'});
   }
 
   getRange(): Range {
@@ -33,9 +48,12 @@ export class RangeSliderModel extends Publisher<EventType> {
     if (range.from == null && range.to == null)
       return;
 
+    const from = range.from != null;
+    const to = range.to != null;
+
     range = {
-      from: range.from != null ? range.from : this.range.from,
-      to: range.to != null ? range.to : this.range.to
+      from: from ? range.from : this.range.from,
+      to: to ? range.to : this.range.to
     };
 
     range = {
@@ -43,38 +61,38 @@ export class RangeSliderModel extends Publisher<EventType> {
       to: Math.max(Math.min(range.to, this.minMaxRange.to), this.minMaxRange.from)
     };
 
-    if (range.from != null && range.to != null) {
+    if (from && to) {
       this.range = {
         from: Math.min(range.from, range.to),
         to: Math.max(range.to, range.from)
       };
     }
-    else if (range.to != null) {
+    else if (to) {
       this.range = {
         to: Math.max(range.to, this.range.from),
         from: this.range.from
       };
     }
-    else if (range.from != null ) {
+    else if (from) {
       this.range = {
         from: Math.min(range.from, this.range.to),
         to: this.range.to
       };
     }
 
-    this.delayedNotify({ type: 'changed' });
+    this.delayedNotify({ type: 'changing' });
   }
 
   getRangeForRender(width: number): Range {
     const size = this.minMaxRange.to - this.minMaxRange.from;
     return {
-      from: Math.round(this.range.from * ( width - 20 ) / size),
-      to: Math.round(this.range.to * ( width - 20 ) / size)
+      from: Math.round(this.range.from * ( width - this.sliderSize * 2 ) / size),
+      to: Math.round(this.range.to * ( width - this.sliderSize * 2 ) / size)
     };
   }
 
   getRenderForRange(pos: number, width: number): number {
     const size = this.minMaxRange.to - this.minMaxRange.from;
-    return size * pos / (width - 20);
+    return this.minMaxRange.from + size * pos / (width - this.sliderSize * 2);
   }
 }
