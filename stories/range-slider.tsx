@@ -2,10 +2,9 @@ import * as React from 'react';
 
 import { storiesOf } from '@storybook/react';
 import { RangeSlider, RangeSliderModel } from '../src/range-slider';
-import { FitToParent } from '../src/fittoparent';
 
 const model = new RangeSliderModel();
-model.setRange({from: 0.1, to: 0.5});
+model.setMinMax({from: 1890, to: 2011});
 
 class Test extends React.Component<{}, {}> {
   subscriber = () => {

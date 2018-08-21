@@ -86,8 +86,8 @@ export class RangeSliderModel extends Publisher<EventType> {
   getRangeForRender(width: number): Range {
     const size = this.minMaxRange.to - this.minMaxRange.from;
     return {
-      from: Math.round(this.range.from * ( width - this.sliderSize * 2 ) / size),
-      to: Math.round(this.range.to * ( width - this.sliderSize * 2 ) / size)
+      from: Math.round((this.range.from - this.minMaxRange.from) * ( width - this.sliderSize * 2 ) / size),
+      to: Math.round((this.range.to - this.minMaxRange.from) * ( width - this.sliderSize * 2 ) / size)
     };
   }
 
