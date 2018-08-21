@@ -26,6 +26,7 @@ interface Props {
   extraClass?: string,
   width?: number;
   height?: number;
+  round?: boolean;
 }
 
 interface State {

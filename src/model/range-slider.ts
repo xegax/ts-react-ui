@@ -13,6 +13,15 @@ export class RangeSliderModel extends Publisher<EventType> {
   private range: Range = { from: 0, to: 1};
   private sliderSize: number = 10;
   private lastDrag: LastDrag;
+  private round: boolean = false;
+
+  setRound(round: boolean): void {
+    this.round = round;
+  }
+
+  getRound(): boolean {
+    return this.round;
+  }
 
   getSliderSize() {
     return this.sliderSize;
@@ -30,13 +39,24 @@ export class RangeSliderModel extends Publisher<EventType> {
     return {...this.minMaxRange};
   }
 
+  protected value(val: number): number {
+    if (this.round)
+      return Math.round(val);
+
+    return val;
+  }
+
   setMinMax(range: Range): void {
     this.minMaxRange = {
-      from: Math.min(range.from, range.to),
-      to: Math.max(range.from, range.to)
+      from: this.value(Math.min(range.from, range.to)),
+      to: this.value(Math.max(range.from, range.to))
     };
 
-    this.range = {...range};
+    this.range = {
+      from: this.value(range.from),
+      to: this.value(range.to)
+    };
+
     this.delayedNotify({type: 'changing'});
   }
 
@@ -52,8 +72,8 @@ export class RangeSliderModel extends Publisher<EventType> {
     const to = range.to != null;
 
     range = {
-      from: from ? range.from : this.range.from,
-      to: to ? range.to : this.range.to
+      from: from ? this.value(range.from) : this.range.from,
+      to: to ? this.value(range.to) : this.range.to
     };
 
     range = {
