@@ -30,6 +30,7 @@ export interface ListColumn {
 
 export interface ListModelHandler<T = Object> {
   loadItems(from: number, count: number): Promise<Array<T>> | Array<T>;
+  renderItem?(jsx: JSX.Element): JSX.Element;
   getItemID?(item: T): string;
 }
 

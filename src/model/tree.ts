@@ -1,5 +1,5 @@
 import { Publisher } from 'objio/common/publisher';
-import { RenderListModel } from './list';
+import { RenderListModel, RenderArgs } from './list';
 
 export type EventType = 'select';
 
@@ -31,19 +31,24 @@ export class TreeModel<T extends TreeItem = TreeItem> extends Publisher<EventTyp
   private rows = Array<TreeItem>();
   private items: Array<TreeItem>;
   private handler: TreeModelHandler;
+  private select: T;
 
   setHandler(handler: TreeModelHandler): void {
     this.handler = handler;
     this.render.setHandler({
-      loadItems: (from: number, count: number): Array<JSX.Element> => {
-        const items = this.rows.slice(from, count);
-        const jsx = items.map(item => {
-          return this.handler.renderItem(item);
-        });
-
-        return jsx;
+      loadItems: (from: number, count: number): Array<TreeItem> => {
+        return this.rows.slice(from, count);
       }
     });
+    this.render.setColumns([
+      {
+        name: 'treeItem',
+        render: (args: RenderArgs<TreeItem>) => {
+          return this.handler.renderItem(args.item);
+        }
+      }
+    ]);
+    this.render.setHeader(false);
 
     this.render.subscribe(() => {
       this.notify('select');
@@ -65,11 +70,21 @@ export class TreeModel<T extends TreeItem = TreeItem> extends Publisher<EventTyp
   }
 
   getSelect(): T {
-    return this.rows[this.render.getSelRow()] as T;
+    return this.select;
   }
 
   setSelect(item: T): void {
-    this.render.setSelRow(this.rows.indexOf(item));
+    if (this.select == item)
+      return;
+
+    this.select = item;
+    this.render.setSelRow( item.ctrlData.rowIdx );
+    this.render.delayedNotify();
+    this.delayedNotify();
+  }
+
+  findItem(pred: (item: T) => boolean): T {
+    return this.items.find(pred) as T;
   }
 
   rebuildTree() {

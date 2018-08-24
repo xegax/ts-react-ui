@@ -17,7 +17,8 @@ const classes = {
   opened: 'tree-ctrl-opened',
   closed: 'tree-ctrl-closed',
   imgIcon: 'tree-ctrl-imgicon',
-  emptyIcon: 'tree-ctrl-emptyicon'
+  emptyIcon: 'tree-ctrl-emptyicon',
+  select: 'item-select'
 };
 
 export interface Props {
@@ -25,6 +26,7 @@ export interface Props {
   width?: number;
   height?: number;
   renderItem?: (item: TreeItem, jsx: JSX.Element) => JSX.Element;
+  key?: string | number;
 }
 
 function EmptyWraper<T>(data: T) {
@@ -37,7 +39,8 @@ export class Tree extends React.Component<Props, {}> {
     const levelOffs = 10;
     const className = cn(
       classes.item,
-      model.isOpenable(item) ? item.open && classes.opened || classes.closed : false
+      model.isOpenable(item) ? item.open && classes.opened || classes.closed : false,
+      model.getSelect() == item && classes.select
     );
 
     let icon: JSX.Element;
@@ -60,8 +63,10 @@ export class Tree extends React.Component<Props, {}> {
         className={className}
         style={{ marginLeft: item.ctrlData.level * levelOffs, cursor: item.children ? 'pointer' : 'default' }}
         onClick={() => {
-          if (!item.children)
+          if (!item.children) {
+            model.setSelect(item);
             return;
+          }
 
           item.open = !item.open;
           model.rebuildTree();
