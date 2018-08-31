@@ -1,11 +1,11 @@
 {
   "name": "ts-react-ui",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "dependencies": {
     "font-awesome": "^4.7.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
-    "objio": "^0.0.28"
+    "objio": "^0.0.29"
   },
   "scripts": {
     "prepare": "npm run clean && tsc -p tsconfig.json -outDir . && npm run copy",
