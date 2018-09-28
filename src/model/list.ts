@@ -1,5 +1,5 @@
 import { Publisher } from 'objio/common/publisher';
-import { Cancelable, cancelable } from '../common/promise';
+import { Cancelable, ExtPromise } from 'objio';
 import { clamp } from '../common/common';
 
 export type EventType = 'select-row';
@@ -122,7 +122,7 @@ export class ListModel<T = Object> extends Publisher<EventType> {
     });
 
     if (task instanceof Promise) {
-      this.cancelable = cancelable(task);
+      this.cancelable = ExtPromise().cancelable(task);
       this.cancelable.then(updateData);
       return null;
     }
