@@ -5,6 +5,7 @@ export interface Params {
   x: number;
   y: number;
   minDist?: number;
+  preventDefault?: boolean;
 }
 
 export interface HandlerArgs {
@@ -101,8 +102,10 @@ export function startDragging(args: Params, handler: DragHandler) {
       window.addEventListener('mouseup', onMouseUp);
     }
     
-    // event.preventDefault();
-    // event.stopPropagation();
+    if (args.preventDefault != false) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
   };
 
   return (e: MouseEvent | TouchEvent) => {
