@@ -4,7 +4,7 @@ import { storiesOf } from '@storybook/react';
 import { List, RenderListModel } from '../src/list';
 import { RenderArgs } from '../src/model/list';
 import '../styles/styles.scss';
-import { timer } from '../src/common/promise';
+import { ExtPromise } from 'objio/common/ext-promise';
 import { KeyCode } from '../src/common/keycode';
 
 let items = Array<Row>();
@@ -13,14 +13,14 @@ while(items.length < 2000)
 
 let model = new RenderListModel(items.length, 20);
 interface Row {
-  label: string;
+  label: string; 
   time: number;
   idx: number;
 }
 
 model.setHandler({
   loadItems: (from, count) => {
-    return timer(10).then(() => items.slice(from, from + count));
+    return ExtPromise().timer(10).then(() => items.slice(from, from + count));
   }
 });
 
@@ -48,7 +48,7 @@ list.setHandler({
     let arr = Array<Row>();
     while (arr.length < count)
       arr.push({label: `row: ${from + arr.length}`, time: Date.now(), idx: arr.length});
-    return timer(1000).then(() => arr.map(item => item.label));
+    return ExtPromise().timer(1000).then(() => arr.map(item => item.label));
   }
 });
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { LayoutModel, LayoutCont, LayoutItem } from './model/layout';
+import { LayoutModel, LayoutCont, LayoutItem, DropZone } from './model/layout';
 import { className as cn } from './common/common';
 import { Droppable, DropArgs } from './drag-and-drop';
 import './_layout.scss';
@@ -7,12 +7,6 @@ import { ContainerModel, ContItem } from './container';
 import { Rect } from './common/rect';
 import { Point } from './common/point';
 import { startDragging } from './common/start-dragging';
-
-interface DropZone {
-  show: Rect;
-  id: 'top' | 'bottom' | 'left' | 'right' | 'after' | 'before';
-  item: LayoutItem | LayoutCont;
-}
 
 const classes = {
   layout: 'layout-ctrl',
@@ -27,6 +21,7 @@ export interface Props {
   model: LayoutModel;
   width?: number;
   height?: number;
+  onDrop?(item: LayoutItem): LayoutItem;
 }
 
 class DroppableLayout {
@@ -48,96 +43,11 @@ class DroppableLayout {
 
   private getRootDropZone(cursor: Point): DropZone {
     const bbox = this.getRootElement().getBoundingClientRect();
-    if (cursor.x - bbox.left <= 5) {
-      return {
-        id: 'left',
-        item: null,
-        show: {x: bbox.left, y: bbox.top, width: bbox.width / 2, height: bbox.height}
-      };
-    } else if (bbox.right - cursor.x <= 5) {
-      return {
-        id: 'right',
-        item: null,
-        show: {x: bbox.left + bbox.width / 2, y: bbox.top, width: bbox.width / 2, height: bbox.height}
-      };
-    } else if (cursor.y - bbox.top <= 5) {
-      return {
-        id: 'top',
-        item: null,
-        show: {x: bbox.left, y: bbox.top, width: bbox.width, height: bbox.height / 2}
-      };
-    } else if (bbox.bottom - cursor.y <= 5) {
-      return {
-        id: 'bottom',
-        item: null,
-        show: {x: bbox.left, y: bbox.top + bbox.height / 2, width: bbox.width, height: bbox.height / 2}
-      };
-    }
-
-    return null;
+    return this.getModel().getRootDropZone(cursor, bbox);
   }
 
   private findDropZone(item: LayoutItem | LayoutCont, cursor: Point): DropZone {
-    const zone = this.getRootDropZone(cursor);
-    if (zone)
-      return zone;
-
-    const model = this.getModel();
-    let cont = model.findParent(item);
-    if (!cont)
-      return null;
-
-    const bbox = item.ref.current.getBoundingClientRect();
-    const rect = {x: bbox.left, y: bbox.top, width: bbox.width, height: bbox.height};
-    const itemIdx = cont.items.indexOf(item);
-
-    const minDist = 20;
-    if (cont.type == 'row') {
-      if (cursor.x - rect.x <= minDist) {
-        const show = {...rect, width: rect.width / 2};
-        if (itemIdx != 0)
-          show.x -= show.width / 2;
-        return { id: 'before', show, item };
-      } else if (rect.x + rect.width - cursor.x <= minDist) {
-        const show = {...rect, x: rect.x + rect.width / 2, width: rect.width / 2};
-        if (itemIdx != cont.items.length - 1)
-          show.x += show.width / 2;
-        return { id: 'after', show, item }
-      } else if (cursor.y - rect.y <= minDist || rect.y + rect.height - cursor.y <= minDist) {
-        const zone = this.findDropZone(cont, cursor);
-        if (zone && zone.id == 'before' || zone.id == 'after')
-          return zone;
-      }
-
-      const size = rect.height / 2;
-      if (cursor.y <= rect.y + size)
-        return {id: 'top', show: {...rect, height: size}, item};
-      else
-        return {id: 'bottom', show: {...rect, height: size, y: rect.y + size}, item};
-    } else if (cont.type == 'col') {
-
-      if (cursor.y - rect.y <= minDist) {
-        const show = {...rect, height: rect.height / 2};
-        if (itemIdx != 0)
-          show.y -= show.height / 2;
-        return { id: 'before', show, item };
-      } else if (rect.y + rect.height - cursor.y <= minDist) {
-        const show = {...rect, y: rect.y + rect.height / 2, height: rect.height / 2};
-        if (itemIdx != cont.items.length - 1)
-          show.y += show.height / 2;
-        return { id: 'after', show, item }
-      } else if (cursor.x - rect.x <= minDist || rect.x + rect.width - cursor.x <= minDist) {
-        const zone = this.findDropZone(cont, cursor);
-        if (zone && zone.id == 'before' || zone.id == 'after')
-          return zone;
-      }
-
-      const size = rect.width / 2;
-      if (cursor.x <= rect.x + size)
-        return {id: 'left', show: {...rect, width: size}, item};
-      else
-        return {id: 'right', show: {...rect, width: size, x: rect.x + size}, item};
-    }
+    return this.getRootDropZone(cursor) || this.getModel().findDropZone(item, cursor);
   }
 
   dragStart = (args: DropArgs<LayoutItem, LayoutItem | LayoutCont>) => {
@@ -161,7 +71,14 @@ class DroppableLayout {
     if (!args.dragData) {
       dropRect = bboxRect;
     } else {
-      this.dropZone = this.findDropZone(args.dropData, {x: args.event.pageX, y: args.event.pageY});
+      let dz = this.findDropZone(args.dropData, {x: args.event.pageX, y: args.event.pageY});
+      if (!dz && this.dropZone) {
+        console.log('empty');
+      } else if (dz && !this.dropZone || dz.putPlace != this.dropZone.putPlace) {
+        console.log(dz.putPlace, dz.item);
+      }
+
+      this.dropZone = dz;
       if (this.dropZone)
         dropRect = this.dropZone.show;
     }
@@ -187,40 +104,22 @@ class DroppableLayout {
     ContainerModel.get().remove(this.overlay);
     this.overlay = null;
 
-    const dragData = {...args.dragData};
     const model = this.getModel();
+    const handler = model.getHandler();
+    let dragData = {...args.dragData};
+
+    if (handler.onDrop && !(dragData = handler.onDrop(dragData))) {
+      return;
+    }
 
     if (!args.dropData && model.getLayout().items.length == 0) {
       model.getLayout().items.push(dragData);
       model.setLastDrop(dragData);
-      return model.delayedNotify({type: 'change'});
     } else if (this.dropZone) {
-      const parent = model.findParent(this.dropZone.item);
-      const idx = parent ? parent.items.indexOf(this.dropZone.item) : -1;
-      let cont: LayoutCont;
-      const id = this.dropZone.id;
-      if (id == 'before') {
-        parent.items.splice(idx, 0, dragData);
-      } else if (id == 'after') {
-        parent.items.splice(idx + 1, 0, dragData);
-      } else {
-        const item = this.dropZone.item || model.getLayout();
-        if (id == 'top') {
-          cont = { items: [dragData, item], type: 'col' };
-        } else if (id == 'bottom') {
-          cont = { items: [item, dragData], type: 'col' };
-        } else if (id == 'left') {
-          cont = { items: [dragData, item], type: 'row' };
-        } else if (id == 'right') {
-          cont = { items: [item, dragData], type: 'row' };
-        }
-        
-        if (this.dropZone.item)
-          parent.items.splice(parent.items.indexOf(item), 1, cont);
-        else
-          model.setLayout(cont);
-      }
-      model.setLastDrop(dragData);
+      if (model.putRelativeTo(dragData, this.dropZone.item, this.dropZone.putPlace))
+        model.setLastDrop(dragData);
+      else
+        return;
     }
 
     model.delayedNotify({type: 'change'});
@@ -229,6 +128,7 @@ class DroppableLayout {
   droppableItem(item: JSX.Element, data?: LayoutItem | LayoutCont, key?: string): JSX.Element {
     return (
       <Droppable
+        types={['layout']}
         key={key}
         dropData={data}
         onDropOver={this.dropOver}

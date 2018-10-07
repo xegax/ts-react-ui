@@ -3,32 +3,65 @@ import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { Layout } from '../src/layout';
 import { LayoutModel } from '../src/model/layout';
-import { Draggable } from '../src/drag-and-drop';
+import { Draggable, Droppable } from '../src/drag-and-drop';
 
-function item(n: number, style: React.CSSProperties): JSX.Element {
+function render(id: string, style: React.CSSProperties): JSX.Element {
   style = {flexGrow: 1, border: '1px solid black', ...style};
-  return <div style={style}>{'item ' + n}</div>;
+  return (
+    <Droppable types={['item']}>
+      <div style={style}>
+        {'item ' + id}
+        <button onClick={() => {
+          model.remove(id);
+        }}>remove</button>
+      </div>
+    </Droppable>
+  );
 }
 
 const model = new LayoutModel();
-model.getMap()['i1'] = item(1, {backgroundColor: 'purple'});
-model.getMap()['i2'] = item(2, {backgroundColor: 'lightgreen'});
-model.getMap()['i3'] = item(3, {backgroundColor: 'lightblue'});
-model.getMap()['i4'] = item(4, {backgroundColor: 'lightblue'});
-model.getMap()['i5'] = item(5, {backgroundColor: 'lightblue'});
-model.getMap()['i6'] = item(6, {backgroundColor: 'lightblue'});
+const pal = ['#cfcef5', '#aa93d6', '#865f73', '#fecc0c', '#828c59'];
+const viewList = pal.map((color, i) => ({
+  item: (
+    <Draggable
+      type='layout'
+      data={{idx: i}}
+    >
+      <div style={{color, cursor: 'default'}}>
+        item {i}
+      </div>
+    </Draggable>
+  )
+}));
+
+viewList.push({
+  item: (
+    <Draggable
+      type='item'
+      data={{}}
+    >
+      <div>not layout item</div>
+    </Draggable>
+  )
+})
+
+let idCounter = 0;
+model.setHandler({
+  onDrop: (item: {idx: number}) => {
+    idCounter++;
+    const newId = 'id-' + idCounter;
+    model.getMap()[newId] = render(newId, { backgroundColor: pal[item.idx] });
+    return { id: newId };
+  }
+});
+
 
 storiesOf('Layout', module)
   .add('layout', () => {
     return (
       <div style={{position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'row'}}>
         <div style={{width: 200, flexGrow: 0, backgroundColor: 'silver', userSelect: 'none'}}>
-          <Draggable data={{id: 'i1'}}><div>item 1</div></Draggable>
-          <Draggable data={{id: 'i2'}}><div>item 2</div></Draggable>
-          <Draggable data={{id: 'i3'}}><div>item 3</div></Draggable>
-          <Draggable data={{id: 'i4'}}><div>item 4</div></Draggable>
-          <Draggable data={{id: 'i5'}}><div>item 5</div></Draggable>
-          <Draggable data={{id: 'i6'}}><div>item 6</div></Draggable>
+          {viewList.map(item => item.item)}
         </div>
         <div style={{display: 'flex', flexGrow: 1}}>
           <Layout model={model}/>
