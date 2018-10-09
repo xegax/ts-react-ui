@@ -51,11 +51,6 @@ function removeEmpty(cont: LayoutCont) {
   if (cont.items.length != 0 || !cont.parent)
     return;
 
-  /*if (cont.items.length == 1) {
-    const [ item ] = cont.items.splice(0, 1);
-    cont.parent.items.push(item);
-  }*/
-
   const i = cont.parent.items.indexOf(cont);
   if (i == -1)
     return;
@@ -66,6 +61,12 @@ function removeEmpty(cont: LayoutCont) {
 
 export interface LayoutHandler {
   onDrop?(item: any): LayoutItem | null;
+}
+
+export interface FindPutContResult {
+  item: LayoutItem | LayoutCont;
+  cont: LayoutCont;
+  idx: number;
 }
 
 export class LayoutModel extends Publisher<EventType> {
@@ -104,14 +105,29 @@ export class LayoutModel extends Publisher<EventType> {
   }
 
   remove(id: string, cont?: LayoutCont): boolean {
-    if (!cont)
-      console.log(clone(this.layout));
-
     cont = cont || this.layout;
     const idx = cont.items.findIndex((item: LayoutItem) => item.id == id );
     if (idx != -1) {
       cont.items.splice(idx, 1);
       removeEmpty(cont);
+
+      if (cont.items.length == 0)
+        cont = cont.parent;
+
+      if (cont) {
+        let grow = 0;
+        cont.items.forEach(item => {
+          grow += (item.grow || 1);
+        });
+
+        if (grow < cont.items.length) {
+          let shareGrow = cont.items.length - grow;
+          cont.items.forEach(item => {
+            item.grow = (item.grow || 1) + shareGrow;
+          });
+        }
+      }
+
       this.delayedNotify({type: 'change'});
       return true;
     }
@@ -120,6 +136,7 @@ export class LayoutModel extends Publisher<EventType> {
       const next = cont.items[n] as LayoutCont;
       if (!next.items)
         continue;
+
       if (this.remove(id, next))
         return true;
     }
@@ -154,25 +171,33 @@ export class LayoutModel extends Publisher<EventType> {
     this.delayedNotify({type: 'change'});
   }
 
-  putRelativeTo(newItem: LayoutItem, relItem: LayoutCont | LayoutItem | null, place: PutPlace): boolean {
+  findPutContainer(newItem: LayoutItem, relItem: LayoutCont | LayoutItem | null, place: PutPlace): FindPutContResult {
     let relItemParent: LayoutCont = null;
     let relItemIdx = -1;
     if (relItem) {
       if (!(relItemParent = this.findParent(relItem)))
-        return false;
+        return null;
 
       relItemIdx = relItemParent.items.indexOf(relItem);
       if (relItemIdx == -1)
-        return false;
+        return null;
     } else {
       relItem = this.layout;
     }
 
     // 'before' or 'after' put newItem into the middle
     if (place == 'before') {
-      relItemParent.items.splice(relItemIdx, 0, newItem);
+      return {
+        cont: relItemParent,
+        idx: relItemIdx,
+        item: newItem
+      };
     } else if (place == 'after') {
-      relItemParent.items.splice(relItemIdx + 1, 0, newItem);
+      return {
+        cont: relItemParent,
+        idx: relItemIdx + 1,
+        item: newItem
+      };
     } else {
       let newCont: LayoutCont;
       if (place == 'top') {
@@ -184,24 +209,46 @@ export class LayoutModel extends Publisher<EventType> {
       } else if (place == 'right') {
         newCont = { items: [relItem, newItem], type: 'row' };
       } else {
-        return false;
+        return null;
       }
       
       if (!relItemParent) {
-        this.layout = newCont;
-      } else {
-        if (relItem.grow != null) {
-          newCont.grow = relItem.grow;
-          delete relItem.grow;
-        }
-        relItemParent.items.splice(relItemIdx, 1, newCont);
+        return {
+          cont: null,
+          idx: -1,
+          item: newCont
+        };
       }
+
+      return {
+        cont: relItemParent,
+        idx: relItemIdx,
+        item: newCont
+      };
+    }
+  }
+
+  putRelativeTo(newItem: LayoutItem, relItem: LayoutCont | LayoutItem | null, place: PutPlace): boolean {
+    const res = this.findPutContainer(newItem, relItem, place);
+    if (!res)
+      return false;
+     
+    if (!res.cont && (res.item as LayoutCont).type) {
+      this.layout = res.item as LayoutCont;
+    } else {
+      if (res.item != newItem && relItem.grow != null) {
+        res.item.grow = relItem.grow;
+        delete relItem.grow;
+      }
+
+      res.cont.items.splice(res.idx, res.item == newItem ? 0 : 1, res.item);
     }
 
     return true;
   }
 
-  getRootDropZone(cursor: Point, rootRect: ClientRect): DropZone {
+  getRootDropZone(cursor: Point): DropZone {
+    const rootRect = this.layout.ref.current.getBoundingClientRect();
     if (cursor.x - rootRect.left <= 5) {
       return {
         putPlace: 'left',
@@ -231,14 +278,14 @@ export class LayoutModel extends Publisher<EventType> {
     return null;
   }
 
-  findDropZone(item: LayoutItem | LayoutCont, cursor: Point): DropZone {
-    let cont = this.findParent(item);
+  findDropZone1(relItem: LayoutItem | LayoutCont, cursor: Point): DropZone {
+    let cont = this.findParent(relItem);
     if (!cont)
       return null;
 
-    const bbox = item.ref.current.getBoundingClientRect();
+    const bbox = relItem.ref.current.getBoundingClientRect();
     const rect = {x: bbox.left, y: bbox.top, width: bbox.width, height: bbox.height};
-    const itemIdx = cont.items.indexOf(item);
+    const itemIdx = cont.items.indexOf(relItem);
 
     const minDist = 20;
     if (cont.type == 'row') {
@@ -246,46 +293,83 @@ export class LayoutModel extends Publisher<EventType> {
         const show = {...rect, width: rect.width / 2};
         if (itemIdx != 0)
           show.x -= show.width / 2;
-        return { putPlace: 'before', show, item };
+        return { putPlace: 'before', show, item: relItem };
       } else if (rect.x + rect.width - cursor.x <= minDist) {
         const show = {...rect, x: rect.x + rect.width / 2, width: rect.width / 2};
         if (itemIdx != cont.items.length - 1)
           show.x += show.width / 2;
-        return { putPlace: 'after', show, item };
+        return { putPlace: 'after', show, item: relItem };
       } else if (cursor.y - rect.y <= minDist || rect.y + rect.height - cursor.y <= minDist) {
-        const zone = this.findDropZone(cont, cursor);
+        const zone = this.findDropZone1(cont, cursor);
         if (zone && zone.putPlace == 'before' || zone.putPlace == 'after')
           return zone;
       }
 
       const size = rect.height / 2;
       if (cursor.y <= rect.y + size)
-        return {putPlace: 'top', show: {...rect, height: size}, item};
+        return {putPlace: 'top', show: {...rect, height: size}, item: relItem};
       else
-        return {putPlace: 'bottom', show: {...rect, height: size, y: rect.y + size}, item};
+        return {putPlace: 'bottom', show: {...rect, height: size, y: rect.y + size}, item: relItem};
     } else if (cont.type == 'col') {
 
       if (cursor.y - rect.y <= minDist) {
         const show = {...rect, height: rect.height / 2};
         if (itemIdx != 0)
           show.y -= show.height / 2;
-        return { putPlace: 'before', show, item };
+        return { putPlace: 'before', show, item: relItem };
       } else if (rect.y + rect.height - cursor.y <= minDist) {
         const show = {...rect, y: rect.y + rect.height / 2, height: rect.height / 2};
         if (itemIdx != cont.items.length - 1)
           show.y += show.height / 2;
-        return { putPlace: 'after', show, item }
+        return { putPlace: 'after', show, item: relItem }
       } else if (cursor.x - rect.x <= minDist || rect.x + rect.width - cursor.x <= minDist) {
-        const zone = this.findDropZone(cont, cursor);
+        const zone = this.findDropZone1(cont, cursor);
         if (zone && zone.putPlace == 'before' || zone.putPlace == 'after')
           return zone;
       }
 
       const size = rect.width / 2;
       if (cursor.x <= rect.x + size)
-        return {putPlace: 'left', show: {...rect, width: size}, item};
+        return {putPlace: 'left', show: {...rect, width: size}, item: relItem};
       else
-        return {putPlace: 'right', show: {...rect, width: size, x: rect.x + size}, item};
+        return {putPlace: 'right', show: {...rect, width: size, x: rect.x + size}, item: relItem};
     }
+  }
+
+  findDropZone(relItem: LayoutItem | LayoutCont, cursor: Point): DropZone {
+    let zone = this.getRootDropZone(cursor);
+    if (zone) {
+      const putRowInRow = (zone.putPlace == 'left' || zone.putPlace == 'right') && this.layout.type == 'row';
+      const putColInCol = (zone.putPlace == 'top' || zone.putPlace == 'bottom') && this.layout.type == 'col';
+      if (putRowInRow || putColInCol)
+        zone = this.findDropZone1(relItem, cursor);
+    } else {
+      zone = this.findDropZone1(relItem, cursor);
+    }
+
+    const newItem = { id: '?' };
+    const res = this.findPutContainer(newItem, zone.item, zone.putPlace);
+    if (zone.putPlace == 'before' || zone.putPlace == 'after') {
+      const bbox = res.cont.ref.current.getBoundingClientRect();
+      const totalSize = res.cont.type == 'row' ? bbox.width : bbox.height;
+
+      let pos = 0;
+      res.cont.items.forEach((item, i) => {
+        let size = (item.grow || 1) * totalSize / ( res.cont.items.length + 1);
+        if (i == res.idx) {
+          size = totalSize / ( res.cont.items.length + 1);
+          if (res.cont.type == 'row') {
+            zone.show.width = size;
+            zone.show.x = pos + bbox.left;
+          } else {
+            zone.show.height = size;
+            zone.show.y = pos + bbox.top;
+          }
+          return;
+        }
+        pos += size;
+      });
+    }
+    return zone;
   }
 }

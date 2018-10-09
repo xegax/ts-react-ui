@@ -41,13 +41,8 @@ class DroppableLayout {
     return this.layout.props.model;
   }
 
-  private getRootDropZone(cursor: Point): DropZone {
-    const bbox = this.getRootElement().getBoundingClientRect();
-    return this.getModel().getRootDropZone(cursor, bbox);
-  }
-
   private findDropZone(item: LayoutItem | LayoutCont, cursor: Point): DropZone {
-    return this.getRootDropZone(cursor) || this.getModel().findDropZone(item, cursor);
+    return this.getModel().findDropZone(item, cursor);
   }
 
   dragStart = (args: DropArgs<LayoutItem, LayoutItem | LayoutCont>) => {
@@ -70,17 +65,8 @@ class DroppableLayout {
     let dropRect: Rect;
     if (!args.dragData) {
       dropRect = bboxRect;
-    } else {
-      let dz = this.findDropZone(args.dropData, {x: args.event.pageX, y: args.event.pageY});
-      if (!dz && this.dropZone) {
-        console.log('empty');
-      } else if (dz && !this.dropZone || dz.putPlace != this.dropZone.putPlace) {
-        console.log(dz.putPlace, dz.item);
-      }
-
-      this.dropZone = dz;
-      if (this.dropZone)
-        dropRect = this.dropZone.show;
+    } else if (this.dropZone = this.findDropZone(args.dropData, {x: args.event.pageX, y: args.event.pageY})) {
+      dropRect = this.dropZone.show;
     }
 
     const style = this.overlay.getElement().style;
