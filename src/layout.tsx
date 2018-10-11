@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { LayoutModel, LayoutCont, LayoutItem, DropZone } from './model/layout';
 import { className as cn } from './common/common';
-import { Droppable, DropArgs } from './drag-and-drop';
+import { Droppable, DropArgs, Draggable, DragProps } from './drag-and-drop';
 import './_layout.scss';
 import { ContainerModel, ContItem } from './container';
 import { Rect } from './common/rect';
@@ -126,6 +126,23 @@ class DroppableLayout {
       </Droppable>
     );
   }
+}
+
+interface HeaderProps extends DragProps {
+  layout: LayoutModel;
+  data: { id: string };
+}
+
+export const Header = (props: HeaderProps) => {
+  return (
+    <Draggable
+      {...props}
+      type='layout'
+      onDragStart={() => props.layout.setDragStart(props.data.id)}
+    >
+      {props.children}
+    </Draggable>
+  );
 }
 
 export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {

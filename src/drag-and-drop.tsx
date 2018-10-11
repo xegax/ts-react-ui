@@ -12,6 +12,8 @@ import './_drag-and-drop.scss';
 export interface DragProps extends React.HTMLProps<any> {
   data?: any;
   type?: string;
+  onDragStart?: () => void;
+  enabled?: boolean;
 }
 
 export class Draggable extends React.Component<DragProps, {}> {
@@ -19,26 +21,39 @@ export class Draggable extends React.Component<DragProps, {}> {
     const parent = ReactDOM.findDOMNode(this) as HTMLElement;
 
     parent.addEventListener('mousedown', event => {
+      if (this.props.enabled == false)
+        return;
+
       let drag: ContItem;
+      let children = this.props.children;
+      let type = this.props.type;
+      let dragData = { ...this.props.data };
+      const { onDragStart } = this.props;
 
       startDragging({ x: 0, y: 0, minDist: 5 }, {
         onDragStart: () => {
-          dropModel.showDropForType(this.props.type);
-          drag = ContainerModel.get().append(
-            <div
-              style={{
-                position: 'absolute',
-                left: event.pageX,
-                top: event.pageY,
-                opacity: 0.5,
-                pointerEvents: 'none'
-              }}
-            >
-              {this.props.children}
-            </div>
-          );
+          onDragStart && onDragStart();
+          setTimeout(() => {
+            dropModel.collectDropsForType(type);
+            drag = ContainerModel.get().append(
+              <div
+                style={{
+                  position: 'absolute',
+                  left: event.pageX,
+                  top: event.pageY,
+                  opacity: 0.5,
+                  pointerEvents: 'none'
+                }}
+              >
+                {children}
+              </div>
+            );
+          }, 10);
         },
         onDragging: evt => {
+          if (!drag)
+            return;
+
           const mouse = evt.event as MouseEvent;
           const el = drag.getElement();
           if (!el)
@@ -46,9 +61,12 @@ export class Draggable extends React.Component<DragProps, {}> {
 
           el.style.left = mouse.pageX + 'px';
           el.style.top = mouse.pageY + 'px';
-          dropModel.checkDragEvent(mouse, this.props.data);
+          dropModel.checkDragEvent(mouse, { ...dragData });
         },
         onDragEnd: evt => {
+          if (!drag)
+            return;
+
           dropModel.drop(this, evt.event as MouseEvent);
           drag.remove();
         }
@@ -83,6 +101,7 @@ class DropModel extends Publisher {
   remove(drop: Droppable, subscriber: () => void) {
     this.unsubscribe(subscriber);
     this.allDrops.splice(this.allDrops.indexOf(drop), 1);
+    this.dropList.splice(this.dropList.indexOf(drop), 1);
   }
 
   getShowDrop(types: Array<string>): boolean {
@@ -92,12 +111,13 @@ class DropModel extends Publisher {
     return !types || types.indexOf(this.dragType) != -1;
   }
 
-  showDropForType(dragType?: string): void {
+  collectDropsForType(dragType?: string): void {
     this.showDrop = true;
     this.dragType = dragType;
     this.dropList = this.allDrops.filter(drop => {
       return !drop.props.types || drop.props.types.indexOf(this.dragType) != -1;
     });
+    console.log('drops', this.dropList);
     this.delayedNotify();
   }
 
@@ -117,6 +137,7 @@ class DropModel extends Publisher {
     });
 
     if (this.currDrop != drop) {
+      console.log(this.currDrop, this.dropList.length);
       this.currDrop && this.onDragLeave(this.currDrop);
       this.currDrop = drop;
       this.currDrop && this.onDragEnter(this.currDrop, event, data);
@@ -202,23 +223,29 @@ export interface DropProps {
 }
 
 export class Droppable extends React.Component<DropProps, {}> {
-  private el: HTMLElement;
+  private mount: boolean = false;
 
   private subscriber = () => {
-    this.setState({});
+    if (this.mount)
+      this.setState({});
   }
 
   componentDidMount() {
-    this.el = ReactDOM.findDOMNode(this) as HTMLElement;  
+    this.mount = true;
     dropModel.append(this, this.subscriber);
   }
 
   componentWillUnmount() {
+    this.mount = false;
     dropModel.remove(this, this.subscriber);
   }
 
   getElement(): HTMLElement {
-    return this.el;
+    try {
+      return ReactDOM.findDOMNode(this) as HTMLElement;
+    } catch (e) {
+      return null;
+    }
   }
 
   render() {

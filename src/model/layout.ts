@@ -74,6 +74,7 @@ export class LayoutModel extends Publisher<EventType> {
   private layout: LayoutCont = { items: [], type: 'row' };
   private lastDrop: LayoutItem;
   private handler: LayoutHandler = {};
+  private lastDrag: LayoutItem;
 
   setHandler(handler: LayoutHandler) {
     this.handler = handler;
@@ -94,10 +95,23 @@ export class LayoutModel extends Publisher<EventType> {
     this.delayedNotify({type: 'change'});
   }
 
+  setDragStart(id: string): void {
+    this.lastDrag = this.findItem(id);
+    this.remove(id);
+  }
+
+  getLastDrag(): LayoutItem {
+    return this.lastDrag;
+  }
+
   setLastDrop(drop: LayoutItem): void {
     this.lastDrop = drop;
     updateParents(this.layout);
-    this.delayedNotify({type: 'drop'});
+
+    if (this.lastDrag && drop.id == this.lastDrag.id)
+      this.delayedNotify({ type: 'change' });
+    else
+      this.delayedNotify({type: 'drop'});
   }
 
   getLastDrop(): LayoutItem {
@@ -109,6 +123,11 @@ export class LayoutModel extends Publisher<EventType> {
     const idx = cont.items.findIndex((item: LayoutItem) => item.id == id );
     if (idx != -1) {
       cont.items.splice(idx, 1);
+      if (cont.items.length == 1 && cont.parent) {
+        cont.parent.items.splice( cont.parent.items.indexOf(cont), 1, cont.items[0]);
+        cont = cont.parent;
+      }
+
       removeEmpty(cont);
 
       if (cont.items.length == 0)
@@ -120,12 +139,10 @@ export class LayoutModel extends Publisher<EventType> {
           grow += (item.grow || 1);
         });
 
-        if (grow < cont.items.length) {
-          let shareGrow = cont.items.length - grow;
-          cont.items.forEach(item => {
-            item.grow = (item.grow || 1) + shareGrow;
-          });
-        }
+        let shareGrow = ( cont.items.length - grow ) / cont.items.length;
+        cont.items.forEach(item => {
+          item.grow = (item.grow || 1) + shareGrow;
+        });
       }
 
       this.delayedNotify({type: 'change'});
@@ -157,6 +174,26 @@ export class LayoutModel extends Publisher<EventType> {
       cont = this.findParent(tgt, cont);
       if (cont)
         return cont;
+    }
+
+    return null;
+  }
+
+  findItem(id: string, parent?: LayoutCont): LayoutItem {
+    parent = parent || this.layout;
+
+    const item = parent.items.find(item => (item as LayoutItem).id == id );
+    if (item)
+      return item as LayoutItem;
+
+    for (let n = 0; n < parent.items.length; n++) {
+      let cont = parent.items[n] as LayoutCont;
+      if (!cont.items)
+        continue;
+      
+      let res = this.findItem(id, cont);
+      if (res)
+        return res;
     }
 
     return null;

@@ -6,15 +6,20 @@ export interface Props<M extends Publisher = Publisher> {
 }
 
 export abstract class Subscriber<P extends Props, S = {}> extends React.Component<P, S> {
+  private mount: boolean = false;
+
   protected subscriber = () => {
-    this.setState({});
+    if (this.mount)
+      this.setState({});
   }
 
   componentDidMount() {
+    this.mount = true;
     this.props.model.subscribe(this.subscriber);
   }
 
   componentWillUnmount() {
+    this.mount = false;
     this.props.model.unsubscribe(this.subscriber);
   }
 }
