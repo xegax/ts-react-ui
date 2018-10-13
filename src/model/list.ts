@@ -238,15 +238,15 @@ export class RenderListModel extends ListModel {
   }
 
   setSelRow(row: number, ctrl?: boolean, shift?: boolean): void {
-    let newRow = clamp(row, [0, this.itemsCount - 1]);
+    row = clamp(row, [0, this.itemsCount - 1]);
     const alreadySelect = this.isSelect(row);
-    if (alreadySelect && !ctrl && this.selRow == newRow)
+    if (alreadySelect && !ctrl && this.selRow == row)
       return;
 
-    if (newRow < this.firstSelItem)
-      this.firstSelItem = newRow;
-    else if (newRow >= this.firstSelItem + this.fullVisItems - 1)
-      this.firstSelItem = Math.max(0, newRow - this.fullVisItems + 1);
+    if (row < this.firstSelItem)
+      this.firstSelItem = row;
+    else if (row >= this.firstSelItem + this.fullVisItems - 1)
+      this.firstSelItem = Math.max(0, row - this.fullVisItems + 1);
 
     if (!ctrl || this.selType == 'single')
       this.sel.clear();
@@ -257,7 +257,7 @@ export class RenderListModel extends ListModel {
         this.sel.delete(id);
       else {
         if (shift && this.selType == 'multi') {
-          for (let n = Math.min(this.selRow, newRow); n < Math.max(this.selRow, newRow); n++)
+          for (let n = Math.min(this.selRow, row); n < Math.max(this.selRow, row); n++)
             this.sel.add(this.getItemID(n));
         } else {
           this.sel.add(id);
@@ -265,7 +265,7 @@ export class RenderListModel extends ListModel {
       }
     }
 
-    this.selRow = newRow;
+    this.selRow = row;
     this.delayedNotify({type: 'select-row'});
   }
 
