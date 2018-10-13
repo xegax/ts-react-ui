@@ -240,7 +240,7 @@ export class RenderListModel extends ListModel {
   setSelRow(row: number, ctrl?: boolean, shift?: boolean): void {
     let newRow = clamp(row, [0, this.itemsCount - 1]);
     const alreadySelect = this.isSelect(row);
-    if (!(alreadySelect && ctrl) && this.selRow == newRow)
+    if (alreadySelect && !ctrl && this.selRow == newRow)
       return;
 
     if (newRow < this.firstSelItem)
