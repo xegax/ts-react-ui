@@ -60,7 +60,7 @@ function removeEmpty(cont: LayoutCont) {
 }
 
 export interface LayoutHandler {
-  onDrop?(item: any): LayoutItem | null;
+  onDrop?(item: any, layout: LayoutModel): LayoutItem | Promise<LayoutItem> | null;
 }
 
 export interface FindPutContResult {
@@ -108,14 +108,10 @@ export class LayoutModel extends Publisher<EventType> {
     this.lastDrop = drop;
     updateParents(this.layout);
 
-    if (this.lastDrag && drop.id == this.lastDrag.id)
+    if (this.lastDrag && drop.id == this.lastDrag.id) {
+      this.lastDrag = null;
       this.delayedNotify({ type: 'change' });
-    else
-      this.delayedNotify({type: 'drop'});
-  }
-
-  getLastDrop(): LayoutItem {
-    return this.lastDrop;
+    }
   }
 
   remove(id: string, cont?: LayoutCont): boolean {

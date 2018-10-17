@@ -117,7 +117,6 @@ class DropModel extends Publisher {
     this.dropList = this.allDrops.filter(drop => {
       return !drop.props.types || drop.props.types.indexOf(this.dragType) != -1;
     });
-    console.log('drops', this.dropList);
     this.delayedNotify();
   }
 
@@ -137,7 +136,6 @@ class DropModel extends Publisher {
     });
 
     if (this.currDrop != drop) {
-      console.log(this.currDrop, this.dropList.length);
       this.currDrop && this.onDragLeave(this.currDrop);
       this.currDrop = drop;
       this.currDrop && this.onDragEnter(this.currDrop, event, data);
@@ -182,8 +180,8 @@ class DropModel extends Publisher {
   }
 
   drop(drag: Draggable, event: MouseEvent): void {
-    if (this.currDrop && this.currDrop.props.onDropOver)
-      this.currDrop.props.onDropOver({
+    if (this.currDrop && this.currDrop.props.onDrop)
+      this.currDrop.props.onDrop({
         event,
         dragData: drag.props.data,
         dropData: this.currDrop.props.dropData,
@@ -197,11 +195,11 @@ class DropModel extends Publisher {
   }
 }
 
-let dropModel = new DropModel();
+const dropModel = new DropModel();
 
 const dropClasses = {
-  dropHighlight: 'drop-highlight',
-  dropOver: 'drop-over'
+  dndHighlight: 'dnd-highlight',
+  dndOver: 'dnd-over'
 };
 
 export interface DropArgs<TDrag = Object, TDrop = Object> {
@@ -218,7 +216,7 @@ export interface DropProps {
   onDragEnter?(args: DropArgs): void;
   onDragLeave?(): void;
   onDragOver?(args: DropArgs): void;
-  onDropOver?(args: DropArgs): void;
+  onDrop?(args: DropArgs): void;
   children: React.ReactChild;
 }
 
@@ -250,13 +248,13 @@ export class Droppable extends React.Component<DropProps, {}> {
 
   render() {
     const child = React.Children.only(this.props.children);
-    const showDrop = dropModel.getShowDrop(this.props.types) && dropClasses.dropHighlight;
+    const showDrop = dropModel.getShowDrop(this.props.types) && dropClasses.dndHighlight;
     return (
       React.cloneElement(child, {
         className: cn(
           child.props.className,
           showDrop,
-          dropModel.getCurrDrop() == this && dropClasses.dropOver
+          dropModel.getCurrDrop() == this && dropClasses.dndOver
         )
       })
     );

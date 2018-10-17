@@ -67,7 +67,7 @@ class Canvas extends React.Component<Props, {}> {
 
   render() {
     return (
-      <Droppable onDropOver={this.onDrop} types={this.props.types}>
+      <Droppable onDrop={this.onDrop} types={this.props.types}>
         <div style={{flexGrow: 1, position: 'relative'}}>
           {this.props.model.items.map((item, i) => {
             return (

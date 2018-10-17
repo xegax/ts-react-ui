@@ -17,13 +17,6 @@ const classes = {
   colsSplit: 'layout-ctrl-cols-spliter'
 };
 
-export interface Props {
-  model: LayoutModel;
-  width?: number;
-  height?: number;
-  onDrop?(item: LayoutItem): LayoutItem;
-}
-
 class DroppableLayout {
   private dropZone: DropZone;
   private overlay: ContItem;
@@ -33,12 +26,8 @@ class DroppableLayout {
     this.layout = layout;
   }
 
-  getRootElement(): HTMLDivElement {
-    return this.layout.props.model.getLayout().ref.current;
-  }
-
   getModel(): LayoutModel {
-    return this.layout.props.model;
+    return this.layout.state.model;
   }
 
   private findDropZone(item: LayoutItem | LayoutCont, cursor: Point): DropZone {
@@ -94,21 +83,37 @@ class DroppableLayout {
     const handler = model.getHandler();
     let dragData = {...args.dragData};
 
-    if (handler.onDrop && !(dragData = handler.onDrop(dragData))) {
-      return;
-    }
-
-    if (!args.dropData && model.getLayout().items.length == 0) {
-      model.getLayout().items.push(dragData);
-      model.setLastDrop(dragData);
-    } else if (this.dropZone) {
-      if (model.putRelativeTo(dragData, this.dropZone.item, this.dropZone.putPlace))
+    const dropImpl = (dragData: LayoutItem) => {
+      if (!args.dropData && model.getLayout().items.length == 0) {
+        model.getLayout().items.push(dragData);
         model.setLastDrop(dragData);
-      else
-        return;
+      } else if (this.dropZone) {
+        if (model.putRelativeTo(dragData, this.dropZone.item, this.dropZone.putPlace))
+          model.setLastDrop(dragData);
+        else
+          return;
+      }
+
+      model.delayedNotify({type: 'change'});
     }
 
-    model.delayedNotify({type: 'change'});
+    if (model.getLastDrag())
+      return dropImpl(dragData);
+
+    if (!handler.onDrop)
+      return console.error('handler.onDrop must be defined');
+      
+    const res = handler.onDrop(dragData, model);
+    if (!res)
+      return console.error('onDrop must return item with unique id');
+
+    (res instanceof Promise ? res : Promise.resolve(res))
+    .then(item => {
+      if (!item.id || model.findItem(item.id))
+        return console.error('onDrop must return item with unique id');
+
+      dropImpl(item);
+    });
   };
 
   droppableItem(item: JSX.Element, data?: LayoutItem | LayoutCont, key?: string): JSX.Element {
@@ -117,7 +122,7 @@ class DroppableLayout {
         types={['layout']}
         key={key}
         dropData={data}
-        onDropOver={this.dropOver}
+        onDrop={this.dropOver}
         onDragEnter={this.dragStart}
         onDragLeave={this.dragLeave}
         onDragOver={this.dragMove}
@@ -145,12 +150,30 @@ export const Header = (props: HeaderProps) => {
   );
 }
 
-export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {
+export interface Props {
+  model?: LayoutModel;
+  width?: number;
+  height?: number;
+  onDrop?(item: LayoutItem, layout: LayoutModel): LayoutItem;
+}
+
+interface State {
+  phase?: 'move-splitter',
+  model: LayoutModel;
+}
+
+// Layout can't change model on the fly
+export class Layout extends React.Component<Props, State> {
   private droppable = new DroppableLayout(this);
 
   constructor(props: Props) {
     super(props);
-    this.state = {};
+    const model = props.model || new LayoutModel();
+    this.state = { model };
+
+    const handler = { ...model.getHandler() };
+    handler.onDrop = props.onDrop || handler.onDrop;
+    model.setHandler(handler);
   }
 
   private subscriber = () => {
@@ -158,14 +181,14 @@ export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {
   };
 
   componentDidMount() {
-    this.props.model.subscribe(this.subscriber);
+    this.state.model.subscribe(this.subscriber);
   }
 
   componentWillUnmount() {
-    this.props.model.unsubscribe(this.subscriber);
+    this.state.model.unsubscribe(this.subscriber);
   }
 
-  dragSplitter(event: React.MouseEvent, cont: LayoutCont, idx: number) {
+  private dragSplitter(event: React.MouseEvent, cont: LayoutCont, idx: number) {
     const bbox = event.currentTarget.getBoundingClientRect();
     const style: React.CSSProperties = {
       left: bbox.left,
@@ -205,17 +228,17 @@ export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {
           el.style.left = (bbox.left + event.x) + 'px';
         else
           el.style.top = (bbox.top + event.y) + 'px';
-        this.props.model.notify();
+        this.state.model.notify();
       },
       onDragEnd: () => {
         spliter.remove();
         this.setState({phase: null});
-        this.props.model.delayedNotify({type: 'change'});
+        this.state.model.delayedNotify({type: 'change'});
       }
     })(event.nativeEvent);
   }
 
-  renderSpliter(cont: LayoutCont, idx: number): JSX.Element {
+  private renderSpliter(cont: LayoutCont, idx: number): JSX.Element {
     if (cont.items.length - 1 == idx || this.state.phase == 'move-splitter')
       return null;
 
@@ -227,7 +250,7 @@ export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {
     );
   }
 
-  renderCont(cont: LayoutCont, idx?: number, parent?: LayoutCont, key?: string): JSX.Element {
+  private renderCont(cont: LayoutCont, idx?: number, parent?: LayoutCont, key?: string): JSX.Element {
     const flexGrow = cont.grow;
     const arr = cont.items.map((itemOrCont, i) => {
       const item = itemOrCont as LayoutItem
@@ -255,13 +278,14 @@ export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {
     );
   }
 
-  renderItem(item: LayoutItem, idx: number, cont: LayoutCont, key: string): JSX.Element {
+  private renderItem(item: LayoutItem, idx: number, cont: LayoutCont, key: string): JSX.Element {
     item.ref = item.ref || React.createRef();
     const flexGrow = item.grow;
+    const element = this.state.model.getMap()[item.id];
     return this.droppable.droppableItem(
       <div className={classes.item} ref={item.ref} style={{flexGrow}} key={key}>
         <div style={{position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, display: 'flex'}}>
-          {this.props.model.getMap()[item.id]}
+          {element ? React.cloneElement(element, { layout: this.state.model }) : null}
         </div>
         {this.renderSpliter(cont, idx)}
       </div>,
@@ -272,7 +296,7 @@ export class Layout extends React.Component<Props, {phase?: 'move-splitter'}> {
 
   render() {
     const { width, height } = this.props;
-    const model = this.props.model;
+    const model = this.state.model;
     const layout = model.getLayout();
     const el = (
       <div className={classes.layout} style={{width, height}}>
