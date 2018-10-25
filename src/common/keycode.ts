@@ -7,5 +7,6 @@ export enum KeyCode {
   PAGE_DOWN = 34,
   ENTER = 13,
   ESCAPE = 27,
-  DELETE = 46
+  DELETE = 46,
+  TAB = 9
 };

@@ -3,30 +3,31 @@ import { FitToParent } from '../src/fittoparent';
 import { storiesOf } from '@storybook/react';
 import { List2, List2Model, List2Item } from '../src/list2';
 
-function render(item: Object, idx: number): JSX.Element {
+type Item = List2Item<{ label: string }>;
+function render(item: Item, idx: number): JSX.Element {
   return (
-    <div key={idx} style={{padding: 10}}>
-      {item['label']}
+    <div key={idx}>
+      {item.data.label}
     </div>
   );
 }
 
 let revers = false;
 let total = 1400;
-function loadNext(from: number, count: number): Promise<Array<List2Item>> {
-  let arr = [];
+function loadNext(from: number, count: number): Promise<Array<Item>> {
+  let arr: Array<Item> = [];
   count = Math.min(from + count, total) - from;
   while(arr.length < count) {
     let idx = from + arr.length;
     if (revers)
       idx = total - idx - 1;
-    arr.push({ label: 'item-' + idx, id: idx });
+    arr.push({ data: { label: 'item-' + idx }, id: '' + idx });
   }
 
   return Promise.resolve(arr);
 }
 
-let model = new List2Model();
+let model = new List2Model<{ label: string }>();
 model.setSelectable('multi-select');
 storiesOf('list2', module)
   .add('list2', () => {

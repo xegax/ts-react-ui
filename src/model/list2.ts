@@ -2,29 +2,31 @@ import { Publisher } from 'objio/common/publisher';
 import { ExtPromise, Cancelable } from 'objio/common/ext-promise';
 import { clamp } from '../common/common';
 
-export interface List2Item {
+export interface List2Item<T = any> {
   id: string;
+  label?: string;
+  data: T;
 }
 
-export interface Handler<T extends List2Item = List2Item> {
-  loadNext(from: number, count: number): Promise<Array<T>>;
-  render(item: T, idx: number): JSX.Element | string;
+export interface Handler<T> {
+  loadNext(from: number, count: number): Promise< Array<List2Item<T>> >;
+  render(item: List2Item<T>, idx: number): JSX.Element | string;
 }
 
 export type EventType = 'select';
 export type SelectType = 'single-select' | 'multi-select' | 'none';
 
-export class List2Model<T extends List2Item = List2Item> extends Publisher<EventType> {
-  private items = Array<T>();
-  private handler: Handler<T>;
-  private itemsPerLoad = 100;
-  private dataId: number = 0;
-  private loading: Cancelable<Array<T>>;
-  private selection = new Set<string>();
-  private selectable: SelectType = 'single-select';
-  private focusItem: number = -1;
-  private focusable: boolean = true;
-  private selectOnFocus: boolean = true;
+export class List2Model<T = Object, TEventType = string> extends Publisher<EventType | TEventType> {
+  protected items = Array<List2Item<T>>();
+  protected handler: Handler<T>;
+  protected itemsPerLoad = 100;
+  protected dataId: number = 0;
+  protected loading: Cancelable<Array< List2Item<T> >>;
+  protected selection = new Set<string>();
+  protected selectable: SelectType = 'single-select';
+  protected focusItem: number = -1;
+  protected focusable: boolean = true;
+  protected selectOnFocus: boolean = true;
 
   setFocusable(able: boolean): boolean {
     if (this.focusable == able)
@@ -54,6 +56,10 @@ export class List2Model<T extends List2Item = List2Item> extends Publisher<Event
 
   getFocus(): number {
     return this.focusItem;
+  }
+
+  getFocusItem(): List2Item {
+    return this.items[this.focusItem];
   }
 
   setSelectable(type: SelectType): boolean {
@@ -105,6 +111,12 @@ export class List2Model<T extends List2Item = List2Item> extends Publisher<Event
     return arr;
   }
 
+  getSelectedItems(): Array<List2Item<T>> {
+    return this.items.filter(item => {
+      return this.selection.has(item.id);
+    });
+  }
+
   getItemsPerLoad(): number {
     return this.itemsPerLoad;
   }
@@ -117,7 +129,7 @@ export class List2Model<T extends List2Item = List2Item> extends Publisher<Event
     return this.items.length;
   }
 
-  getItems(): Array<T> {
+  getItems(): Array< List2Item<T> > {
     return this.items;
   }
 
@@ -142,7 +154,7 @@ export class List2Model<T extends List2Item = List2Item> extends Publisher<Event
     return Promise.resolve();
   }
 
-  append(items: Array<T>): Array<T> {
+  append(items: Array< List2Item<T> >): Array< List2Item<T> > {
     this.items.push(...items);
     this.delayedNotify();
 
@@ -157,7 +169,7 @@ export class List2Model<T extends List2Item = List2Item> extends Publisher<Event
     return this.handler;
   }
 
-  loadNext(): Promise<Array<T>> {
+  loadNext(): Promise<Array< List2Item<T> >> {
     if (!this.handler)
       return Promise.reject('not defined');
 
@@ -165,7 +177,7 @@ export class List2Model<T extends List2Item = List2Item> extends Publisher<Event
       return this.loading;
 
     this.loading = (
-      ExtPromise<Array<T>>()
+      ExtPromise<Array< List2Item<T> >>()
       .cancelable(this.handler.loadNext(this.items.length, this.itemsPerLoad) )
     );
 
@@ -178,7 +190,7 @@ export class List2Model<T extends List2Item = List2Item> extends Publisher<Event
     );
   }
 
-  render(item: T, idx: number): JSX.Element | string {
+  render(item: List2Item<T>, idx: number): JSX.Element | string {
     if (!this.handler)
       return typeof item == 'string' ? item : JSON.stringify(item);
 

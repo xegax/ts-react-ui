@@ -2,13 +2,18 @@
   overflow-y: auto;
 
   .list2-item {
-    height: 40px;
     border: 1px solid transparent;
     box-sizing: border-box;
+    &:hover {
+      background-color: rgb(218, 225, 245);
+    }
   }
 
   .list2-item:nth-child(odd) {
     background-color: rgb(226, 239, 255);
+    &:hover {
+      background-color: rgb(218, 225, 245);
+    }
   }
 
   .list2-item.list2-select {

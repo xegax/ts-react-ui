@@ -1,0 +1,46 @@
+.drop-down-list-ctrl {
+  &-wrapper {
+    overflow: hidden;
+
+    .input-wrap {
+      cursor: default;
+      position: relative;
+      border: 1px solid silver;
+      box-sizing: border-box;
+      i {
+        padding-top: 4px;
+        padding-right: 5px;
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        bottom: 0px;
+        background-color: white;
+        padding-left: 5px;
+        border-left: 1px solid lightgray;
+      }
+    }
+
+    .input-box {
+      padding: 4px;
+      height: 24px;
+      box-sizing: border-box;
+      min-width: 0px;
+      white-space: nowrap;
+      width: calc(100% - 20px);
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+  }
+
+  .list2-ctrl {
+    background-color: white;
+
+    .list2-item {
+      cursor: default;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+  }
+}

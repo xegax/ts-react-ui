@@ -9,6 +9,8 @@ export interface State {
 
 export interface Props extends React.HTMLProps<any> {
   wrapToFlex?: boolean;
+  calcW?: boolean;
+  calcH?: boolean;
 }
 
 export class FitToParent extends React.Component<Props, State> {
@@ -48,10 +50,12 @@ export class FitToParent extends React.Component<Props, State> {
     if (!child)
       return null;
 
-    const newProps: React.HTMLProps<any> = {
-      width: this.state.width,
-      height: this.state.height
-    };
+    const newProps: React.HTMLProps<any> = {};
+    if (this.props.calcW != false)
+      newProps.width = this.state.width;
+    
+    if (this.props.calcH != false)
+      newProps.height = this.state.height;
 
     return React.cloneElement(child, newProps);
   }
