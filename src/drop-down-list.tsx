@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { DropDownListModel } from './model/drop-down-list';
 import { List2 } from './list2';
-import { Handler, List2Item } from './model/list2';
+import { Handler, List2Item, List2ItemData } from './model/list2';
 import './_drop-down-list.scss';
 import { FitToParent } from './fittoparent';
 import { findParent } from './common/dom';
@@ -16,34 +16,48 @@ const classes = {
   inputWrap: 'input-wrap'
 };
 
-interface Props<T> {
+interface Props<T = List2ItemData> {
   width?: number;
   model?: DropDownListModel<T>;
   render?(item: List2Item<T>, idx: number): JSX.Element | string;
-  items?: Array<T> | ( (from: number, count: number) => Promise<Array< List2Item<T> >> );
+  items?: Array<T> | Array<string> | ( (from: number, count: number) => Promise<Array< List2Item<T> >> );
   onSelect?(item: Array<List2Item<T>>);
   onFilterChanged?(filter: string);
   onFilter?(item: T, filter: string): boolean;  // to filter local data
+  style?: React.CSSProperties;
 }
 
 interface State<T> {
   model?: DropDownListModel<T>;
   showList?: boolean;
-  selection?: Array<List2Item<T>>;
 }
 
-export class DropDownList<T> extends React.Component<Props<T>, State<T>> {
+function fromLocal<T>(item: T, idx: number): List2Item<T> {
+  const listItem: List2Item<T> = {
+    id: idx + '',
+    data: item
+  };
+
+  if (typeof item != 'string' && item['label'])
+    listItem.label = item['label'];
+  else if (typeof item == 'string')
+    listItem.label = item;
+
+  return listItem;
+}
+
+export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, State<T>> {
   private ref = React.createRef<HTMLDivElement>();
   private list = React.createRef<List2<T>>();
   private input = React.createRef<HTMLInputElement>();
   private focus = false;
-  private filtered: Array<List2Item<T>>;
+  private filtered: Array< List2Item<T> >;
 
   constructor(props: Props<T>) {
     super(props);
 
     const model = props.model || new DropDownListModel<T>();
-    this.state = { model, selection: model.getSelectedItems() || [] };
+    this.state = { model };
 
     const handler = { ...model.getHandler() } as Handler<T>;
 
@@ -61,7 +75,9 @@ export class DropDownList<T> extends React.Component<Props<T>, State<T>> {
     if (props.render)
       handler.render = props.render;
 
-    model.setFilterable(!!props.onFilter || !!props.onFilterChanged);
+    if (props.onFilter || props.onFilterChanged)
+      model.setFilterable(!!props.onFilter || !!props.onFilterChanged);
+
     model.subscribe(() => {
       const filter = model.getFilter();
       if (props.onFilterChanged)
@@ -73,11 +89,8 @@ export class DropDownList<T> extends React.Component<Props<T>, State<T>> {
       if (!filter || !filter.trim()) {
         this.filtered = null;
       } else {
-        this.filtered = props.items.map((item, i) => ({
-          id: i + '',
-          label: item['label'],
-          data: item
-        })).filter(item => props.onFilter(item.data, filter));
+        const items = props.items as Array<T>;
+        this.filtered = items.map(fromLocal).filter(item => props.onFilter(item.data, filter));
       }
 
       this.state.model.clear({ reload: true });
@@ -93,18 +106,14 @@ export class DropDownList<T> extends React.Component<Props<T>, State<T>> {
     if (this.filtered)
       return Promise.resolve(this.filtered.slice(from, from + count));
 
-    const slice = this.props.items.slice(from, from + count);
+    const items = this.props.items as Array<T>;
     return (
-      Promise.resolve(slice.map((data, i) => ({
-        id: i + '',
-        label: data['label'],
-        data
-      })))
+      Promise.resolve(items.slice(from, from + count).map(fromLocal))
     );
   }
 
   onSelect(selection: Array<List2Item<T>>) {
-    this.setState({ selection });
+    this.setState({});
     this.props.onSelect && this.props.onSelect( selection );
     if (this.input && this.input.current)
       this.input.current.value = this.getSelStr();
@@ -127,6 +136,10 @@ export class DropDownList<T> extends React.Component<Props<T>, State<T>> {
     this.setState({ showList: !this.state.showList });
   }
 
+  onInputClick = () => {
+    this.setState({ showList: true });
+  }
+
   onInputBlur = (event: React.FocusEvent<any>) => {
     if(findParent(event.nativeEvent.relatedTarget as HTMLElement, this.ref.current))
       return;
@@ -137,6 +150,7 @@ export class DropDownList<T> extends React.Component<Props<T>, State<T>> {
 
   closeList() {
     this.setState({ showList: false });
+    this.state.model.setFilter('');
     this.state.model.delayedNotify({ type: 'close-list' });
   }
 
@@ -156,15 +170,15 @@ export class DropDownList<T> extends React.Component<Props<T>, State<T>> {
   }
 
   getSelStr(): string {
-    return (this.state.selection || []).map(item => item.label || item.data.toString()).join(', ');
+    return (this.state.model.getSelectedItems() || []).map(item => item.label || item.data.toString()).join(', ');
   }
 
   renderInput(): JSX.Element {
     if (this.focus && this.state.model.isFilterable()) {
       return (
         <input
-          onClick={this.onClick}
-          onChange={event => {
+          onClick={this.onInputClick}
+          onChange={() => {
             if (this.state.model.isFilterable())
               this.state.model.setFilter(this.input.current.value);
           }}
@@ -175,9 +189,10 @@ export class DropDownList<T> extends React.Component<Props<T>, State<T>> {
         />
       );
     } else {
+      const sel = this.state.model.getSelectedItems();
       return (
         <div className={classes.input} onClick={this.onClick}>
-          {this.getSelStr()}
+          {sel.length ? this.state.model.render(sel[0], 0) : null }
         </div>
       );
     }
@@ -216,7 +231,7 @@ export class DropDownList<T> extends React.Component<Props<T>, State<T>> {
   }
 
   render() {
-    const style: React.CSSProperties = {};
+    const style: React.CSSProperties = {...this.props.style};
     if (this.props.width != null)
       style.display = 'inline-block';
 

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { DropDownList, List2Item } from '../src/drop-down-list';
+import { DropDownListModel } from '../src/model/drop-down-list';
 
 type Item =  List2Item<{}>;
 
@@ -28,12 +29,21 @@ function loadNext(from: number, count: number): Promise< Array<Item> > {
 }
 
 const items = [
-  { label: 'fruit apple' },
+  { label: <span style={{color: 'red'}}>fruit apple</span> },
   { label: 'vegetable onion' },
   { label: 'fruit pear' },
   { label: 'vegetable cabbage'}
 ];
 
+const items2 = [
+  'fruit apple',
+  'vegetable onion',
+  'fruit pear',
+  'vegetable cabbage'
+];
+
+let fruits = new DropDownListModel<{label: string}>();
+let fruits2 = new DropDownListModel<{label: string}>();
 storiesOf('drop-down-list', module)
   .add('drop-down-list', () => {
     return (
@@ -46,11 +56,17 @@ storiesOf('drop-down-list', module)
       >
         <div style={{padding: 5}}>
           <DropDownList
-            render={render}
-            items={items}
+            items={items2}
             width={120}
+            model={fruits}
+            onSelect={() => {
+              const items = fruits.getSelectedItems();
+              if (items.length)
+                fruits2.setSelect({ id: items[0].id });
+            }}
           />
           <DropDownList
+            model={fruits2}
             render={render}
             items={items}
             width={100}

@@ -2,7 +2,8 @@ import { Publisher } from 'objio/common/publisher';
 import { ExtPromise, Cancelable } from 'objio/common/ext-promise';
 import { clamp } from '../common/common';
 
-export interface List2Item<T = any> {
+export type List2ItemData = { label?: string | JSX.Element } | string;
+export interface List2Item<T = List2ItemData> {
   id: string;
   label?: string;
   data: T;
@@ -22,7 +23,7 @@ export class List2Model<T = Object, TEventType = string> extends Publisher<Event
   protected itemsPerLoad = 100;
   protected dataId: number = 0;
   protected loading: Cancelable<Array< List2Item<T> >>;
-  protected selection = new Set<string>();
+  protected selection = new Array<List2Item<T>>();
   protected selectable: SelectType = 'single-select';
   protected focusItem: number = -1;
   protected focusable: boolean = true;
@@ -75,15 +76,19 @@ export class List2Model<T = Object, TEventType = string> extends Publisher<Event
       return false;
 
     if (args.clear)
-      this.selection.clear();
+      this.selection = [];
 
-    if (!args.clear && this.selection.has(args.id)) {
-      this.selection.delete(args.id);
+    if (!args.clear && this.selection.find(item => item.id == args.id)) {
+      this.selection = this.selection.filter(item => item.id != args.id);
     } else {
       if (this.selectable == 'single-select')
-        this.selection.clear();
+        this.selection = [];
 
-      this.selection.add(args.id);  
+      const item = this.items.find(item => item.id == args.id);
+      if (item)
+        this.selection.push(item);
+      else
+        return false;
     }
 
     this.delayedNotify({ type: 'select' });
@@ -91,30 +96,24 @@ export class List2Model<T = Object, TEventType = string> extends Publisher<Event
   }
 
   clearSelect(): boolean {
-    if (!this.selection.size)
+    if (!this.selection.length)
       return false;
     
-    this.selection.clear();
+    this.selection = [];
     this.delayedNotify({ type: 'select' });
     return true;
   }
 
   isSelected(id: string): boolean {
-    return this.selection.has(id);
+    return this.selection.find(item => item.id == id) != null;
   }
 
   getSelectedIds(): Array<string> {
-    let arr = Array<string>();
-    this.selection.forEach(id => {
-      arr.push(id);
-    });
-    return arr;
+    return this.selection.map(item => item.id);
   }
 
   getSelectedItems(): Array<List2Item<T>> {
-    return this.items.filter(item => {
-      return this.selection.has(item.id);
-    });
+    return this.selection.slice();
   }
 
   getItemsPerLoad(): number {
@@ -191,8 +190,12 @@ export class List2Model<T = Object, TEventType = string> extends Publisher<Event
   }
 
   render(item: List2Item<T>, idx: number): JSX.Element | string {
-    if (!this.handler)
-      return typeof item == 'string' ? item : JSON.stringify(item);
+    if (!this.handler.render) {
+      if (item.label)
+        return item.label;
+
+      return typeof item.data == 'string' ? item.data : JSON.stringify(item.data);
+    }
 
     return this.handler.render(item, idx);
   }
