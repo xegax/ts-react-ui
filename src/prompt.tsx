@@ -5,6 +5,7 @@ import { className as cn } from './common/common';
 
 export interface PromptArgs {
   title?: string;
+  value?: string;
   prompt?: string;
   placeholder?: string;
 }
@@ -35,6 +36,7 @@ export class Prompt extends React.Component<Props, {}> {
               id='prompt'
               placeholder={this.props.placeholder}
               className={cn(cs.INPUT, cs.LARGE, cs.FILL)}
+              defaultValue={this.props.value}
             />
           </FormGroup>
         </div>
