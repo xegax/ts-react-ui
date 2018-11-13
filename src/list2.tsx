@@ -63,6 +63,7 @@ class ListContent<T extends Object = Object> extends React.Component<Props<T>> {
       return;
 
     event.preventDefault();
+
     if (this.props.model.setFocus( this.props.model.getFocus() + vec ))
       this.scrollToFocus();
   }
@@ -114,8 +115,8 @@ class ListContent<T extends Object = Object> extends React.Component<Props<T>> {
                              model.isSelected(item.id) && classes.list2select,
                              model.getFocus() == idx && classes.list2focus
                            )}
-              onClick={event => {
-                model.setSelect({id: item.id, clear: !event.ctrlKey});
+              onClick={e => {
+                model.setSelect({id: item.id, clear: !e.ctrlKey});
                 if (model.setFocus(idx))
                   this.scrollToFocus();
               }}

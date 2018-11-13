@@ -11,6 +11,24 @@ $prop-group-font: 14px sans-serif;
   background-color: white;
   width: 100%;
   box-sizing: border-box;
+  user-select: none;
+
+  .list2-ctrl {
+    .list2-item {
+      font: $prop-name-font;
+    }
+  }
+
+  .drop-down-list-ctrl {
+    .input-box {
+      padding: 2px;
+      height: inherit;
+      font: $prop-name-font;
+    }
+    input.input-box {
+      padding: 0px;
+    }
+  }
 
   .prop-group {
     > .wrap {

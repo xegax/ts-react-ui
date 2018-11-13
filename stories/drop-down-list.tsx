@@ -2,6 +2,7 @@ import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { DropDownList, List2Item } from '../src/drop-down-list';
 import { DropDownListModel } from '../src/model/drop-down-list';
+import { DropDown } from '../src/drop-down';
 
 type Item =  List2Item<{}>;
 
@@ -44,7 +45,20 @@ const items2 = [
 
 let fruits = new DropDownListModel<{label: string}>();
 let fruits2 = new DropDownListModel<{label: string}>();
+let ddlist2 = [
+  { value: '1 1 1 1 1111 1111' },
+  { value: '2 2222 2222 22222' },
+  { value: '3 333 3333 333333' }
+];
 storiesOf('drop-down-list', module)
+  .add('drop-down-list2', () => {
+    return (
+      <div style={{padding: 5}}>
+        <DropDown values={ddlist2} width={100}/>
+        <DropDown values={ddlist2}/>
+      </div>
+    );
+  })
   .add('drop-down-list', () => {
     return (
       <div style={{

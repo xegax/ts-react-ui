@@ -1,17 +1,52 @@
-.drop-down-list-ctrl {
+.drop-down-ctrl {
   background-color: white;
+  user-select: none;
+
+  &:focus {
+    background-color: rgb(234, 252, 255);
+    outline: none;
+  }
+
+  .drop-down-panel {
+    display: none;
+    max-height: 300px;
+    z-index: 1000;
+    margin-top: -1px;
+    position: absolute;
+  }
+
+  &.show-list {
+    .drop-down-ctrl-wrapper {
+      .input-wrap {
+        border-radius: 2px 2px 0px 0px;
+      }
+
+      .list-view-ctrl.border {
+        border-radius: 0px 0px 2px 2px;
+      }
+    }
+
+    .drop-down-panel {
+      display: block;
+      border-radius: 0px 0px 2px 2px;
+    }
+  }
+
   &-wrapper {
     overflow: hidden;
 
     .input-wrap {
+      display: flex;
       cursor: default;
       position: relative;
       border: 1px solid silver;
+      border-radius: 2px;
       box-sizing: border-box;
       i {
+        flex-grow: 0;
         padding-top: 4px;
         padding-right: 5px;
-        position: absolute;
+        // position: absolute;
         right: 0px;
         top: 0px;
         bottom: 0px;
@@ -22,30 +57,18 @@
     }
 
     .input-box {
+      font: 14px sans-serif;
+      flex-grow: 1;
       padding: 4px;
-      height: 24px;
       box-sizing: border-box;
       min-width: 0px;
       white-space: nowrap;
-      width: calc(100% - 20px);
       text-overflow: ellipsis;
       overflow: hidden;
-    }
-  }
 
-  .list2-ctrl {
-    background-color: white;
-
-    .list2-item {
-      cursor: default;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-      padding-left: 5px;
-      padding-right: 5px;
-      padding-top: 2px;
-      padding-bottom: 2px;
+      span {
+        font: 14px sans-serif;
+      }
     }
   }
 }

@@ -4,6 +4,7 @@ import { PropertySheetModel } from './property-sheet-model';
 import { className as cn } from '../common/common';
 import { findParent } from '../common/dom';
 import { KeyCode } from '../common/keycode';
+import { DropDownList } from '../drop-down-list';
 import '../_property-sheet.scss';
 
 export { PropertyItem, PropItemGroup };
@@ -64,15 +65,69 @@ export class PropertySheet extends React.Component<Props, State> {
     return this.state.model.isReadOnly();
   }
 
-  renderEditor(item: PropertyItem, idx: number): JSX.Element {
+  renderItemValue(item: PropertyItem<any>): JSX.Element | string {
+    if (item.render)
+      return item.render(item);
+
+    if (typeof item.value == 'boolean')
+      return item.value ? 'true' : 'false';
+
+    return item.value;
+  }
+
+  renderEditor(item: PropertyItem<any>, idx: number): JSX.Element {
+    const isNum = typeof item.value == 'number';
+    const isBool = typeof item.value == 'boolean';
+    if (isBool) {
+      return (
+        <div
+          key={idx}
+          className={classes.wrap}
+          style={{border: '1px solid transparent'}}
+          onClick={() => {
+            if (item.setValue)
+              item.setValue(!item.value);
+            else
+              item.value = !item.value;
+          }}
+        >
+          {this.renderItemValue(item)}
+        </div>
+      );
+    }
+
+    if (item.items) {
+      return (
+        <div className={classes.wrap} style={{padding: 0}}>
+          <DropDownList
+            autoFocus
+            autoOpen
+            select={item.value}
+            items={item.items}
+            onSelect={selItem => {
+              if (item.setValue)
+                item.setValue(selItem[0].data);
+              else
+                item.value = selItem[0].data;
+              this.setState({});
+            }}
+          />
+        </div>
+      );
+    }
+
     return (
       <React.Fragment>
         <input
           autoFocus
           key={idx}
+          type={isNum && 'number' || null}
           defaultValue={item.value}
           onBlur={e => {
-            const value = e.currentTarget.value;
+            let value: number | string = e.currentTarget.value;
+            if (isNum)
+              value = +value;
+
             if (item.setValue)
               item.setValue(value);
             else
@@ -81,7 +136,9 @@ export class PropertySheet extends React.Component<Props, State> {
             this.state.model.delayedNotify();
           }}
           onKeyDown={e => {
-            const value = e.currentTarget.value;
+            let value: string | number = e.currentTarget.value;
+            if (isNum)
+              value = +value;
 
             if (e.keyCode == KeyCode.ENTER) {
               if (item.setValue)
@@ -126,13 +183,12 @@ export class PropertySheet extends React.Component<Props, State> {
     const ctrlFocus = findParent(document.activeElement as HTMLElement, this.ref.current);
     const editable: boolean = !this.isReadOnly() && item.readOnly != true && focusItem && ctrlFocus && this.state.edit;
 
-    const render = item.render || (() => item.value);
     const size = model.getNameColSize();
     const textinput = editable && !item.action;
     return (
       <div
         className={cn(classes.item, focusItem && classes.focus, textinput && classes.textinput)}
-        title={item.name}
+        title={'' + item.name}
         onClick={() => {
           model.setFocusItem(item);
           this.setState({ edit: true });
@@ -145,8 +201,8 @@ export class PropertySheet extends React.Component<Props, State> {
         >
           <div className={classes.wrap}>{item.name}</div>
         </div>
-        <div className={classes.value} title={item.value}>
-          {textinput ? this.renderEditor(item, idx) : <div className={classes.wrap}>{render(item)}</div>}
+        <div className={classes.value} title={!Array.isArray(item.value) && '' + item.value}>
+          {textinput ? this.renderEditor(item, idx) : <div className={classes.wrap}>{this.renderItemValue(item)}</div>}
           {editable && item.action ? <button onClick={() => this.onAction(item)}>...</button> : null}
         </div>
       </div>
@@ -168,10 +224,17 @@ export class PropertySheet extends React.Component<Props, State> {
     });
 
     return (
-      <div className={classes.group} key={idx}>
+      <div
+        className={classes.group}
+        key={idx}
+        onScroll={() => {
+          if (this.state.edit)
+            this.setState({ edit: false });
+        }}>
         <div
           className={classes.header}
           onClick={() => {
+            this.state.model.setFocusItem(null);
             this.state.model.toggleGroup(group);
           }}
         >

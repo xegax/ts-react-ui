@@ -71,7 +71,7 @@ export class List2Model<T = Object, TEventType = string> extends Publisher<Event
     return true;
   }
 
-  setSelect(args: { id: string, clear?: boolean}): boolean {
+  setSelect(args: { id: string, clear?: boolean, notify?: boolean}): boolean {
     if (this.selectable == 'none' || !args || !('id' in args))
       return false;
 
@@ -91,7 +91,9 @@ export class List2Model<T = Object, TEventType = string> extends Publisher<Event
         return false;
     }
 
-    this.delayedNotify({ type: 'select' });
+    if (args.notify != false)
+      this.delayedNotify({ type: 'select' });
+
     return true;
   }
 

@@ -2,13 +2,21 @@ import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { PropertySheet, PropertyItem, PropItemGroup } from '../src/property-sheet';
 import { prompt } from '../src/prompt';
-import { PropertySheetModel } from '../src/property-sheet/property-sheet-model';
+// import { PropertySheetModel } from '../src/property-sheet/property-sheet-model';
 
 const groups: Array<PropItemGroup> = [
   {
     group: 'object',
     maxHeight: 100,
     items: [
+      {
+        name: 'select',
+        value: 'two',
+        items: ['one', 'two', 'three', 'four'],
+        setValue(v: string) {
+          this.value = 'one';
+        }
+      },
       {
         name: 'id',
         value: '0001',
@@ -32,6 +40,16 @@ const groups: Array<PropItemGroup> = [
         name: 'readOnly',
         value: 'false',
         readOnly: true
+      }, {
+        name: 'show',
+        value: true,
+      }, {
+        value: 11,
+        name: 'count'
+      }, {
+        name: 'choose',
+        value: '22',
+        items: ['11', '22', '33', '44']
       }
     ]
   }, {

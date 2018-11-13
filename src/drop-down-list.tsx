@@ -17,10 +17,13 @@ const classes = {
 };
 
 interface Props<T = List2ItemData> {
+  autoFocus?: boolean;
+  autoOpen?: boolean;
   width?: number;
   model?: DropDownListModel<T>;
   render?(item: List2Item<T>, idx: number): JSX.Element | string;
   items?: Array<T> | Array<string> | ( (from: number, count: number) => Promise<Array< List2Item<T> >> );
+  select?: Array<T>;
   onSelect?(item: Array<List2Item<T>>);
   onFilterChanged?(filter: string);
   onFilter?(item: T, filter: string): boolean;  // to filter local data
@@ -57,7 +60,7 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
     super(props);
 
     const model = props.model || new DropDownListModel<T>();
-    this.state = { model };
+    this.state = { model, showList: props.autoOpen == true };
 
     const handler = { ...model.getHandler() } as Handler<T>;
 
@@ -74,29 +77,58 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
 
     if (props.render)
       handler.render = props.render;
+    model.setHandler(handler);
 
     if (props.onFilter || props.onFilterChanged)
       model.setFilterable(!!props.onFilter || !!props.onFilterChanged);
+
+    if (props.select && Array.isArray(props.items)) {
+      model.loadNext().then(() => {
+        (props.items as Array<T>).forEach((item, i) => {
+          if (item as any != props.select)
+            return;
+
+          const v = fromLocal(item, i);
+          model.setSelect({ id: v.id, clear: i == 0, notify: false });
+        });
+      });
+    }
 
     model.subscribe(() => {
       const filter = model.getFilter();
       if (props.onFilterChanged)
         props.onFilterChanged(filter);
 
-      if (!props.onFilter || !Array.isArray(props.items))
+      if (!this.state.model.isFilterable() || !Array.isArray(props.items))
         return;
 
       if (!filter || !filter.trim()) {
         this.filtered = null;
       } else {
         const items = props.items as Array<T>;
-        this.filtered = items.map(fromLocal).filter(item => props.onFilter(item.data, filter));
+        this.filtered = items.map(fromLocal).filter(item => this.filter(item.data, filter));
       }
 
       this.state.model.clear({ reload: true });
     }, 'filter');
+  }
 
-    model.setHandler(handler);
+  filter(item: T, filter: string): boolean {
+    const filterImpl = this.props.onFilter;
+    if (filterImpl)
+      return filterImpl(item, filter);
+
+    let label: string;
+    if (typeof item == 'string')
+      label = item;
+    
+    if (typeof item['label'] == 'string')
+      label = item['label'];
+
+    if (label != null)
+      return label.indexOf(filter) != -1;
+
+    return false;
   }
 
   loadNext = (from: number, count: number): Promise< Array<List2Item<T>> > => {
@@ -110,6 +142,20 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
     return (
       Promise.resolve(items.slice(from, from + count).map(fromLocal))
     );
+  }
+
+  static getDerivedStateFromProps(props: Props, state: State<any>): State<any> | null {
+    if (props.select && Array.isArray(props.items)) {
+      (props.items as Array<any>).forEach((item, i) => {
+        if (item as any != props.select)
+          return;
+
+        const v = fromLocal(item, i);
+        state.model.setSelect({ id: v.id, clear: i == 0, notify: false });
+      });
+    }
+
+    return null;
   }
 
   onSelect(selection: Array<List2Item<T>>) {
@@ -126,22 +172,34 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
 
   componentDidMount() {
     this.state.model.subscribe(this.subscriber);
+    if (this.props.autoFocus)
+      this.ref.current.focus();
+  }
+
+  protected getListPos() {
+    if (!this.ref.current)
+      return 0;
+
+    return this.ref.current.getBoundingClientRect().bottom;
   }
 
   componentWillUnmount() {
     this.state.model.unsubscribe(this.subscriber);
   }
 
-  onClick = () => {
-    this.setState({ showList: !this.state.showList });
+  onInputClick = () => {
+    this.toggleList(true);
   }
 
-  onInputClick = () => {
-    this.setState({ showList: true });
+  toggleList(showList?: boolean) {
+    if (showList == null)
+      showList = !this.state.showList;
+
+    this.setState({ showList });
   }
 
   onInputBlur = (event: React.FocusEvent<any>) => {
-    if(findParent(event.nativeEvent.relatedTarget as HTMLElement, this.ref.current))
+    if(findParent(event.relatedTarget as HTMLElement, this.ref.current))
       return;
 
     this.focus = false;
@@ -149,6 +207,9 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
   }
 
   closeList() {
+    if (this.state.showList)
+      this.ref.current.focus();
+
     this.setState({ showList: false });
     this.state.model.setFilter('');
     this.state.model.delayedNotify({ type: 'close-list' });
@@ -160,6 +221,7 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
 
   onKeyDown = (event: React.KeyboardEvent<any>) => {
     if (!this.state.showList && event.keyCode != KeyCode.TAB) {
+      event.preventDefault();
       return this.setState({ showList: true });
     }
 
@@ -191,8 +253,8 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
     } else {
       const sel = this.state.model.getSelectedItems();
       return (
-        <div className={classes.input} onClick={this.onClick}>
-          {sel.length ? this.state.model.render(sel[0], 0) : null }
+        <div className={classes.input} onClick={() => this.toggleList()}>
+          {sel.length ? this.state.model.render(sel[0], 0) : <span style={{visibility: 'hidden'}}>.</span> }
         </div>
       );
     }
@@ -203,7 +265,8 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
       maxHeight: 300,
       display: !this.state.showList ? 'none' : null,
       position: 'absolute',
-      zIndex: 1000
+      zIndex: 1000,
+      top: this.getListPos()
     };
 
     return (
@@ -217,7 +280,7 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
       >
         <div className={classes.inputWrap} style={{ width: this.props.width != null ? this.props.width : null }}>
           {this.renderInput()}
-          <i className={this.state.showList ? 'fa fa-caret-up' : 'fa fa-caret-down'} onClick={this.onClick}/>
+          <i className={this.state.showList ? 'fa fa-caret-up' : 'fa fa-caret-down'} onClick={() => this.toggleList()}/>
         </div>
         <FitToParent calcH={false}>
           <List2
