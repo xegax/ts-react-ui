@@ -2,7 +2,6 @@ import * as React from 'react';
 import { DropDownListModel } from './model/drop-down-list';
 import { List2 } from './list2';
 import { Handler, List2Item, List2ItemData } from './model/list2';
-import './_drop-down-list.scss';
 import { FitToParent } from './fittoparent';
 import { findParent } from './common/dom';
 import { KeyCode } from './common/keycode';

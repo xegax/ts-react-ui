@@ -2,8 +2,12 @@
   background-color: white;
   user-select: none;
 
+  &.disabled * {
+    color: silver !important;
+  }
+
   &:focus {
-    background-color: rgb(234, 252, 255);
+    @extend .focus-background;
     outline: none;
   }
 
@@ -11,8 +15,9 @@
     display: none;
     max-height: 300px;
     z-index: 1000;
-    margin-top: -1px;
     position: absolute;
+    border-radius: 0px 0px 2px 2px;
+    border-top: none;
   }
 
   &.show-list {
@@ -28,7 +33,6 @@
 
     .drop-down-panel {
       display: block;
-      border-radius: 0px 0px 2px 2px;
     }
   }
 
@@ -37,38 +41,32 @@
 
     .input-wrap {
       display: flex;
+      align-items: stretch;
       cursor: default;
       position: relative;
-      border: 1px solid silver;
-      border-radius: 2px;
       box-sizing: border-box;
-      i {
+      padding-right: 4px;
+
+      .button {
         flex-grow: 0;
-        padding-top: 4px;
-        padding-right: 5px;
-        // position: absolute;
-        right: 0px;
-        top: 0px;
-        bottom: 0px;
-        background-color: white;
-        padding-left: 5px;
-        border-left: 1px solid lightgray;
+        padding: 0px 0px 0px 4px;
+        border-right: none;
+        border-top: none;
+        border-bottom: none;
+        border-radius: 0px;
+        display: flex;
+        align-items: center;
       }
     }
 
     .input-box {
-      font: 14px sans-serif;
       flex-grow: 1;
-      padding: 4px;
+      padding: 4px 0px 4px 4px;
       box-sizing: border-box;
       min-width: 0px;
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
-
-      span {
-        font: 14px sans-serif;
-      }
     }
   }
 }

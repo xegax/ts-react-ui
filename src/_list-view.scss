@@ -1,6 +1,7 @@
 .list-view-ctrl {
   outline: none;
   background-color: white;
+  overflow-y: auto;
 
   > .list-item {
     overflow: hidden;
@@ -11,14 +12,12 @@
     padding-right: 5px;
     padding-top: 1px;
     padding-bottom: 1px;
-    font: 14px sans-serif;
 
     &:hover {
       background-color: rgb(234, 252, 255);
     }
 
     &.select {
-      // color: white;
       background-color: rgb(163, 218, 255);
 
       &:hover {

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import '../src/_base.scss';
 import { storiesOf } from '@storybook/react';
 import { DropDownList, List2Item } from '../src/drop-down-list';
 import { DropDownListModel } from '../src/model/drop-down-list';
@@ -50,14 +51,52 @@ let ddlist2 = [
   { value: '2 2222 2222 22222' },
   { value: '3 333 3333 333333' }
 ];
-storiesOf('drop-down-list', module)
-  .add('drop-down-list2', () => {
+
+let ddl2Value: string;
+let ddlist3 = new Array(100).fill(null).map((item, i) => ({
+  value: '' + i,
+  render: <span style={{color: i % 2 == 0 ? 'red' : null }}>{'item ' + (i + 1)}</span>
+}));
+
+class Control extends React.Component {
+  render() {
     return (
-      <div style={{padding: 5}}>
-        <DropDown values={ddlist2} width={100}/>
-        <DropDown values={ddlist2}/>
+      <div className='card-2 vert-panel-1 round-border-2'>
+        <DropDown
+          values={ddlist2}
+          width={100}
+          itemsPerPage={2}
+        />
+        <div className='horz-panel-1'>
+          <DropDown
+            width = {100}
+            values={ddlist3}
+            itemsPerPage={15}
+            defaultValue='30'
+            onSelect={item => {
+              ddl2Value = item.value;
+              this.setState({});
+            }}
+          />
+          <DropDown
+            width = {150}
+            enabled = {false}
+            values = {ddlist3}
+            value = {ddl2Value}
+          />
+        </div>
+        <DropDown
+          values={ddlist3}
+          value={ddl2Value}
+        />
       </div>
     );
+  }
+}
+
+storiesOf('drop-down-list', module)
+  .add('drop-down-list2', () => {
+    return <Control/>;
   })
   .add('drop-down-list', () => {
     return (

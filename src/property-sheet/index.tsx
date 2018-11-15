@@ -5,7 +5,6 @@ import { className as cn } from '../common/common';
 import { findParent } from '../common/dom';
 import { KeyCode } from '../common/keycode';
 import { DropDownList } from '../drop-down-list';
-import '../_property-sheet.scss';
 
 export { PropertyItem, PropItemGroup };
 

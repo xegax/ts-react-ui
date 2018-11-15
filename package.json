@@ -13,7 +13,7 @@
     "dev": "npm run prepare",
     "storybook": "start-storybook -p 6006 -s ./public",
     "build-storybook": "build-storybook",
-    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map *.js *.js.map *.d.ts *.scss  common model"
+    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map *.js *.js.map *.d.ts *.scss  common model property-sheet"
   },
   "devDependencies": {
     "@blueprintjs/core": "^2.3.1",

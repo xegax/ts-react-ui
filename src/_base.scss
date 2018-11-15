@@ -1,0 +1,133 @@
+@mixin vert-panel($space) {
+  > * {
+    margin-bottom: $space;
+  }
+
+  > *:last-child {
+    margin-bottom: 0px;
+  }
+}
+
+@mixin horz-panel($space) {
+  > * {
+    vertical-align: bottom;
+    margin-right: $space;
+  }
+
+  > *:last-child {
+    margin-right: 0px;
+  }
+}
+
+// vert-panel
+
+.vert-panel-1 {
+  @include vert-panel(8px);
+}
+
+.vert-panel-2 {
+  @include vert-panel(12px);
+}
+
+.vert-panel-3 {
+  @include vert-panel(16px);
+}
+
+// horz-panel
+
+.horz-panel-1 {
+  @include horz-panel(8px);
+}
+
+.horz-panel-2 {
+  @include horz-panel(12px);
+}
+
+.horz-panel-3 {
+  @include horz-panel(16px);
+}
+
+// card
+
+@mixin card($padding) {
+  padding: $padding;
+  border: 1px solid silver;
+  @extend .background-1;
+}
+
+.card-1 {
+  @include card(5px);
+}
+
+.card-2 {
+  @include card(8px);
+}
+
+.card-3 {
+  @include card(14px);
+}
+
+
+// round-border
+.round-border-1 {
+  border-radius: 2px;
+}
+
+.round-border-2 {
+  border-radius: 4px;
+}
+
+.round-border-3 {
+  border-radius: 8px;
+}
+
+.background-1 {
+  background-color: #eef1f3;
+}
+
+.background-2 {
+  background-color: #e1e9ee;
+}
+
+.background-3 {
+  background-color: #9ccbeb;
+}
+
+.highlight-1 {
+  background-color: #eff7f8;
+}
+
+.highlight-2 {
+  background-color: #eef1f3;
+}
+
+.highlight-3 {
+  background-color: #eef1f3;
+}
+
+.focus-background {
+  background-color: #eff7f8;
+}
+
+.focus-border {
+  border-color: #888888;
+}
+
+.disable-border {
+  border-color: silver;
+}
+
+.disabled {
+  .border {
+    border: 1px solid #dedede;
+  }
+}
+
+.border {
+  border: 1px solid silver;
+  border-radius: 2px;
+}
+
+@import './drop-down';
+@import './list-view';
+@import './property-sheet';
