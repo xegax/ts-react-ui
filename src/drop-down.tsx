@@ -3,6 +3,7 @@ import { FitToParent } from './fittoparent';
 import { findParent } from './common/dom';
 import { ListView } from './list-view';
 import { className as cn } from './common/common';
+import { KeyCode } from './common/keycode';
 
 interface Item {
   render?: string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
@@ -18,6 +19,7 @@ interface Props {
   defaultValue?: string;
 
   onSelect?(item: Item);
+  onFilter?(filter: string): Array<Item>;
 
   width?: number;
   style?: React.CSSProperties;
@@ -31,12 +33,14 @@ interface ListProps {
   onItemSize?(size: number);
   itemsPerPage?: number;
   itemSize?: number;
+  refList?: React.RefObject<ListView>;
 }
 
 interface State {
   value?: string;
   showList?: boolean;
   itemSize?: number;
+  filtered?: Array<Item>;
 }
 
 const classes = {
@@ -47,7 +51,8 @@ const classes = {
   wrapper:        'drop-down-ctrl-wrapper',
   input:          'input-box',
   inputWrap:      'input-wrap',
-  button:         'button'
+  button:         'button',
+  focus:          'focus'
 };
 
 function DropDownCont(props: ListProps): JSX.Element {
@@ -59,6 +64,7 @@ function DropDownCont(props: ListProps): JSX.Element {
   return (
     <div className={cn(classes.dropDownPanel, 'border')} style={style}>
       <ListView
+        ref = {props.refList}
         border = {false}
         itemsPerPage = {props.itemsPerPage}
         value = {props.value}
@@ -76,26 +82,37 @@ export class DropDown extends React.Component<Props, State> {
     enabled: true
   };
 
+  private input = React.createRef<HTMLInputElement>();
   private ref = React.createRef<HTMLDivElement>();
+  private list = React.createRef<ListView>();
   state: Readonly<Partial<State>> = {};
 
-  toggleList(showList?: boolean) {
+  toggleList(args?: Partial<{showList: boolean, blur?: boolean}>) {
     if (!this.props.enabled)
       return;
 
-    if (showList == null)
-      showList = !this.state.showList;
+    args = {...{ showList: !this.state.showList, blur: false }, ...args};
 
-    this.setState({ showList });
+    const state: State = { showList: args.showList };
+    if (args.blur)
+      state.filtered = null;
+
+    this.setState(state, () => {
+      args.showList && this.list.current.scrollToFocus();
+    });
   }
 
   getValue(): string {
     return this.props.value || this.state.value || this.props.defaultValue;
   }
 
+  getValues(): Array<Item> {
+    return this.state.filtered || this.props.values;
+  }
+
   findSelected(): Item {
     const value = this.getValue();
-    return this.props.values.find(item => item.value == value);
+    return this.getValues().find(item => item.value == value);
   }
 
   isListShown(): boolean {
@@ -113,6 +130,23 @@ export class DropDown extends React.Component<Props, State> {
   }
 
   renderInput(): JSX.Element {
+    if (this.isFilterable() && this.hasFocus()) {
+      return (
+        <div className={classes.input}>
+          <input
+            autoFocus
+            ref = {this.input}
+            onFocus = {() => {
+              this.toggleList();
+            }}
+            onChange = {() => {
+              this.setState({ filtered: this.props.onFilter(this.input.current.value) });
+            }}
+          />
+        </div>
+      );
+    }
+
     const select = this.findSelected();
     return (
       <div className={classes.input}>
@@ -126,18 +160,50 @@ export class DropDown extends React.Component<Props, State> {
   }
 
   onInputBlur = (event: React.FocusEvent<any>) => {
+    setTimeout(() => this.setState({}), 5);
+
     if(findParent(event.relatedTarget as HTMLElement, this.ref.current))
       return;
 
-    this.toggleList(false);
+    this.toggleList({ showList: false });
   }
 
   onSelect = (item: Item) => {
     this.setState({
-      value: item.value,
+      value: item ? item.value : null,
       showList: false
+    }, () => {
+      item && this.props.onSelect && this.props.onSelect(item);
+      if (this.input) {
+        this.input.current.value = this.state.value;
+        this.input.current.focus();
+      }
     });
-    this.props.onSelect && this.props.onSelect(item);
+  }
+
+  onKeyDown = (e: React.KeyboardEvent) => {
+    if (!this.isListShown()) {
+      this.toggleList({ showList: true });
+    } else if (this.list.current) {
+      this.list.current.onKeyDown(e);
+    }
+
+    if (this.input.current)
+      return;
+
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  isFilterable(): boolean {
+    return this.props.onFilter != null;
+  }
+
+  hasFocus(): boolean {
+    return (
+      document.activeElement == this.ref.current ||
+      document.activeElement == this.input.current
+    );
   }
 
   renderCtrl(): JSX.Element {
@@ -145,21 +211,24 @@ export class DropDown extends React.Component<Props, State> {
       <div
         className={classes.wrapper}
         // onFocus={this.onInputFocus}
-        //onKeyDown={this.onKeyDown}
       >
-        <div className={cn(classes.inputWrap, 'border')} style={{ width: this.props.width }}>
+        <div
+          className={cn(classes.inputWrap, 'border')}
+          style={{ width: this.props.width }}
+          onClick={() => this.toggleList()}
+        >
           {this.renderInput()}
           <div className={cn(classes.button, 'border')}>
             <i
               className={cn(this.isListShown() ? 'fa fa-caret-up' : 'fa fa-caret-down')}
-              onClick={() => this.toggleList()}
             />
           </div>
         </div>
         <FitToParent calcH = {false}>
           <DropDownCont
+            refList = { this.list }
             width = { this.props.width }
-            values = {this.props.values}
+            values = {this.getValues()}
             value = {this.getValue()}
             onSelect = {item => this.onSelect(item)}
 
@@ -186,12 +255,12 @@ export class DropDown extends React.Component<Props, State> {
         className={cn(
           classes.dropDown,
           this.isListShown() && classes.showList,
-          !this.props.enabled && classes.disabled
+          !this.props.enabled && classes.disabled,
+          this.hasFocus() && classes.focus
         )}
         style={style}
-        onClick={() => {
-          this.toggleList();
-        }}
+        onKeyDown={this.onKeyDown}
+        onFocus={() => this.setState({})}
         onBlur={this.onInputBlur}
       >
         {this.renderCtrl()}

@@ -13,7 +13,6 @@
 
   .drop-down-panel {
     display: none;
-    max-height: 300px;
     z-index: 1000;
     position: absolute;
     border-radius: 0px 0px 2px 2px;
@@ -67,6 +66,13 @@
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
+
+      input {
+        border: none;
+        outline: none;
+        padding: 0px;
+        font-family: inherit;
+      }
     }
   }
 }

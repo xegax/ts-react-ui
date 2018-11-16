@@ -24,6 +24,10 @@
         color: gray;
       }
     }
+
+    &.focus {
+      background-color: rgb(143, 191, 223);
+    }
   }
 
   &.border {

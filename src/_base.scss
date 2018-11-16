@@ -128,6 +128,16 @@
   border-radius: 2px;
 }
 
+.focus {
+  .border {
+    border-color: rgb(177, 177, 224);
+  }
+}
+
+*:focus {
+  @extend .focus;
+}
+
 @import './drop-down';
 @import './list-view';
 @import './property-sheet';

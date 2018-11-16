@@ -1,11 +1,14 @@
 import * as React from 'react';
-import { className as cn } from './common/common';
+import { className as cn, clamp } from './common/common';
+import { KeyCode } from './common/keycode';
+import { Publisher } from 'objio/common/publisher';
 
 const classes = {
   class: 'list-view-ctrl',
   item: 'list-item',
   select: 'select',
-  border: 'border'
+  border: 'border',
+  focus: 'focus'
 };
 
 interface Item {
@@ -19,25 +22,134 @@ interface Props {
   defaultValue?: string;
   border?: boolean;
   style?: React.CSSProperties;
+  dummy?: number;
 
   itemsPerPage?: number;
   width?: number;
+  model?: ListViewModel;
 
   onSelect?(item: Item);
   onItemSize?(size: number);
 }
 
 interface State {
-  value?: string;
   itemSize?: number;
+  model?: ListViewModel;
+}
+
+class ListViewModel extends Publisher {
+  private values = Array<Item>();
+  private focus: number;
+  private select: Item;
+
+  getFocus(): number {
+    return this.focus;
+  }
+
+  setFocus(focus: number): boolean {
+    if (this.focus == focus)
+      return false;
+
+    this.focus = focus;
+    this.delayedNotify({});
+    return true;
+  }
+
+  setValues(values: Array<Item>) {
+    if (this.values == values)
+      return false;
+
+    this.values = values;
+    this.delayedNotify();
+    return true;
+  }
+
+  getValues() {
+    return this.values;
+  }
+
+  setValue(value: string, notify?: boolean) {
+    if (this.select && value == this.select.value)
+      return;
+
+    const idx = this.values.findIndex(item => item.value == value);
+    if (idx != -1) {
+      this.select = this.values[idx];
+      this.focus = idx;
+    }
+
+    if (notify == false)
+      return;
+
+    this.delayedNotify({ type: 'select' });
+  }
+
+  selectItem(idx: number, notify?: boolean): boolean {
+    if (!this.values[idx])
+      return false;
+
+    const select = this.values[idx];
+    if (select == this.select)
+      return false;
+
+    this.select = select;
+    this.focus = idx;
+    console.log('select', this.select);
+
+    if (notify == false)
+      return false;
+
+    this.delayedNotify({ type: 'select' });
+    return true;
+  }
+
+  getValue(): string {
+    if (this.select)
+      return this.select.value;
+
+    return null;
+  }
+
+  getSelect(): Item {
+    return this.select;
+  }
 }
 
 export class ListView extends React.Component<Props, State> {
   state: Readonly<Partial<State>> = {};
   ref = React.createRef<HTMLDivElement>();
 
-  getValue(): string {
-    return this.state.value || this.props.value || this.props.defaultValue;
+  constructor(props: Props) {
+    super(props);
+
+    const model = props.model || new ListViewModel();
+    model.setValues(props.values);
+    this.state = { model };
+  }
+
+  static getDerivedStateFromProps(props: Props, state: State) {
+    state.model.setValues(props.values);
+
+    if (!state.model.getValue() && props.defaultValue)
+      state.model.setValue(props.defaultValue);
+    else if (props.value != null)
+      state.model.setValue(props.value);
+
+    return null;
+  }
+
+  subscriber = () => {
+    this.setState({});
+  }
+
+  componentDidMount() {
+    this.updateFirstItemSize();
+
+    this.state.model.subscribe(this.subscriber);
+  }
+
+  componentWillUnmount() {
+    this.state.model.unsubscribe(this.subscriber);
   }
 
   getLabel(item: Item): string {
@@ -57,14 +169,39 @@ export class ListView extends React.Component<Props, State> {
       <div
         key={idx}
         title={this.getLabel(item)}
-        className={cn(classes.item, select && classes.select)}
+        className={cn(classes.item, select && classes.select, idx == this.state.model.getFocus() && classes.focus)}
         onClick={e => {
+          this.state.model.setValue(item.value);
+          this.state.model.notify();
+
           this.props.onSelect && this.props.onSelect(item);
         }}
       >
         {jsx}
       </div>
     );
+  }
+
+  scrollToFocus() {
+    let focus = this.state.model.getFocus();
+
+    const ctrl = this.ref.current;
+    const el = ctrl.childNodes.item(focus) as HTMLElement;
+    const first = ctrl.firstChild as HTMLElement;
+    if (!el)
+      return;
+
+    const firstPos = first.getBoundingClientRect();
+    const elPos = el.getBoundingClientRect();
+    const bbox = ctrl.getBoundingClientRect();
+
+    const offsetTop = elPos.top - bbox.top;
+    const pos = Math.round(elPos.top - firstPos.top);
+    if (offsetTop < 0) {
+      ctrl.scrollTop = pos;
+    } else if (offsetTop + el.offsetHeight >= bbox.height) {
+      ctrl.scrollTop = Math.round(pos + el.offsetHeight - bbox.height + 2);
+    }
   }
 
   getMaxHeight(): number {
@@ -100,7 +237,7 @@ export class ListView extends React.Component<Props, State> {
     if (!itemSize)
       return false;
 
-    const value = this.getValue();
+    const value = this.state.model.getValue();
     if (!value)
       return false;
 
@@ -115,13 +252,49 @@ export class ListView extends React.Component<Props, State> {
     return true;
   }
 
-  componentDidMount() {
-    this.updateFirstItemSize();
+  onKeyDown = (e: React.KeyboardEvent) => {
+    let focus = this.state.model.getFocus();
+    if (e.keyCode == KeyCode.ENTER && this.state.model.selectItem(focus)) {
+      return this.props.onSelect && this.props.onSelect(this.state.model.getSelect());
+    } else if (e.keyCode == KeyCode.ESCAPE) {
+      return this.props.onSelect && this.props.onSelect(null);
+    }
+
+    let vect = 0;
+    if (e.keyCode == KeyCode.ARROW_UP)
+      vect = -1;
+    else if (e.keyCode == KeyCode.ARROW_DOWN)
+      vect = 1;
+
+    if (!vect)
+      return;
+
+    if (focus == null) {
+      vect = 0;
+      focus = 0;
+    }
+
+    focus = clamp(focus + vect, [0, this.props.values.length - 1]);
+    if (focus == this.state.model.getFocus())
+      return;
+
+    this.state.model.setFocus(focus);
+    this.scrollToFocus();
+    this.state.model.notify();
+  }
+
+  renderValues() {
+    const values = this.state.model.getValues();
+    if (values.length == 0)
+      return (
+        <div>No data to display</div>
+      );
+
+    const sel: Item = this.state.model.getSelect();
+    return values.map((item, idx) => this.renderItem(item, idx, sel && item.value == sel.value));
   }
 
   render() {
-    const value = this.getValue();
-    const sel = this.props.values.find(item => item.value == value);
     const maxHeight = this.getMaxHeight();
     const style: React.CSSProperties = {
       ...this.props.style,
@@ -135,7 +308,7 @@ export class ListView extends React.Component<Props, State> {
         className={cn(classes.class, this.props.border != false && classes.border)}
         style={style}
       >
-        {this.props.values.map((item, idx) => this.renderItem(item, idx, sel && item.value == sel.value))}
+        {this.renderValues()}
       </div>
     );
   }

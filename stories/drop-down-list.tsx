@@ -55,7 +55,7 @@ let ddlist2 = [
 let ddl2Value: string;
 let ddlist3 = new Array(100).fill(null).map((item, i) => ({
   value: '' + i,
-  render: <span style={{color: i % 2 == 0 ? 'red' : null }}>{'item ' + (i + 1)}</span>
+  render: <div style={{height: 18, color: i % 2 == 0 ? 'red' : null }}>{'item ' + (i + 1)}</div>
 }));
 
 class Control extends React.Component {
@@ -88,6 +88,12 @@ class Control extends React.Component {
         <DropDown
           values={ddlist3}
           value={ddl2Value}
+        />
+        <DropDown
+          values={ddlist3}
+          onFilter={(filter: string) => {
+            return ddlist3.filter(item => item.value.indexOf(filter) != -1);
+          }}
         />
       </div>
     );
