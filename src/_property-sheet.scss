@@ -1,9 +1,8 @@
 $prop-name-color: #e9e9e9;
 $prop-group-color: lightgray;
-$prop-name-font: 14px sans-serif;
-$prop-group-font: 14px sans-serif;
 
 .property-sheet {
+  outline: none;
   overflow: hidden;
   border: 1px solid gray;
   display: flex;
@@ -13,24 +12,9 @@ $prop-group-font: 14px sans-serif;
   box-sizing: border-box;
   user-select: none;
 
-  .list2-ctrl {
-    .list2-item {
-      font: $prop-name-font;
-    }
-  }
-
-  .drop-down-list-ctrl {
-    .input-box {
-      padding: 2px;
-      height: inherit;
-      font: $prop-name-font;
-    }
-    input.input-box {
-      padding: 0px;
-    }
-  }
-
   .prop-group {
+    outline: none;
+
     > .wrap {
       overflow-y: auto;
     }
@@ -53,7 +37,6 @@ $prop-group-font: 14px sans-serif;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font: $prop-group-font;
       }
       i {
         flex-grow: 0;
@@ -63,31 +46,46 @@ $prop-group-font: 14px sans-serif;
   }
 
   .property-item {
+    &:last-child {
+      margin-bottom: 4px; 
+    }
+
+    margin-top: 4px;
     white-space: nowrap;
     display: flex;
     cursor: default;
-
+  
     .wrap {
       flex-grow: 1;
-      padding-top: 2px;
-      padding-bottom: 2px;
+      padding-top: 4px;
+      padding-bottom: 4px;
       padding-left: 5px;
       padding-right: 5px;
       overflow: hidden;
       text-overflow: ellipsis;
-      font: $prop-name-font;
+      font-weight: inherit;
     }
 
     .name {
-      flex-grow: 1;
-      width: 0px;
-      background-color: $prop-name-color;
+      flex-grow: 0;
+      // font-weight: bold;
+      display: flex;
+      align-items: center;
+      position: relative;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .name-wrap {
+      padding-right: 2px;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
     .value {
       display: flex;
       flex-grow: 1;
-      width: 0px;
+      justify-content: flex-end;
       background-color: transparent;
       border: 1px solid transparent;
 
@@ -99,24 +97,36 @@ $prop-group-font: 14px sans-serif;
       }
     }
 
-    &.textinput {
-      .value {
-        border: none;
-      }
+    .value-wrap {
+      display: flex;
+      flex-grow: 0;
+      margin-right: 4px;
+      justify-content: inherit;
 
       input {
-        flex-grow: 1;
-        min-width: 0px;
+        outline: none;
+        width: 100%;
         padding-left: 3px;
         padding-right: 3px;
-        font: $prop-name-font;
+        border: 1px solid silver;
+        border-radius: 2px;
+
+        &:focus {
+          border-color: gray;
+        }
+      }
+
+      .pt-switch {
+        margin-bottom: 0px;
+
+        * {
+          outline: none;
+        }
       }
     }
   }
 
   .property-item.focus {
-    .name {
-      background-color: lightblue;
-    }
+    background-color: rgb(210, 227, 233);
   }
 }

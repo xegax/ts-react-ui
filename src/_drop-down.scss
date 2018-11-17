@@ -66,13 +66,22 @@
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
+      display: flex;
 
       input {
+        flex-grow: 1;
         border: none;
         outline: none;
         padding: 0px;
-        font-family: inherit;
+        font: inherit;
       }
     }
   }
+}
+
+.no-data {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 3px;
+  text-align: center;
 }

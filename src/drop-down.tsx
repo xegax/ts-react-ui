@@ -11,6 +11,7 @@ interface Item {
 }
 
 interface Props {
+  autoFocus?: boolean;
   enabled?: boolean;
   values: Array<Item>;
   itemsPerPage?: number;
@@ -33,14 +34,17 @@ interface ListProps {
   onItemSize?(size: number);
   itemsPerPage?: number;
   itemSize?: number;
+  offset?: number;
   refList?: React.RefObject<ListView>;
 }
 
 interface State {
   value?: string;
   showList?: boolean;
+  showInput?: boolean;
   itemSize?: number;
   filtered?: Array<Item>;
+  offset?: number;
 }
 
 const classes = {
@@ -52,13 +56,15 @@ const classes = {
   input:          'input-box',
   inputWrap:      'input-wrap',
   button:         'button',
-  focus:          'focus'
+  focus:          'focus',
+  noData:         'no-data'
 };
 
 function DropDownCont(props: ListProps): JSX.Element {
   const style: React.CSSProperties = {
     width: props.width,
-    visibility: !props.itemsPerPage || props.itemSize ? null : 'hidden'
+    visibility: !props.itemsPerPage || props.itemSize ? null : 'hidden',
+    top: props.offset
   };
 
   return (
@@ -71,12 +77,19 @@ function DropDownCont(props: ListProps): JSX.Element {
         values = {props.values}
         onSelect = {props.onSelect}
         onItemSize = {props.onItemSize}
+        noDataToDisplay = {<div className={classes.noData}>No data</div>}
       />
     </div>
   );
 }
 
 export class DropDown extends React.Component<Props, State> {
+  private static active: DropDown;
+
+  static getActive(): DropDown {
+    return DropDown.active;
+  }
+
   static defaultProps: Partial<Props> = {
     itemsPerPage: 10,
     enabled: true
@@ -86,19 +99,44 @@ export class DropDown extends React.Component<Props, State> {
   private ref = React.createRef<HTMLDivElement>();
   private list = React.createRef<ListView>();
   state: Readonly<Partial<State>> = {};
+  _state: Readonly<Partial<State>> = {};
 
-  toggleList(args?: Partial<{showList: boolean, blur?: boolean}>) {
+  setState(state: Partial<State>, callback?: () => void) {
+    this._state = { ...this.state, ...state };
+    super.setState(state, callback);
+  }
+
+  componentDidMount() {
+    if (this.props.autoFocus && this.ref && this.ref.current)
+      this.ref.current.focus();
+  }
+
+  toggleList() {
     if (!this.props.enabled)
       return;
 
-    args = {...{ showList: !this.state.showList, blur: false }, ...args};
+    const showList = !this._state.showList;
+    const showInput = this.isFilterable() && showList;
+    let offset = this._state.offset;
+    if (showList) {
+      DropDown.active = this;
+      offset = this.ref.current.getBoundingClientRect().bottom;
+    } else {
+      DropDown.active = null;
+    }
 
-    const state: State = { showList: args.showList };
-    if (args.blur)
-      state.filtered = null;
+    this.setState({ showList, showInput, offset }, () => {
+      this._state.showList && !this._state.showInput && this.ref.current.focus();
+      this._state.showList && this.list.current.scrollToFocus();
+    });
+  }
 
-    this.setState(state, () => {
-      args.showList && this.list.current.scrollToFocus();
+  hideList() {
+    DropDown.active = null;
+    this.setState({
+      showList: false,
+      filtered: null,
+      showInput: false
     });
   }
 
@@ -130,14 +168,19 @@ export class DropDown extends React.Component<Props, State> {
   }
 
   renderInput(): JSX.Element {
-    if (this.isFilterable() && this.hasFocus()) {
+    if (this.state.showInput) {
       return (
         <div className={classes.input}>
           <input
             autoFocus
             ref = {this.input}
-            onFocus = {() => {
-              this.toggleList();
+            placeholder = {this.getValue()}
+            onClick = {e => {
+              if (!this.state.showList)
+                return;
+
+              e.stopPropagation();
+              e.preventDefault();
             }}
             onChange = {() => {
               this.setState({ filtered: this.props.onFilter(this.input.current.value) });
@@ -160,35 +203,37 @@ export class DropDown extends React.Component<Props, State> {
   }
 
   onInputBlur = (event: React.FocusEvent<any>) => {
-    setTimeout(() => this.setState({}), 5);
-
     if(findParent(event.relatedTarget as HTMLElement, this.ref.current))
       return;
 
-    this.toggleList({ showList: false });
+    this.hideList();
   }
 
   onSelect = (item: Item) => {
     this.setState({
-      value: item ? item.value : null,
-      showList: false
+      value: item ? item.value : this.state.value,
+      showList: false,
+      showInput: false,
+      filtered: null
     }, () => {
       item && this.props.onSelect && this.props.onSelect(item);
-      if (this.input) {
-        this.input.current.value = this.state.value;
-        this.input.current.focus();
+      if (this.ref && this.ref.current) {
+        this.ref.current.focus();
       }
     });
   }
 
   onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.keyCode == KeyCode.TAB)
+      return;
+
     if (!this.isListShown()) {
-      this.toggleList({ showList: true });
+      this.toggleList();
     } else if (this.list.current) {
       this.list.current.onKeyDown(e);
     }
 
-    if (this.input.current)
+    if (this.input.current && [ KeyCode.ARROW_DOWN, KeyCode.ARROW_UP ].indexOf(e.keyCode) == -1)
       return;
 
     e.preventDefault();
@@ -210,12 +255,13 @@ export class DropDown extends React.Component<Props, State> {
     return (
       <div
         className={classes.wrapper}
-        // onFocus={this.onInputFocus}
       >
         <div
           className={cn(classes.inputWrap, 'border')}
           style={{ width: this.props.width }}
-          onClick={() => this.toggleList()}
+          onClick={() => {
+            this.toggleList();
+          }}
         >
           {this.renderInput()}
           <div className={cn(classes.button, 'border')}>
@@ -228,10 +274,11 @@ export class DropDown extends React.Component<Props, State> {
           <DropDownCont
             refList = { this.list }
             width = { this.props.width }
-            values = {this.getValues()}
-            value = {this.getValue()}
-            onSelect = {item => this.onSelect(item)}
+            values = { this.getValues() }
+            value = { this.getValue() }
+            onSelect = { item => this.onSelect(item) }
 
+            offset = { this.state.offset }
             itemSize = {this.state.itemSize}
             itemsPerPage = {this.props.itemsPerPage}
             onItemSize = {itemSize => {
@@ -260,7 +307,6 @@ export class DropDown extends React.Component<Props, State> {
         )}
         style={style}
         onKeyDown={this.onKeyDown}
-        onFocus={() => this.setState({})}
         onBlur={this.onInputBlur}
       >
         {this.renderCtrl()}

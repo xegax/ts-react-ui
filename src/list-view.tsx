@@ -30,6 +30,7 @@ interface Props {
 
   onSelect?(item: Item);
   onItemSize?(size: number);
+  noDataToDisplay?: JSX.Element;
 }
 
 interface State {
@@ -60,7 +61,8 @@ class ListViewModel extends Publisher {
       return false;
 
     this.values = values;
-    this.delayedNotify();
+    this.focus = null;
+    this.delayedNotify({ type: 'values' });
     return true;
   }
 
@@ -94,7 +96,6 @@ class ListViewModel extends Publisher {
 
     this.select = select;
     this.focus = idx;
-    console.log('select', this.select);
 
     if (notify == false)
       return false;
@@ -123,6 +124,11 @@ export class ListView extends React.Component<Props, State> {
     super(props);
 
     const model = props.model || new ListViewModel();
+    model.subscribe(() => {
+      if (this.ref && this.ref.current)
+        this.ref.current.scrollTop = 0;
+    }, 'values');
+
     model.setValues(props.values);
     this.state = { model };
   }
@@ -286,9 +292,7 @@ export class ListView extends React.Component<Props, State> {
   renderValues() {
     const values = this.state.model.getValues();
     if (values.length == 0)
-      return (
-        <div>No data to display</div>
-      );
+      return this.props.noDataToDisplay;
 
     const sel: Item = this.state.model.getSelect();
     return values.map((item, idx) => this.renderItem(item, idx, sel && item.value == sel.value));

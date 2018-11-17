@@ -6,6 +6,7 @@ export interface PropertyItem<T = string> {
   value: T;
   items?: Array<T>;
   readOnly?: boolean;
+  show?: boolean;
   render?(item: PropertyItem): JSX.Element | T;
   setValue?(v: T);
   action?(item: PropertyItem): Promise<T>;

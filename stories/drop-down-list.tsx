@@ -54,7 +54,7 @@ let ddlist2 = [
 
 let ddl2Value: string;
 let ddlist3 = new Array(100).fill(null).map((item, i) => ({
-  value: '' + i,
+  value: 'item ' + (i + 1),
   render: <div style={{height: 18, color: i % 2 == 0 ? 'red' : null }}>{'item ' + (i + 1)}</div>
 }));
 
@@ -67,12 +67,16 @@ class Control extends React.Component {
           width={100}
           itemsPerPage={2}
         />
+        <DropDown
+          values={ddlist2}
+          width={100}
+        />
         <div className='horz-panel-1'>
           <DropDown
             width = {100}
             values={ddlist3}
             itemsPerPage={15}
-            defaultValue='30'
+            defaultValue='item 30'
             onSelect={item => {
               ddl2Value = item.value;
               this.setState({});

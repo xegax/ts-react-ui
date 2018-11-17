@@ -4,6 +4,11 @@ import { PropertySheet, PropertyItem, PropItemGroup } from '../src/property-shee
 import { prompt } from '../src/prompt';
 // import { PropertySheetModel } from '../src/property-sheet/property-sheet-model';
 
+const count: PropertyItem<number> = {
+  name: 'count',
+  value: 11
+}
+
 const groups: Array<PropItemGroup> = [
   {
     group: 'object',
@@ -12,7 +17,7 @@ const groups: Array<PropItemGroup> = [
       {
         name: 'select',
         value: 'two',
-        items: ['one', 'two', 'three', 'four'],
+        items: [ 'one', 'two', 'three', 'four' ],
         setValue(v: string) {
           this.value = 'one';
         }
@@ -40,16 +45,19 @@ const groups: Array<PropItemGroup> = [
         name: 'readOnly',
         value: 'false',
         readOnly: true
-      }, {
-        name: 'show',
+      },
+      {
+        name: 'show count',
         value: true,
-      }, {
-        value: 11,
-        name: 'count'
-      }, {
+        setValue(value: boolean) {
+          this.value = value;
+          count.show = value;
+        }
+      },
+      count, {
         name: 'choose',
         value: '22',
-        items: ['11', '22', '33', '44']
+        items: [ '11', '22', '33', '44' ]
       }
     ]
   }, {
