@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Publisher } from 'objio/common/publisher';
 
 export interface Props<M extends Publisher = Publisher> {
-  model: M;
+  model?: M;
 }
 
 export abstract class Subscriber<P extends Props, S = {}> extends React.Component<P, S> {

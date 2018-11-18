@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { PropertyItem, PropItemGroup } from './property-item';
+import { PropertyItem, PropItemGroup, getValue } from './property-item';
 import { PropertySheetModel } from './property-sheet-model';
 import { className as cn } from '../common/common';
 import { findParent } from '../common/dom';
 import { DropDown } from '../drop-down';
 import { FitToParent } from '../fittoparent';
-import { DefaultFactory, ItemFactory } from './item-factory';
+import { DefaultFactory, ItemFactory, RenderResult } from './item-factory';
 
 export { PropertyItem, PropItemGroup };
 
@@ -20,7 +20,8 @@ const classes = {
   valueWrap: 'value-wrap',
   wrap: 'wrap',
   group: 'prop-group',
-  header: 'prop-group-header'
+  header: 'prop-group-header',
+  doubleRow: 'double-row'
 };
 
 export interface Props {
@@ -29,6 +30,7 @@ export interface Props {
   model?: PropertySheetModel;
   readOnly?: boolean;
   factory?: ItemFactory;
+  doubleRow?: boolean;
 }
 
 interface State {
@@ -68,6 +70,9 @@ function scrollIntoView(e: React.MouseEvent) {
 export class PropertySheetImpl extends React.Component<Props, State> {
   private ref = React.createRef<HTMLDivElement>();
   private static factory: ItemFactory = new DefaultFactory();
+  static defaultProps: Props = {
+    doubleRow: false
+  };
   
   static getFactory(): ItemFactory {
     return this.factory;
@@ -105,55 +110,83 @@ export class PropertySheetImpl extends React.Component<Props, State> {
 
     item.action(item)
     .then(value => {
-      this.ref.current.focus();
-      if (item.setValue)
-        item.setValue(value);
-      else
-        item.value = value;
+      this.setValue(item, value);
       this.setState({ action: false });
-      this.state.model.delayedNotify();
     })
     .catch(() => {
-      this.ref.current.focus();
       this.setState({ action: false });
-      this.state.model.delayedNotify();
     });
   }
 
-  setValue = (item: PropertyItem, value: string) => {
+  setValue = (item: PropertyItem<string | number | boolean>, value: string | number | boolean) => {
+    if (typeof getValue(item) == 'number')
+      value = +value;
+
     if (item.setValue)
       item.setValue(value);
-    else
+    else if (typeof item.value != 'function')
       item.value = value;
 
     console.log(value);
     this.setState({});
   }
 
-  renderItemValue(item: PropertyItem): JSX.Element {
-    let jsx: JSX.Element;
-    if (this.props.factory)
-      jsx = this.props.factory.renderItem(item, this.setValue);
+  renderItemValue(item: PropertyItem): RenderResult {
+    let res: RenderResult;
 
-    if (!jsx)
-      jsx = PropertySheetImpl.factory.renderItem(item, this.setValue);
+    if (item.action) {
+      let element: JSX.Element;
+      if (item.render)
+        element = <button>{item.render(item)}</button>;
+      else
+        element = <button>{getValue(item)}</button>;
 
-    return jsx;
+      element = React.cloneElement(element, {
+        onClick: () => this.onAction(item)
+      });
+
+      res = {
+        inline: true,
+        element
+      };
+    }
+
+    if (!res && this.props.factory)
+      res = this.props.factory.renderItem(item, this.setValue);
+
+    if (!res)
+      res = PropertySheetImpl.factory.renderItem(item, this.setValue);
+
+    if (!res) {
+      res = {
+        element: item.render ? item.render(item) as JSX.Element : JSON.stringify(item.value) as any
+      };
+    }
+
+    return res;
   }
 
   renderItem(item: PropertyItem, idx: number, depth: number): JSX.Element {
+    const res = this.renderItemValue(item);
+    const doubleRow = item.doubleRow != null ? item.doubleRow : this.props.doubleRow;
+    const style: React.CSSProperties = {
+      width: res.inline || doubleRow ? null : this.props.width / 2
+    };
+
     return (
       <div
-        className = {cn(classes.item)}
-        title = {item.name}
-        key = {idx}
+        className={cn(classes.item, res.inline != true && doubleRow && classes.doubleRow)}
+        title={item.name}
+        key={idx}
       >
-        <div className = {classes.name}>
-          <div className = {classes.nameWrap} style = {{ paddingLeft: depth * this.state.levelPadding }} >{ item.name }</div>
+        <div className={classes.name}>
+          <div className={classes.nameWrap}>
+            {item.name}
+          </div>
         </div>
-        <div className={ classes.value } title={ item.value } onMouseDown={scrollIntoView}>
-          <div className = { classes.valueWrap } style = {{ width: this.props.width / 2}}>
-            {this.renderItemValue(item)}
+        <div className={classes.value} title={getValue(item)} onMouseDown={scrollIntoView}>
+          <div className={classes.valueWrap} style={style}>
+            {res.element}
           </div>
         </div>
       </div>

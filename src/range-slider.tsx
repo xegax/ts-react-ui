@@ -19,25 +19,56 @@ const classes = {
   thumb: 'range-slider-ctrl-thumb'
 };
 
-interface Props {
+export interface Props {
   style?: React.CSSProperties;
-  model: RangeSliderModel;
+  model?: RangeSliderModel;
   className?: string;
   extraClass?: string,
   width?: number;
   height?: number;
   round?: boolean;
+
+  min?: number;
+  max?: number;
+  range?: Array<number>;
 }
 
 interface State {
   active?: 'left' | 'right' | 'thumb';
+  model?: RangeSliderModel;
 }
 
-export class RangeSliderImpl extends Subscriber<Props, State> {
-  state: Readonly<State> = {};
+export class RangeSliderImpl extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+
+    let model = props.model || new RangeSliderModel();
+    if (props.min != null && props.max != null)
+      model.setMinMax({from: props.min || 0, to: props.max || 1});
+    
+    if (props.range != null)
+      model.setRange({from: props.range[0], to: props.range[1]});
+
+    this.state = {
+      model
+    };
+  }
+
+  protected subscriber = () => {
+    this.setState({});
+  }
+
+  componentDidMount() {
+    this.state.model.subscribe(this.subscriber);
+  }
+
+  componentWillUnmount() {
+    this.state.model.unsubscribe(this.subscriber);
+  }
 
   protected onMouseDown = (evt: React.MouseEvent, key: keyof Range) => {
-    const { width, model } = this.props;
+    const model = this.state.model;
+    const { width } = this.props;
     const range = model.getRangeForRender(width);
 
     startDragging({ x: range[key], y: 0 }, {
@@ -56,7 +87,8 @@ export class RangeSliderImpl extends Subscriber<Props, State> {
   }
 
   protected onMouseDownThumb = (evt: React.MouseEvent) => {
-    const { width, model } = this.props;
+    const model = this.state.model;
+    const { width } = this.props;
     const rrange = model.getRangeForRender(width);
     const range = model.getRange();
     const minMaxRange = model.getMinMax();
@@ -82,7 +114,8 @@ export class RangeSliderImpl extends Subscriber<Props, State> {
   }
 
   render() {
-    const { model, width, height, className, extraClass, style } = this.props;
+    const model = this.state.model;
+    const { width, height, className, extraClass, style } = this.props;
     const { active } = this.state;
     const rrange = model.getRangeForRender(width);
     return (
@@ -107,9 +140,9 @@ export class RangeSliderImpl extends Subscriber<Props, State> {
   }
 }
 
-export function RangeSlider(props: Props): JSX.Element {
+export function RangeSlider(props: Props & { wrapToFlex?: boolean }): JSX.Element {
   return (
-    <FitToParent>
+    <FitToParent wrapToFlex={props.wrapToFlex}>
       <RangeSliderImpl {...props}/>
     </FitToParent>
   );

@@ -12,7 +12,7 @@ const count: PropertyItem<number> = {
 const groups: Array<PropItemGroup> = [
   {
     group: 'object',
-    maxHeight: 100,
+    // maxHeight: 100,
     items: [
       {
         name: 'select',
@@ -26,6 +26,10 @@ const groups: Array<PropItemGroup> = [
         name: 'id',
         value: '0001',
         render: (item: PropertyItem) => '[' + item.value + ']'
+      }, {
+        name: 'range',
+        doubleRow: true,
+        value: { min: 0, max: 100, value: 50 }
       }, {
         name: 'name',
         value: 'some name'
@@ -49,6 +53,7 @@ const groups: Array<PropItemGroup> = [
       {
         name: 'show count',
         value: true,
+        doubleRow: false,
         setValue(value: boolean) {
           this.value = value;
           count.show = value;
@@ -66,7 +71,12 @@ const groups: Array<PropItemGroup> = [
       {
         name: 'color',
         value: '#5500ff',
-        action: (item: PropertyItem) => prompt({ title: 'enter color', value: item.value })
+        action: function() {
+          return prompt({
+            title: 'enter color',
+            value: this.value
+          });
+        }
       }
     ]
   }, {

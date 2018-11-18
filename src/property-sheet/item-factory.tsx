@@ -1,12 +1,18 @@
 import * as React from 'react';
-import { PropertyItem } from './property-item';
+import { PropertyItem, getValue } from './property-item';
 import { DropDown } from '../drop-down';
 import { KeyCode } from '../../common/keycode';
 import { Switch } from '@blueprintjs/core';
+import { RangeSlider } from '../range-slider';
 
-export type SetValueCallback = (item: PropertyItem, newValue: string | boolean) => void;
+export interface RenderResult {
+  element: JSX.Element;
+  inline?: boolean;
+};
+
+export type SetValueCallback = (item: PropertyItem<any>, newValue: any) => void;
 export interface FactoryItem {
-  render(item: PropertyItem, setValue: SetValueCallback): JSX.Element;
+  render(item: PropertyItem, setValue: SetValueCallback): RenderResult;
 }
 
 export class ItemFactory {
@@ -16,14 +22,14 @@ export class ItemFactory {
     this.items.push(item);
   }
 
-  renderItem(item: PropertyItem, setValue: SetValueCallback): JSX.Element {
-    let jsx: JSX.Element;
+  renderItem(item: PropertyItem, setValue: SetValueCallback) {
+    let res: RenderResult;
     for (let n = 0; n < this.items.length; n++) {
-      if (jsx = this.items[n].render(item, setValue))
+      if (res = this.items[n].render(item, setValue))
         break;
     }
 
-    return jsx;
+    return res;
   }
 }
 
@@ -40,17 +46,19 @@ export class DefaultFactory extends ItemFactory {
           return { value };
         });
 
-        return (
+        const element = (
           <DropDown
             style = {{ flexGrow: 1 }}
             enabled = {prop.readOnly != true}
             values = {values}
-            value = {prop.value}
+            value = {getValue(prop)}
             onSelect = {item => {
               setValue(prop, item.value);
             }}
           />
         );
+
+        return { element };
       }
     });
 
@@ -60,7 +68,7 @@ export class DefaultFactory extends ItemFactory {
         if (type != 'boolean')
           return null;
 
-        return (
+        const element = (
           <Switch
             disabled = {prop.readOnly}
             checked = {prop.value as any}
@@ -69,6 +77,8 @@ export class DefaultFactory extends ItemFactory {
             }}
           />
         );
+
+        return { element, inline: true };
       }
     });
 
@@ -78,11 +88,11 @@ export class DefaultFactory extends ItemFactory {
         if (type != 'string' && type != 'number')
           return null;
 
-        return (
+        const element = (
           <input
             disabled = {prop.readOnly}
             type = {type}
-            defaultValue = {prop.value}
+            defaultValue = {getValue(prop)}
             onBlur = {e => {
               setValue(prop, e.currentTarget.value);
             }}
@@ -92,6 +102,29 @@ export class DefaultFactory extends ItemFactory {
             }}
           />
         );
+
+        return { element };
+      }
+    });
+
+    this.registerItem({
+      render(prop: PropertyItem<any>, setValue: SetValueCallback) {
+        const type = typeof prop.value;
+        const value = prop.value as any as { min: number; max: number; value: number };
+        if (type != 'object' || value.min == null || value.max == null || value.value == null)
+          return null;
+
+        let tmpValue = value.value;
+        const element = (
+          <RangeSlider
+            wrapToFlex
+            min={value.min}
+            max={value.max}
+            range={[ 50, 50 ]}
+          />
+        );
+
+        return { element };
       }
     });
   }

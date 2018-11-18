@@ -47,10 +47,10 @@ $prop-group-color: lightgray;
 
   .property-item {
     &:last-child {
-      margin-bottom: 4px; 
+      margin-bottom: 8px; 
     }
 
-    margin-top: 4px;
+    margin-top: 8px;
     white-space: nowrap;
     display: flex;
     cursor: default;
@@ -74,9 +74,12 @@ $prop-group-color: lightgray;
       position: relative;
       text-overflow: ellipsis;
       overflow: hidden;
+      color: gray;
+      font-size: small;
     }
 
     .name-wrap {
+      padding-left: 10px;
       padding-right: 2px;
       text-overflow: ellipsis;
       overflow: hidden;
@@ -93,7 +96,6 @@ $prop-group-color: lightgray;
         padding-left: 3px;
         padding-right: 3px;
         margin: 2px;
-        line-height: 0px;
       }
     }
 
@@ -106,8 +108,7 @@ $prop-group-color: lightgray;
       input {
         outline: none;
         width: 100%;
-        padding-left: 3px;
-        padding-right: 3px;
+        padding: 4px 3px 4px 3px;
         border: 1px solid silver;
         border-radius: 2px;
 
@@ -123,6 +124,21 @@ $prop-group-color: lightgray;
           outline: none;
         }
       }
+    }
+  }
+
+  .property-item.double-row {
+    display: block;
+
+    .name {
+      flex-grow: 1;
+      padding-bottom: 4px;
+    }
+
+    .value-wrap {
+      flex-grow: 1;
+      margin-left: 4px;
+      min-height: 20px;
     }
   }
 
