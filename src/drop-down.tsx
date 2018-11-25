@@ -1,48 +1,41 @@
 import * as React from 'react';
 import { FitToParent } from './fittoparent';
 import { findParent } from './common/dom';
-import { ListView } from './list-view';
+import { ListView, IListView, ListViewModel, ListProps } from './list-view';
 import { className as cn } from './common/common';
 import { KeyCode } from './common/keycode';
+import { ExtPromise, Cancelable } from 'objio';
 
-interface Item {
+export interface Item {
   render?: string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
   value: string;
 }
 
-interface Props {
+export interface Props {
   autoFocus?: boolean;
-  enabled?: boolean;
-  values: Array<Item>;
+  disabled?: boolean;
+  values?: Array<Item>;
   itemsPerPage?: number;
+  listModel?: ListViewModel;
 
-  value?: string;
-  defaultValue?: string;
+  value?: Item;
+  defaultValue?: Item;
 
   onSelect?(item: Item);
-  onFilter?(filter: string): Array<Item>;
+  onFilter?(filter: string): Array<Item> | Promise< Array<Item> >;
+  onScroll?(event: React.UIEvent);
+  renderList?(props: ListProps): JSX.Element;
 
   width?: number;
   style?: React.CSSProperties;
 }
 
-interface ListProps {
-  values: Array<Item>;
-  value?: string;
-  width?: number;
-  onSelect(item: Item);
-  onItemSize?(size: number);
-  itemsPerPage?: number;
-  itemSize?: number;
-  offset?: number;
-  refList?: React.RefObject<ListView>;
-}
-
 interface State {
-  value?: string;
+  value?: Item;
   showList?: boolean;
   showInput?: boolean;
   itemSize?: number;
+  filter?: string;
   filtered?: Array<Item>;
   offset?: number;
 }
@@ -60,30 +53,7 @@ const classes = {
   noData:         'no-data'
 };
 
-function DropDownCont(props: ListProps): JSX.Element {
-  const style: React.CSSProperties = {
-    width: props.width,
-    visibility: !props.itemsPerPage || props.itemSize ? null : 'hidden',
-    top: props.offset
-  };
-
-  return (
-    <div className={cn(classes.dropDownPanel, 'border')} style={style}>
-      <ListView
-        ref = {props.refList}
-        border = {false}
-        itemsPerPage = {props.itemsPerPage}
-        value = {props.value}
-        values = {props.values}
-        onSelect = {props.onSelect}
-        onItemSize = {props.onItemSize}
-        noDataToDisplay = {<div className={classes.noData}>No data</div>}
-      />
-    </div>
-  );
-}
-
-export class DropDown extends React.Component<Props, State> {
+export class DropDown<T extends Props = Props> extends React.Component<T, State> {
   private static active: DropDown;
 
   static getActive(): DropDown {
@@ -91,13 +61,12 @@ export class DropDown extends React.Component<Props, State> {
   }
 
   static defaultProps: Partial<Props> = {
-    itemsPerPage: 10,
-    enabled: true
+    itemsPerPage: 10
   };
 
   private input = React.createRef<HTMLInputElement>();
   private ref = React.createRef<HTMLDivElement>();
-  private list = React.createRef<ListView>();
+  private list = React.createRef<IListView>();
   state: Readonly<Partial<State>> = {};
   _state: Readonly<Partial<State>> = {};
 
@@ -111,8 +80,12 @@ export class DropDown extends React.Component<Props, State> {
       this.ref.current.focus();
   }
 
+  static getDerivedStateFromProps(props: ListProps, state: State): State {
+    return null;
+  }
+
   toggleList() {
-    if (!this.props.enabled)
+    if (this.props.disabled)
       return;
 
     const showList = !this._state.showList;
@@ -127,7 +100,7 @@ export class DropDown extends React.Component<Props, State> {
 
     this.setState({ showList, showInput, offset }, () => {
       this._state.showList && !this._state.showInput && this.ref.current.focus();
-      this._state.showList && this.list.current.scrollToFocus();
+      this._state.showList && this.list.current.scrollToSelect();
     });
   }
 
@@ -140,17 +113,20 @@ export class DropDown extends React.Component<Props, State> {
     });
   }
 
-  getValue(): string {
+  getValue(): Item {
     return this.props.value || this.state.value || this.props.defaultValue;
   }
 
-  getValues(): Array<Item> {
-    return this.state.filtered || this.props.values;
+  getValueText(): string {
+    const item = this.getValue();
+    return item && item.value || '';
   }
 
-  findSelected(): Item {
-    const value = this.getValue();
-    return this.getValues().find(item => item.value == value);
+  getValues(defaults?: Array<Item>): Array<Item> {
+    return (
+      this.state.filtered || this.props.values ||
+      this.props.listModel && this.props.listModel.getValues() || defaults
+    );
   }
 
   isListShown(): boolean {
@@ -167,36 +143,66 @@ export class DropDown extends React.Component<Props, State> {
     return item.render(item, <>{item.value}</>);
   }
 
-  renderInput(): JSX.Element {
-    if (this.state.showInput) {
-      return (
-        <div className={classes.input}>
-          <input
-            autoFocus
-            ref = {this.input}
-            placeholder = {this.getValue()}
-            onClick = {e => {
-              if (!this.state.showList)
-                return;
+  private filterTask: Cancelable;
+  onFilter = () => {
+    const filter = this.input.current.value;
+    let filtered = this.props.onFilter(filter);
 
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-            onChange = {() => {
-              this.setState({ filtered: this.props.onFilter(this.input.current.value) });
-            }}
-          />
-        </div>
-      );
+    const setFiltered = (filtered: Array<Item>) => {
+      this.setState({ filtered });
+      this.filterTask = null;
+    };
+
+    this.setState({ filter });
+    if (Array.isArray(filtered)) {
+      setFiltered( filtered );
+    } else {
+      this.filterTask && this.filterTask.cancel();
+      this.filterTask = ExtPromise()
+        .cancelable(
+          filtered
+          .then(setFiltered)
+          .catch(() => {  // filter from drop-down-loadable
+            this.filterTask = null;
+            this.setState({});
+          })
+        );
+    }
+  }
+
+  renderInput(): JSX.Element {
+    return (
+      <div className={classes.input}>
+        <input
+          autoFocus
+          ref = {this.input}
+          placeholder = {this.getValueText()}
+          defaultValue = {this.state.filter}
+          onClick = {e => {
+            if (!this.state.showList)
+              return;
+
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onChange = {this.onFilter}
+        />
+      </div>
+    );
+  }
+
+  renderValue(): JSX.Element {
+    if (this.state.showInput) {
+      return this.renderInput();
     }
 
-    const select = this.findSelected();
+    const select = this.getValue();
     return (
       <div className={classes.input}>
         {select ? (
           this.renderItem(select)
         ) : (
-          <span style={{visibility: 'hidden'}}>.</span>
+          <div style={{ width: 0, color: 'silver' }}>-- nothing --</div>
         )}
       </div>
     );
@@ -209,17 +215,16 @@ export class DropDown extends React.Component<Props, State> {
     this.hideList();
   }
 
-  onSelect = (item: Item) => {
+  onSelect = (value: Item) => {
+    value && this.props.onSelect && this.props.onSelect(value);
     this.setState({
-      value: item ? item.value : this.state.value,
+      value: value || this.state.value,
       showList: false,
       showInput: false,
       filtered: null
     }, () => {
-      item && this.props.onSelect && this.props.onSelect(item);
-      if (this.ref && this.ref.current) {
+      if (this.ref && this.ref.current)
         this.ref.current.focus();
-      }
     });
   }
 
@@ -251,6 +256,39 @@ export class DropDown extends React.Component<Props, State> {
     );
   }
 
+  renderList = (width: number) => {
+    const style: React.CSSProperties = {
+      width,
+      visibility: !this.props.itemsPerPage || this.state.itemSize ? null : 'hidden',
+      top: this.state.offset
+    };
+  
+    const renderList = this.props.renderList || ((props: ListProps) => {
+      return (
+        <ListView {...props}/>
+      );
+    });
+
+    const props: ListProps = {
+      ref: this.list,
+      model: this.props.listModel,
+      border: false,
+      itemsPerPage: this.props.itemsPerPage,
+      value: this.getValue(),
+      values: this.getValues(),
+      onSelect: item => this.onSelect(item),
+      onScroll: this.props.onScroll,
+      onItemSize: itemSize => this.setState({ itemSize }),
+      noDataToDisplay: (<div className={classes.noData}>No data</div>)
+    };
+  
+    return (
+      <div className={cn(classes.dropDownPanel, 'border')} style={style}>
+        {renderList(props)}
+      </div>
+    );
+  }
+
   renderCtrl(): JSX.Element {
     return (
       <div
@@ -263,46 +301,34 @@ export class DropDown extends React.Component<Props, State> {
             this.toggleList();
           }}
         >
-          {this.renderInput()}
+          {this.renderValue()}
           <div className={cn(classes.button, 'border')}>
             <i
               className={cn(this.isListShown() ? 'fa fa-caret-up' : 'fa fa-caret-down')}
             />
           </div>
         </div>
-        <FitToParent calcH = {false}>
-          <DropDownCont
-            refList = { this.list }
-            width = { this.props.width }
-            values = { this.getValues() }
-            value = { this.getValue() }
-            onSelect = { item => this.onSelect(item) }
-
-            offset = { this.state.offset }
-            itemSize = {this.state.itemSize}
-            itemsPerPage = {this.props.itemsPerPage}
-            onItemSize = {itemSize => {
-              this.setState({ itemSize });
-            }}
-          />
-        </FitToParent>
+        <FitToParent render={this.renderList}/>
       </div>
     );
   }
 
   render() {
-    const style: React.CSSProperties = {...this.props.style};
+    const style: React.CSSProperties = { ...this.props.style as any };
     if (this.props.width != null)
       style.display = 'inline-block';
 
+    const select = this.getValue();
+    const title = select && (typeof select.render == 'string' && select.render || select.value) || '';
     return (
       <div
+        title={title}
         ref={this.ref}
-        tabIndex={!this.props.enabled ? null : 0}
+        tabIndex={this.props.disabled ? null : 0}
         className={cn(
           classes.dropDown,
           this.isListShown() && classes.showList,
-          !this.props.enabled && classes.disabled,
+          this.props.disabled && classes.disabled,
           this.hasFocus() && classes.focus
         )}
         style={style}

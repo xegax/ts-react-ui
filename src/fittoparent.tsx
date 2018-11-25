@@ -11,6 +11,7 @@ export interface Props extends React.HTMLProps<any> {
   wrapToFlex?: boolean;
   calcW?: boolean;
   calcH?: boolean;
+  render?(width: number, height: number): JSX.Element;
 }
 
 export class FitToParent extends React.Component<Props, State> {
@@ -34,11 +35,13 @@ export class FitToParent extends React.Component<Props, State> {
     let paddingX = (padding.length == 1 ? padding[0] * 2 : (padding[1] + padding[3])) || 0;
     let paddingY = (padding.length == 1 ? padding[0] * 2 : (padding[0] + padding[2])) || 0;
 
-    const width = clientWidth - paddingX;
-    const height = clientHeight - paddingY;
+    let width = clientWidth - paddingX;
+    let height = clientHeight - paddingY;
     if (this.state.width == width && this.state.height == height)
       return;
 
+    width = width || this.state.width;
+    height = height || this.state.height;
     this.setState({
       width,
       height
@@ -46,7 +49,11 @@ export class FitToParent extends React.Component<Props, State> {
   }
 
   private getChildren(): JSX.Element {
-    const child = React.Children.only(this.props.children);
+    let child = this.props.children && React.Children.only(this.props.children);
+
+    if (!child && this.props.render)
+      return this.props.render(this.state.width, this.state.height);
+
     if (!child)
       return null;
 
@@ -80,8 +87,8 @@ export class FitToParent extends React.Component<Props, State> {
   }
 
   render() {
-    let el = <React.Fragment>{this.getChildren()}</React.Fragment>;
-    if (this.props.wrapToFlex)
+    let el = <>{this.getChildren()}</>;
+    if (this.props.wrapToFlex) {
       el = (
         <div style={{position: 'relative', flexGrow: 1, ...this.props.style}}>
           <div style={{position: 'absolute', left: 0, top: 0, right: 0, bottom: 0}}>
@@ -89,6 +96,7 @@ export class FitToParent extends React.Component<Props, State> {
           </div>
         </div>
       );
+    }
 
     return el;
   }

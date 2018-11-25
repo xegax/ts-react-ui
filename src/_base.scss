@@ -1,3 +1,7 @@
+$active-color-1: #51aeea;
+$active-color-2: #a0d2f3;
+$bg-color-1: #d2e2ec;
+
 @mixin vert-panel($space) {
   > * {
     margin-bottom: $space;
@@ -140,4 +144,5 @@
 
 @import './drop-down';
 @import './list-view';
-@import './property-sheet';
+@import './prop-sheet';
+@import './slider';

@@ -1,0 +1,37 @@
+.slider-ctrl {
+  position: relative;
+  height: 20px;
+  user-select: none;
+
+  .slider-thumb {
+    top: 6px;
+    bottom: 6px;
+    position: absolute;
+    background-color: $bg-color-1;
+    border-radius: 4px;
+    border-top: 1px solid gray;
+  }
+
+  &-slider {
+    background-color: $active-color-1;
+    position: absolute;
+    width: 10px;
+    height: 20px;
+    border: 1px solid gray;
+    box-sizing: border-box;
+    border-radius: 4px;
+    &:active {
+      background-color: $active-color-2;
+    }
+  }
+
+  &.disabled {
+    .slider-thumb {
+      background-color: #e2e2e2;
+    }
+    .slider-ctrl-slider {
+      background-color: #e2e2e2;
+      border-color: silver;
+    }
+  }
+}
