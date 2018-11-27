@@ -12,7 +12,6 @@ import {
 // import { prompt } from '../src/prompt';
 import { Item } from '../src/drop-down';
 import { Publisher } from 'objio';
-import './layout.scss';
 import { clamp } from '../common/common';
 import { ListView } from '../src/list-view';
 
@@ -224,43 +223,5 @@ storiesOf('Prop sheet', module)
   .add('property', () => {
     return (
       <View model={model}/>
-    );
-  })
-  .add('layout', () => {
-    return (
-      <div className='layout' style={{width: 200}}>
-        <div className='item inline'>
-          <div className='name-wrap'>name</div>
-          <div className='value-wrap'>
-            value
-          </div>
-        </div>
-        <div className='item'>
-          <div className='name-wrap'>name</div>
-          <div className='value-wrap'>
-            <div className='fit'>value xxx yyy zzz ddd fff  ggg hhh rtrtert</div>
-          </div>
-        </div>
-        <div className='item'>
-          <div className='name-wrap'>name 111 222 333 444 555 666</div>
-          <div className='value-wrap'>value</div>
-        </div>
-        <div className='item'>
-          <div className='name-wrap'>name 111 222 333 444 555 666</div>
-          <div className='value-wrap'>
-            <div className='fit'>
-              <input defaultValue='some'/>
-            </div>
-          </div>
-        </div>
-        <div className='item'>
-          <div className='name-wrap'>id</div>
-          <div className='value-wrap'>
-            <div className='fit'>
-              <input defaultValue='some 111 222 333 444 555 666 777'/>
-            </div>
-          </div>
-        </div>
-      </div>
     );
   });
