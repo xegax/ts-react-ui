@@ -1,0 +1,50 @@
+.tabs-ctrl {
+  white-space: nowrap;
+  overflow-x: hidden;
+  .tab-content {
+    padding: 5px;
+  }
+  .tabs-wrap {
+    display: flex;
+  }
+  .tabs-spacer {
+    flex-grow: 1;
+    border-bottom: 1px solid silver;
+    background-color: #ececec;
+  }
+  .tab-ctrl {
+    display: inline-block;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: #ececec;
+    cursor: default;
+    user-select: none;
+    border-bottom: 1px solid silver;
+    border-top: 1px solid transparent;
+    color: #6d6d6d;
+  }
+  > .tab-ctrl {
+    border-left: 1px solid lightgray; 
+  }
+
+  > .tab-ctrl:first-child {
+    border-left: 1px solid transparent;
+  }
+
+  .tab-ctrl.select {
+    background-color: white;
+    border: 1px solid silver;
+    border-bottom: none;
+    position: relative;
+    color: black;
+  }
+  .tab-ctrl.select + .tab-ctrl  {
+    border-left: none;
+  }
+}
+
+.tabs-ctrl.disabled {
+  opacity: 0.5;
+}

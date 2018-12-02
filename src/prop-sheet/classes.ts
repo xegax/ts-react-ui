@@ -9,5 +9,6 @@ export const classes = {
   group: 'prop-group',
   header: 'prop-group-header',
   fit: 'fit',
-  inline: 'inline'
+  inline: 'inline',
+  padding: 'padding'
 };

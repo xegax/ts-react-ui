@@ -3,7 +3,7 @@ import { className as cn } from '../common/common';
 import { classes } from './classes';
 import { KeyCode } from '../common/keycode';
 import { DropDown, Props as DDProps } from '../drop-down';
-import { Slider, Props as SliderProps } from '../slider';
+import { Slider, Props as SliderBaseProps } from '../slider';
 import { Switch } from '@blueprintjs/core';
 
 export interface Props {
@@ -18,7 +18,7 @@ export interface Props {
 
   width?: number;
   key?: string | number;
-  children?: React.ReactChild;
+  children?: React.ReactChild | any;
 }
 
 function hasClass(e: Element, name: string) {
@@ -152,11 +152,18 @@ export const DropDownPropItem: React.SFC<Props & DDProps> = (props: Props & DDPr
   );
 }
 
-export const SliderPropItem: React.SFC<Props & SliderProps> = (props: Props & SliderProps) => {
+type SliderProps = Props & SliderBaseProps & { left?: Array<JSX.Element>, right?: Array<JSX.Element> };
+export const SliderPropItem: React.SFC<SliderProps> = (props: SliderProps) => {
   const { show, inline, label } = props;
   return (
     <PropItem show={show} inline={inline} label={label} wrapValue={false}>
-      <Slider {...props}/>
+      <div style={{display: 'flex', flexGrow: 1, alignItems: 'center'}} className='horz-panel-1'>
+        {props.left}
+        <div style={{flexGrow: 1, display: 'flex'}}>
+          <Slider {...props}/>
+        </div>
+        {props.right}
+      </div>
     </PropItem>
   );
 }

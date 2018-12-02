@@ -121,6 +121,10 @@ $bg-color-1: #d2e2ec;
   border-color: silver;
 }
 
+.padding {
+  padding: 5px;
+}
+
 .disabled {
   .border {
     border: 1px solid #dedede;
@@ -146,3 +150,4 @@ $bg-color-1: #d2e2ec;
 @import './list-view';
 @import './prop-sheet';
 @import './slider';
+@import './tabs';

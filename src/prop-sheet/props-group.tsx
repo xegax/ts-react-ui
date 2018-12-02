@@ -14,6 +14,7 @@ export interface Props {
   open?: boolean;
   levelPadding?: number;
   height?: number;
+  padding?: boolean;
 }
 
 interface State {
@@ -45,6 +46,13 @@ export class PropsGroup extends React.Component<Props, State> {
 
     let children = React.Children.toArray(this.props.children) as Array<React.ReactElement<any>>;
     const propItems = children.some(item => item.type == PropItem);
+    /*const tabs = children.filter((item: React.ReactElement<any>) => {
+      return item.type == PropTab;
+    }).map((item: React.ReactElement<PropTab>, i) => {
+      item.props;
+      return <Tab label={item.props.label} id={'tab' + i}/>
+    });*/
+
     children = children.filter((item: React.ReactElement<ItemProps>) => {
       return item.props.show != false;
     }).map(item => {
@@ -52,6 +60,11 @@ export class PropsGroup extends React.Component<Props, State> {
         item = React.cloneElement(item, { disabled: true });
       return item;
     });
+
+    /*let tab: JSX.Element;
+    if (tabs.length) {
+      tab = <Tabs>{tabs}</Tabs>;
+    }*/
 
     return (
       <div className = {classes.group}>
