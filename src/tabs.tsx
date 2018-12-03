@@ -89,6 +89,7 @@ export class Tabs extends React.Component<Props, State> {
 
 interface TabProps {
   label?: string;
+  maxWidth?: number;
   id: string;
   select?: boolean;
   onSelect?(id: string);
@@ -102,7 +103,11 @@ export class Tab extends React.Component<TabProps> {
 
   render() {
     return (
-      <div className={cn(classes.TabCtrl, this.props.select && classes.Select)} onClick={this.onClick}>
+      <div
+        className={cn(classes.TabCtrl, this.props.select && classes.Select)}
+        onClick={this.onClick}
+        style={{maxWidth: this.props.maxWidth}}
+      >
         {this.props.label}
       </div>
     );

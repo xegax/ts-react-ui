@@ -171,7 +171,7 @@ class View extends React.Component<{ model: Model }, State> {
               </PropsGroup>
               <PropsGroup label='object'>
                 <Tabs defaultSelect='t1'>
-                  <Tab label='tab 1' id='t1'>
+                  <Tab label='tab 1 1 1 1 1 1' id='t1'>
                     <SwitchPropItem
                       label='on'
                       value={model.isOn()}

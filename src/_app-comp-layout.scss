@@ -1,0 +1,28 @@
+.app-comp-layout {
+  background-color: silver;
+
+  .app-component {
+    background-color: lightgray;
+    position: relative;
+    display: flex;
+    padding: 5px;
+
+    &-wrap {
+      overflow: hidden;
+      flex-grow: 1;
+    }
+  }
+
+  .app-comp-icons {
+    > .app-component-icon {
+      font-size: 200%;
+      opacity: 0.5;
+      &:hover {
+        opacity: 1;
+      }
+      &.select {
+        opacity: 1;
+      }
+    }
+  }
+}

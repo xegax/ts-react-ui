@@ -6,6 +6,16 @@
   }
   .tabs-wrap {
     display: flex;
+    padding-top: 2px;
+    background-color: #ececec;
+
+    > .tab-ctrl {
+      border-left: 1px solid lightgray; 
+    }
+  
+    > .tab-ctrl:first-child {
+      border-left: 1px solid transparent;
+    }
   }
   .tabs-spacer {
     flex-grow: 1;
@@ -13,6 +23,7 @@
     background-color: #ececec;
   }
   .tab-ctrl {
+    overflow: hidden;
     display: inline-block;
     padding-top: 4px;
     padding-bottom: 4px;
@@ -24,13 +35,6 @@
     border-bottom: 1px solid silver;
     border-top: 1px solid transparent;
     color: #6d6d6d;
-  }
-  > .tab-ctrl {
-    border-left: 1px solid lightgray; 
-  }
-
-  > .tab-ctrl:first-child {
-    border-left: 1px solid transparent;
   }
 
   .tab-ctrl.select {
