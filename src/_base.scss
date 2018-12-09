@@ -177,19 +177,34 @@ $bg-color-1: #d2e2ec;
 }
 
 .vertical-resizer {
-  right: 0px;
   width: 5px;
-  top: 0px;
-  bottom: 0px;
   cursor: e-resize;
 }
 
-.horizontal-resizer {
-  bottom: 0px;
-  height: 5px;
-  left: 0px;
+.vertical-resizer.fit-to-abs {
   right: 0px;
-  cursor: w-resize;
+  top: 0px;
+  bottom: 0px;
+  left: unset;
+}
+
+.horizontal-resizer {
+  height: 5px;
+  cursor: n-resize;
+}
+
+.horizontal-resizer.fit-to-abs {
+  right: 0px;
+  left: 0px;
+  bottom: 0px;
+  top: unset;
+}
+
+.fit-to-abs {
+  left: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
 }
 
 @import './drop-down';

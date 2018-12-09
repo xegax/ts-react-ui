@@ -26,6 +26,8 @@ export interface ListProps {
 
   itemsPerPage?: number;
   width?: number;
+  height?: number;
+  maxHeight?: number;
   model?: ListViewModel;
 
   onSelect?(item: Item);
@@ -37,6 +39,7 @@ export interface ListProps {
 
 interface State {
   itemSize?: number;
+  scrollTop?: number;
   model?: ListViewModel;
 }
 
@@ -77,7 +80,7 @@ export class ListViewModel extends Publisher {
   }
 
   setValue(value: Item, notify?: boolean) {
-    if (this.select == value)
+    if (this.select && this.isEqual(this.select, value))
       return;
 
     const idx = this.values.findIndex(v => this.isEqual(value, v));
@@ -128,10 +131,10 @@ export class ListView extends React.Component<ListProps, State> implements IList
     super(props);
 
     const model = props.model || new ListViewModel();
-    model.subscribe(() => {
+    /*model.subscribe(() => {
       if (this.ref && this.ref.current)
         this.ref.current.scrollTop = 0;
-    }, 'values');
+    }, 'values');*/
 
     model.setValues(props.values);
     this.state = { model };
@@ -305,9 +308,12 @@ export class ListView extends React.Component<ListProps, State> implements IList
   renderItem(item: Item, idx: number, select: boolean) {
     let jsx: JSX.Element | string;
     if (typeof item.render != 'function')
-      jsx = item.render || item.value;
+      jsx = item.render || item.value || '';
     else
       jsx = item.render(item, <>{item.value}</>);
+
+    if (typeof jsx == 'string' && jsx.trim() == '')
+      jsx = <span style={{visibility: 'hidden'}}>?</span>;
 
     return (
       <div
@@ -331,10 +337,14 @@ export class ListView extends React.Component<ListProps, State> implements IList
   }
 
   render() {
-    const maxHeight = this.getMaxHeight();
+    let maxHeight = this.getMaxHeight();
+    if (this.props.maxHeight)
+      maxHeight = Math.min(maxHeight, this.props.maxHeight);
+
     const style: React.CSSProperties = {
       ...this.props.style,
       width: this.props.width,
+      height: this.props.height,
       maxHeight
     };
 

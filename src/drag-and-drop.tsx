@@ -17,61 +17,67 @@ export interface DragProps extends React.HTMLProps<any> {
 }
 
 export class Draggable extends React.Component<DragProps, {}> {
+  onMouseDown = (event: MouseEvent) => {
+    if (this.props.enabled == false)
+      return;
+
+    let drag: ContItem;
+    let children = this.props.children;
+    let type = this.props.type;
+    let dragData = { ...this.props.data };
+    const { onDragStart } = this.props;
+
+    startDragging({ x: 0, y: 0, minDist: 5 }, {
+      onDragStart: () => {
+        onDragStart && onDragStart();
+        setTimeout(() => {
+          dropModel.collectDropsForType(type);
+          drag = ContainerModel.get().append(
+            <div
+              style={{
+                position: 'absolute',
+                left: event.pageX,
+                top: event.pageY,
+                opacity: 0.5,
+                pointerEvents: 'none'
+              }}
+            >
+              {children}
+            </div>
+          );
+        }, 10);
+      },
+      onDragging: evt => {
+        if (!drag)
+          return;
+
+        const mouse = evt.event as MouseEvent;
+        const el = drag.getElement();
+        if (!el)
+          return;
+
+        el.style.left = mouse.pageX + 'px';
+        el.style.top = mouse.pageY + 'px';
+        dropModel.checkDragEvent(mouse, { ...dragData });
+      },
+      onDragEnd: evt => {
+        if (!drag)
+          return;
+
+        dropModel.drop(this, evt.event as MouseEvent);
+        drag.remove();
+      }
+    })(event);
+  }
+
+  componentWillUnmount() {
+    const parent = ReactDOM.findDOMNode(this) as HTMLElement;
+    parent.removeEventListener('mousedown', this.onMouseDown);
+  }
+
   componentDidMount() {
     const parent = ReactDOM.findDOMNode(this) as HTMLElement;
-
-    parent.addEventListener('mousedown', event => {
-      if (this.props.enabled == false)
-        return;
-
-      let drag: ContItem;
-      let children = this.props.children;
-      let type = this.props.type;
-      let dragData = { ...this.props.data };
-      const { onDragStart } = this.props;
-
-      startDragging({ x: 0, y: 0, minDist: 5 }, {
-        onDragStart: () => {
-          onDragStart && onDragStart();
-          setTimeout(() => {
-            dropModel.collectDropsForType(type);
-            drag = ContainerModel.get().append(
-              <div
-                style={{
-                  position: 'absolute',
-                  left: event.pageX,
-                  top: event.pageY,
-                  opacity: 0.5,
-                  pointerEvents: 'none'
-                }}
-              >
-                {children}
-              </div>
-            );
-          }, 10);
-        },
-        onDragging: evt => {
-          if (!drag)
-            return;
-
-          const mouse = evt.event as MouseEvent;
-          const el = drag.getElement();
-          if (!el)
-            return;
-
-          el.style.left = mouse.pageX + 'px';
-          el.style.top = mouse.pageY + 'px';
-          dropModel.checkDragEvent(mouse, { ...dragData });
-        },
-        onDragEnd: evt => {
-          if (!drag)
-            return;
-
-          dropModel.drop(this, evt.event as MouseEvent);
-          drag.remove();
-        }
-      })(event);
-    });
+    parent.addEventListener('mousedown', this.onMouseDown);
   }
 
   render() {
@@ -155,7 +161,7 @@ class DropModel extends Publisher {
     };
     try {
       dp.props.onDragEnter && dp.props.onDragEnter(args);
-    } catch(e) {
+    } catch (e) {
     }
   }
 
@@ -168,14 +174,14 @@ class DropModel extends Publisher {
     };
     try {
       dp.props.onDragOver && dp.props.onDragOver(args);
-    } catch(e) {
+    } catch (e) {
     }
   }
 
   onDragLeave(dp: Droppable): void {
     try {
       dp.props.onDragLeave && dp.props.onDragLeave();
-    } catch(e) {
+    } catch (e) {
     }
   }
 

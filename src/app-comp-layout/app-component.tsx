@@ -10,15 +10,18 @@ export interface Props {
   faIcon?: string;
   select?: boolean;
   id: string;
-  onSelect?(id: string);
+  onSelect?(id: string): boolean;
   children?: React.ReactChild | Array<React.ReactChild>;
+  style?: React.CSSProperties;
 }
 
 export const AppComponent: React.SFC<Props> = (props: Props) => {
   return (
     <div
       className={cn(classes.componentIcon, props.select && 'select')}
-      onClick={() => props.onSelect && props.onSelect(props.id)}
+      onClick={() => {
+        props.onSelect && props.onSelect(props.id);
+      }}
     >
       <i className={cn(props.faIcon)}/>
     </div>

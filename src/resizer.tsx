@@ -1,15 +1,16 @@
 import * as React from 'react';
-import { startDragging } from '../common/start-dragging';
-import { clamp } from '../common/common';
+import { startDragging } from './common/start-dragging';
+import { className as cn } from './common/common';
 
 export interface Props {
-  size: number;
+  size: number | (() => number);
   min?: number;
   max?: number;
   onResize?(newSize: number);
+  style?: React.CSSProperties;
 }
 
-export class VerticalResizer extends React.Component<Props> {
+export class VerticalResizer extends React.Component<Props & {height?: number}> {
   onResize(newSize: number) {
     if (this.props.min)
       newSize = Math.max(newSize, this.props.min);
@@ -21,8 +22,11 @@ export class VerticalResizer extends React.Component<Props> {
 
   render() {
     const onMouseDown = e => {
-      const size = this.props.size;
-      startDragging({ x: size, y: 0}, {
+      const size = typeof this.props.size == 'function' ?
+        this.props.size :
+        () => this.props.size as number;
+
+      startDragging({ x: size(), y: 0}, {
         onDragging: event => {
           this.onResize(event.x);
         }
@@ -30,12 +34,18 @@ export class VerticalResizer extends React.Component<Props> {
     };
   
     return (
-      <div className='resizer vertical-resizer' onMouseDown={onMouseDown}/>
+      <div
+        style={this.props.style}
+        className={cn('resizer', 'vertical-resizer', this.props.height == null && 'fit-to-abs')}
+        onMouseDown={onMouseDown}
+      />
     );
   }
 }
 
-export class HorizontalResizer extends React.Component<Props> {
+export class HorizontalResizer extends React.Component<Props & { width: number }> {
+  ref = React.createRef<HTMLDivElement>();
+
   onResize(newSize: number) {
     if (this.props.min)
       newSize = Math.max(newSize, this.props.min);
@@ -45,18 +55,29 @@ export class HorizontalResizer extends React.Component<Props> {
     this.props.onResize && this.props.onResize(newSize);
   }
 
+  onMouseDown = e => {
+    const size = typeof this.props.size == 'function' ?
+        this.props.size :
+        () => this.props.size as number;
+
+    startDragging({ x: 0, y: size()}, {
+      onDragging: event => {
+        this.onResize(event.y);
+      }
+    })(e);
+  };
+
   render() {
-    const onMouseDown = e => {
-      const size = this.props.size;
-      startDragging({ x: 0, y: size}, {
-        onDragging: event => {
-          this.onResize(event.y);
-        }
-      })(e);
-    };
-  
     return (
-      <div className='resizer horizontal-resizer' onMouseDown={onMouseDown}/>
+      <div
+        ref={this.ref}
+        style={{
+          ...this.props.style,
+          width: this.ref.current && this.ref.current.parentElement.offsetWidth || null
+        }}
+        className={cn('resizer', 'horizontal-resizer')}
+        onMouseDown={this.onMouseDown}
+      />
     );
   }
 }

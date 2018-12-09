@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { FitToParent } from './fittoparent';
 import { findParent } from './common/dom';
 import { ListView, IListView, ListViewModel, ListProps } from './list-view';
@@ -38,6 +39,7 @@ interface State {
   filter?: string;
   filtered?: Array<Item>;
   offset?: number;
+  maxHeight?: number;
 }
 
 const classes = {
@@ -84,6 +86,31 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
     return null;
   }
 
+  getBottomOffset() {
+    if (!this.ref.current)
+      return null;
+
+    const bottom = this.ref.current.getBoundingClientRect().bottom;
+    const listHeight = ReactDOM.findDOMNode(this.list.current).offsetHeight;
+    let parent: HTMLElement = this.ref.current;
+    while (parent) {
+      if (['relative', 'absolute'].indexOf(parent.style.position) != -1) {
+        let rect = parent.getBoundingClientRect();
+        return {
+          offset: bottom - rect.top,
+          maxHeight: window.innerHeight - ( bottom - rect.top )
+        };
+      }
+      parent = parent.parentElement;
+    }
+
+    
+    return {
+      offset: bottom,
+      maxHeight: window.innerHeight - bottom
+    };
+  }
+
   toggleList() {
     if (this.props.disabled)
       return;
@@ -91,14 +118,19 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
     const showList = !this._state.showList;
     const showInput = this.isFilterable() && showList;
     let offset = this._state.offset;
+    let maxHeight = this._state.maxHeight;
     if (showList) {
       DropDown.active = this;
-      offset = this.ref.current.getBoundingClientRect().bottom;
+      const res = this.getBottomOffset();
+      if (res) {
+        offset = res.offset;
+        maxHeight = res.maxHeight;
+      }
     } else {
       DropDown.active = null;
     }
 
-    this.setState({ showList, showInput, offset }, () => {
+    this.setState({ showList, showInput, offset, maxHeight }, () => {
       this._state.showList && !this._state.showInput && this.ref.current.focus();
       this._state.showList && this.list.current.scrollToSelect();
     });
@@ -113,8 +145,16 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
     });
   }
 
+  isListView(e: HTMLDivElement) {
+    return ReactDOM.findDOMNode(this.list.current) == e;
+  }
+
   getValue(): Item {
-    return this.props.value || this.state.value || this.props.defaultValue;
+    let value = this.props.value;
+    if (value)
+      value = this.getValues().find(item => item.value == value.value) || value;
+
+    return value || this.state.value || this.props.defaultValue;
   }
 
   getValueText(): string {
@@ -270,6 +310,7 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
     });
 
     const props: ListProps = {
+      maxHeight: this.state.maxHeight,
       ref: this.list,
       model: this.props.listModel,
       border: false,

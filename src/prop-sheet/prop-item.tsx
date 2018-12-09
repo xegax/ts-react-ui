@@ -66,7 +66,7 @@ export const PropItem: React.SFC<Props> = (props: Props) => {
       <div className={classes.nameWrap}>
         {props.label}
       </div>
-      <div className={vc} onMouseDown={scrollIntoView}>
+      <div className={vc} onMouseDown={scrollIntoView} title={typeof value == 'string' ? value : null}>
         {value}
       </div>
     </div>
@@ -75,6 +75,9 @@ export const PropItem: React.SFC<Props> = (props: Props) => {
 
 interface TextProps extends Props {
   onChanged?(value: string);
+  onEnter?(value: string);
+  onCancel?();
+  autoFocus?: boolean;
 }
 
 interface State {
@@ -94,7 +97,8 @@ export class TextPropItem extends React.PureComponent<TextProps, State> {
     return { key: prevState.key + 1 };
   }
 
-  onChanged(value: string, getFous?: boolean) {
+  onChanged(value: string) {
+    this.props.onEnter && this.props.onEnter(value);
     if (this.props.value == value)
       return;
 
@@ -102,6 +106,7 @@ export class TextPropItem extends React.PureComponent<TextProps, State> {
   }
 
   onCancel() {
+    this.props.onCancel && this.props.onCancel();
     this.setState({});
   }
 
@@ -117,6 +122,7 @@ export class TextPropItem extends React.PureComponent<TextProps, State> {
     return (
       <PropItem {...props} fit>
         <input
+          autoFocus={props.autoFocus}
           disabled={props.disabled}
           ref={this.ref}
           key={this.state.key}
@@ -143,11 +149,16 @@ export class TextPropItem extends React.PureComponent<TextProps, State> {
   }
 }
 
-export const DropDownPropItem: React.SFC<Props & DDProps> = (props: Props & DDProps) => {
+type DropDownProps = Props & DDProps & { left?: Array<JSX.Element>, right?: Array<JSX.Element> };
+export const DropDownPropItem: React.SFC<DropDownProps> = (props: DropDownProps) => {
   const { show, inline, label } = props;
   return (
     <PropItem show={show} inline={inline} label={label} wrapValue={false}>
-      <DropDown {...props}/>
+      <div style={{display: 'flex', flexGrow: 1, alignItems: 'center'}} className='horz-panel-1'>
+        {props.left}
+        <DropDown {...props}/>
+        {props.right}
+      </div>
     </PropItem>
   );
 }

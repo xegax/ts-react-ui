@@ -34,35 +34,41 @@ export class AppCompLayout extends React.Component<Props, State> {
 
   getOnSelect(props: CompProps) {
     return () => {
+      if (props.onSelect && !props.onSelect(props.id))
+        return false;
+
       if (this.state.select == props.id)
         this.setState({ select: null});
       else
         this.setState({ select: props.id});
-      props.onSelect && props.onSelect(props.id);
       this.props.onSelect && this.props.onSelect(props.id);
+      return true;
     };
   }
 
-  renderComponent(children?: React.ReactChild | Array<React.ReactChild>) {
-    if (!children)
+  renderComponent(props: CompProps) {
+    if (!props || !props.children)
       return null;
 
     return (
       <div className={classes.component} style={{ width: this.state.width }}>
-        <div className={classes.componentWrap}>{children}</div>
-        <VerticalResizer
-          max={500}
-          min={50}
-          size={this.state.width}
-          onResize={newSize => this.setState({width: newSize})}
-        />
+        <div className={classes.componentWrap} style={props.style}>{props.children}</div>
+        <div style={{position: 'relative'}}>
+          <VerticalResizer
+            style={{ left: 0, right: 'unset' }}
+            max={500}
+            min={50}
+            size={this.state.width}
+            onResize={newSize => this.setState({width: newSize})}
+          />
+        </div>
       </div>
     );
   }
 
   render() {
     let content: React.ReactElement<any>;
-    let component: Array<React.ReactChild> | React.ReactChild;
+    let compProps: CompProps;
     const children = React.Children.toArray(this.props.children)
     .map((item: React.ReactElement<CompProps>) => {
       if (item.type == AppContent) {
@@ -72,7 +78,7 @@ export class AppCompLayout extends React.Component<Props, State> {
 
       const select = (this.props.select || this.state.select) == item.props.id;
       if (select)
-        component = item.props.children;
+        compProps = item.props;
 
       return React.cloneElement(item, {
         select,
@@ -81,11 +87,11 @@ export class AppCompLayout extends React.Component<Props, State> {
     }).filter(item => item);
 
     return (
-      <div className={cn(classes.appCompLayout, 'absolute-fit', 'flex')}>
+      <div className={cn(classes.appCompLayout, 'flex')}>
         <div className={cn(classes.appCompIcons, 'padding-2', 'vert-panel-2')}>
           {children}
         </div>
-        {this.renderComponent(component)}
+        {this.renderComponent(compProps)}
         {content}
       </div>
     );

@@ -13,14 +13,22 @@ export {
 export interface Props {
   width?: number;
   disabled?: boolean;
-  children?: React.ReactChild;
+  children?: React.ReactChild | Array<React.ReactChild>;
 }
 
 export const PropSheetImpl: React.SFC<Props> = (props: Props) => {
   return (
     <div className={classes.propSheet}>
-      {!props.disabled ? props.children : React.Children.map(props.children, child => {
-        return React.cloneElement(child as any, { disabled: true });
+      {React.Children.map(props.children, child => {
+        if (!child)
+          return null;
+
+        return (
+          React.cloneElement(child as any, {
+            disabled: props.disabled,
+            width: props.width - 2
+          })
+        );
       })}
     </div>
   );

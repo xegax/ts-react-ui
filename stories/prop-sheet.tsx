@@ -157,92 +157,94 @@ class View extends React.Component<{ model: Model }, State> {
     const select = model.getSelectImage();
     return (
       <div style={{ backgroundColor: 'silver', width: 200 }}>
-        <PropSheet>
-            <PropsGroup label='root'>
-              <PropsGroup label='wiki'>
-                <div>{select && select.render}</div>
-                <div style={{
-                  height: 200,
-                  backgroundImage: select && select.value,
-                  backgroundPosition: 'center',
-                  backgroundSize: 'contain',
-                  backgroundRepeat: 'no-repeat'}}
+        <PropSheet width={200}>
+          <PropsGroup label='list'>
+            <ListView values={model.getScenes()} />
+          </PropsGroup>
+          <PropsGroup label='wiki'>
+            <div>{select && select.render}</div>
+            <div style={{
+              height: 200,
+              backgroundImage: select && select.value,
+              backgroundPosition: 'center',
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat'
+            }}
+            />
+          </PropsGroup>
+          <PropsGroup label='object'>
+            <Tabs defaultSelect='t1'>
+              <Tab label='tab 1 1 1 1 1 1' id='t1'>
+                <SwitchPropItem
+                  label='on'
+                  value={model.isOn()}
+                  onChanged={v => model.setOn(v)}
                 />
-              </PropsGroup>
-              <PropsGroup label='object'>
-                <Tabs defaultSelect='t1'>
-                  <Tab label='tab 1 1 1 1 1 1' id='t1'>
-                    <SwitchPropItem
-                      label='on'
-                      value={model.isOn()}
-                      onChanged={v => model.setOn(v)}
+                <PropItem label='id' value={model.getID()} />
+                <SliderPropItem
+                  label='frame'
+                  round
+                  min={model.getFrameMin()}
+                  max={model.getFrameMax()}
+                  value={model.getFrame()}
+                  onChanged={value => model.setFrame(value)}
+                  onChange={value => model.setFrame(value)}
+                />
+                <SliderPropItem
+                  inline={false}
+                  label='frame'
+                  min={model.getFrameMin()}
+                  max={model.getFrameMax()}
+                  value={model.getFrame()}
+                  onChanged={value => model.setFrame(value)}
+                  onChange={value => model.setFrame(value)}
+                  left={[
+                    <i
+                      className={model.isPlaying() ? 'fa fa-pause' : 'fa fa-play'}
+                      title='play'
+                      onClick={e => model.togglePlay()}
                     />
-                    <PropItem label='id' value={model.getID()}/>
-                    <SliderPropItem
-                      label='frame'
-                      round
-                      min={model.getFrameMin()}
-                      max={model.getFrameMax()}
-                      value={model.getFrame()}
-                      onChanged={value => model.setFrame(value)}
-                      onChange={value => model.setFrame(value)}
-                    />
-                    <SliderPropItem
-                      inline={false}
-                      label='frame'
-                      min={model.getFrameMin()}
-                      max={model.getFrameMax()}
-                      value={model.getFrame()}
-                      onChanged={value => model.setFrame(value)}
-                      onChange={value => model.setFrame(value)}
-                      left={[
-                        <i
-                          className={model.isPlaying() ? 'fa fa-pause' : 'fa fa-play'}
-                          title='play'
-                          onClick={e => model.togglePlay()}
-                        />
-                      ]}
-                    />
-                    <TextPropItem
-                      label='frame'
-                      value={model.getFrame()}
-                      onChanged={value => model.setFrame(+value)}
-                    />
-                  </Tab>
-                  <Tab label='tab 2' id='t2'>
-                    <TextPropItem
-                      label='name'
-                      value={model.getName()}
-                      onChanged={value => model.setName(value)}
-                    />
-                    <TextPropItem
-                      label='name 2'
-                      value={model.getName()}
-                      onChanged={value => model.setName(value)}
-                    />
-                  </Tab>
-                  <Tab label='tab 3' id='t3'>
-                    <DropDownPropItem
-                      label='scenes 1 2 3 4'
-                      inline={false}
-                      values={model.getScenes()}
-                      value={model.getSelectImage()}
-                      onSelect={scene => model.setImage(scene)}
-                    />
-                    <DropDownPropItem
-                      label='scenes'
-                      values={model.getScenes()}
-                      value={model.getSelectImage()}
-                      onSelect={scene => model.setImage(scene)}
-                    />
-                    <PropItem label='scenes' inline={false}>
-                      <ListView values={model.getScenes()}/>
-                    </PropItem>
-                  </Tab>
-                </Tabs>
-              </PropsGroup>
-            </PropsGroup>
-          </PropSheet>
+                  ]}
+                />
+                <TextPropItem
+                  label='frame'
+                  value={model.getFrame()}
+                  onChanged={value => model.setFrame(+value)}
+                />
+              </Tab>
+              <Tab label='tab 2' id='t2'>
+                <TextPropItem
+                  label='name'
+                  value={model.getName()}
+                  onChanged={value => model.setName(value)}
+                />
+                <TextPropItem
+                  label='name 2'
+                  value={model.getName()}
+                  onChanged={value => model.setName(value)}
+                />
+              </Tab>
+              <Tab label='tab 3' id='t3'>
+                <DropDownPropItem
+                  label='scenes 1 2 3 4'
+                  inline={false}
+                  values={model.getScenes()}
+                  value={model.getSelectImage()}
+                  onSelect={scene => model.setImage(scene)}
+                />
+                <DropDownPropItem
+                  label='scenes'
+                  values={model.getScenes()}
+                  value={model.getSelectImage()}
+                  onSelect={scene => model.setImage(scene)}
+                />
+                <PropItem label='scenes' inline={false}>
+                  <ListView values={model.getScenes()} />
+                </PropItem>
+              </Tab>
+            </Tabs>
+          </PropsGroup>
+        </PropSheet>
       </div>
     );
   }
@@ -252,6 +254,6 @@ let model = new Model();
 storiesOf('Prop sheet', module)
   .add('property', () => {
     return (
-      <View model={model}/>
+      <View model={model} />
     );
   });
