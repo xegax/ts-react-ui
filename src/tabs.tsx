@@ -93,7 +93,7 @@ interface TabProps {
   id: string;
   select?: boolean;
   onSelect?(id: string);
-  children?: Array<React.ReactChild> | Array<string>;
+  children?: React.ReactNode;
 }
 
 export class Tab extends React.Component<TabProps> {

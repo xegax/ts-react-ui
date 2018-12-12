@@ -16,6 +16,9 @@ export class RangeSliderModel extends Publisher<EventType> {
   private round: boolean = false;
 
   setRound(round: boolean): void {
+    if (this.round == round)
+      return;
+
     this.round = round;
   }
 
@@ -47,11 +50,15 @@ export class RangeSliderModel extends Publisher<EventType> {
   }
 
   setMinMax(range: Range): void {
-    this.minMaxRange = {
+    range = {
       from: this.value(Math.min(range.from, range.to)),
       to: this.value(Math.max(range.from, range.to))
     };
 
+    if (range.from == this.minMaxRange.from && range.to == this.minMaxRange.to)
+      return;
+
+    this.minMaxRange = range;
     this.range = {
       from: this.value(range.from),
       to: this.value(range.to)
@@ -64,9 +71,9 @@ export class RangeSliderModel extends Publisher<EventType> {
     return {...this.range};
   }
 
-  setRange(range: Partial<Range>): void {
+  calcRange(range: Partial<Range>): Range {
     if (range.from == null && range.to == null)
-      return;
+      return { from: this.range.from, to: this.range.to };
 
     const from = range.from != null;
     const to = range.to != null;
@@ -82,32 +89,41 @@ export class RangeSliderModel extends Publisher<EventType> {
     };
 
     if (from && to) {
-      this.range = {
+      range = {
         from: Math.min(range.from, range.to),
         to: Math.max(range.to, range.from)
       };
-    }
-    else if (to) {
-      this.range = {
+    } else if (to) {
+      range = {
         to: Math.max(range.to, this.range.from),
         from: this.range.from
       };
-    }
-    else if (from) {
-      this.range = {
+    } else if (from) {
+      range = {
         from: Math.min(range.from, this.range.to),
         to: this.range.to
       };
     }
 
+    return { from: range.from, to: range.to };
+  }
+
+  setRange(range: Partial<Range>): void {
+    let newRange = this.calcRange(range);
+    if (newRange.from == this.range.from && newRange.to == this.range.to)
+      return;
+
+    this.range.from = newRange.from;
+    this.range.to = newRange.to;
     this.delayedNotify({ type: 'changing' });
   }
 
-  getRangeForRender(width: number): Range {
+  getRangeForRender(width: number, range?: Range): Range {
+    range = range || this.range;
     const size = this.minMaxRange.to - this.minMaxRange.from;
     return {
-      from: Math.round((this.range.from - this.minMaxRange.from) * ( width - this.sliderSize * 2 ) / size),
-      to: Math.round((this.range.to - this.minMaxRange.from) * ( width - this.sliderSize * 2 ) / size)
+      from: Math.round((range.from - this.minMaxRange.from) * ( width - this.sliderSize * 2 ) / size),
+      to: Math.round((range.to - this.minMaxRange.from) * ( width - this.sliderSize * 2 ) / size)
     };
   }
 

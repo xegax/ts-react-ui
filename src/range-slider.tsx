@@ -31,10 +31,13 @@ export interface Props {
   min?: number;
   max?: number;
   range?: Array<number>;
+
+  onChanged?(min: number, max: number);
 }
 
 interface State {
   active?: 'left' | 'right' | 'thumb';
+  range?: Range;
   model?: RangeSliderModel;
 }
 
@@ -66,6 +69,23 @@ export class RangeSliderImpl extends React.Component<Props, State> {
     this.state.model.unsubscribe(this.subscriber);
   }
 
+  static getDerivedStateFromProps(props: Props, state: State) {
+    if (props.range != null)
+      state.model.setRange({from: props.range[0], to: props.range[1]});
+
+    if (props.min != null || props.max != null)
+      state.model.setMinMax({from: props.min, to: props.max});
+
+    if (props.round != null)
+      state.model.setRound(props.round);
+
+    return null;
+  }
+
+  protected onChanged() {
+    this.props.onChanged && this.props.onChanged(this.state.range.from, this.state.range.to);
+  }
+
   protected onMouseDown = (evt: React.MouseEvent, key: keyof Range) => {
     const model = this.state.model;
     const { width } = this.props;
@@ -77,10 +97,14 @@ export class RangeSliderImpl extends React.Component<Props, State> {
         this.setState({active: key == 'from' ? 'left' : 'right'});
       },
       onDragging: evt => {
-        model.setRange({[key]: model.getRenderForRange(evt.x, width)});
+        const range = {...model.getRange()};
+        range[key] = model.getRenderForRange(evt.x, width);
+        this.setState({ range: model.calcRange(range) });
       },
       onDragEnd: () => {
-        this.setState({ active: null });
+        this.onChanged();
+        model.setRange( this.state.range );
+        this.setState({ active: null, range: null });
         model.delayedNotify({type: 'changed'});
       }
     })(evt.nativeEvent);
@@ -104,10 +128,12 @@ export class RangeSliderImpl extends React.Component<Props, State> {
         let pos = model.getRenderForRange(evt.x, width);
         pos = Math.min(minMax[1], pos);
         pos = Math.max(minMax[0], pos);
-        model.setRange({ from: pos, to: pos + len });
+        this.setState({ range: model.calcRange({ from: pos, to: pos + len }) });
       },
       onDragEnd: () => {
-        this.setState({ active: null });
+        this.onChanged();
+        model.setRange( this.state.range );
+        this.setState({ active: null, range: null });
         model.delayedNotify({ type: 'changed' });
       }
     })(evt.nativeEvent);
@@ -116,8 +142,8 @@ export class RangeSliderImpl extends React.Component<Props, State> {
   render() {
     const model = this.state.model;
     const { width, height, className, extraClass, style } = this.props;
-    const { active } = this.state;
-    const rrange = model.getRangeForRender(width);
+    const { active, range } = this.state;
+    const rrange = model.getRangeForRender(width, range);
     return (
       <div className={cn(className || classes.rangeSlider, extraClass)} style={{ ...style, height }}>
         <div

@@ -216,7 +216,7 @@ export class ListView extends React.Component<ListProps, State> implements IList
 
   updateFirstItemSize() {
     let itemSize = 0;
-    if (!this.ref.current || !this.ref.current.children)
+    if (!this.ref.current || !this.ref.current.children || this.ref.current.children.length == 0)
       return;
 
     const list = this.ref.current;
