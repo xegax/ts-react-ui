@@ -12,6 +12,7 @@ export interface Props {
   depth?: number;
   key?: number | string;
   itemWrap?: boolean;
+  className?: string;
 
   defaultOpen?: boolean;
   open?: boolean;
@@ -78,7 +79,7 @@ export class PropsGroup extends React.Component<Props, State> {
 
     return (
       <div
-        className = {classes.group}
+        className = {cn(classes.group, this.props.className)}
         onDragEnter={this.props.onDragEnter}
         onDragLeave={this.props.onDragLeave}
         onDrop={this.props.onDrop}

@@ -83,11 +83,23 @@ export class ListViewModel extends Publisher {
     if (this.select && this.isEqual(this.select, value))
       return;
 
+    let newSelect = this.select;
+    let newFocus = this.focus;
+
     const idx = this.values.findIndex(v => this.isEqual(value, v));
     if (idx != -1) {
-      this.select = this.values[idx];
-      this.focus = idx;
+      newSelect = this.values[idx];
+      newFocus = idx;
+    } else {
+      newSelect = undefined;
+      newFocus = -1;
     }
+
+    if (this.select == newSelect && this.focus == newFocus)
+      return;
+
+    this.select = newSelect;
+    this.focus = newFocus;
 
     if (notify == false)
       return;
