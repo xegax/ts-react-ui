@@ -4,6 +4,10 @@
 	"files.exclude": {
 		"build": true,
 		"common": true,
+		"app-comp-layout": true,
+		"prop-sheet": true,
+		"control": true,
+		"model": true,
 		"**/.git": true,
 		"**/.DS_Store": true,
 		"**/.tscache": true,
@@ -11,8 +15,7 @@
 		".gitignore": true,
 		"**/*.js": true,
 		"**/*.js.map": true,
-		"**/*.d.ts": true,
-		"*.d.ts": true,
+		"{!typings,*.d.ts,**/*.d.ts}": true,
 		"*.js": true,
 		"*.scss": true,
 		"*.js.map": true
