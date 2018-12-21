@@ -2,6 +2,7 @@ node_modules
 /build
 /storybook-static
 /common
+/images
 *.js
 *.js.map
 *.d.ts

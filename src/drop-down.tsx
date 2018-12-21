@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { FitToParent } from './fittoparent';
 import { findParent } from './common/dom';
-import { ListView, IListView, ListViewModel, ListProps } from './list-view';
+import { ListView, ListViewModel, ListProps } from './list-view';
 import { className as cn } from './common/common';
 import { KeyCode } from './common/keycode';
 import { ExtPromise, Cancelable } from 'objio';
@@ -68,7 +68,7 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
 
   private input = React.createRef<HTMLInputElement>();
   private ref = React.createRef<HTMLDivElement>();
-  private list = React.createRef<IListView>();
+  private list = React.createRef<ListView>();
   state: Readonly<Partial<State>> = {};
   _state: Readonly<Partial<State>> = {};
 
@@ -91,7 +91,6 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
       return null;
 
     const bottom = this.ref.current.getBoundingClientRect().bottom;
-    const listHeight = ReactDOM.findDOMNode(this.list.current).offsetHeight;
     let parent: HTMLElement = this.ref.current;
     while (parent) {
       if (['relative', 'absolute'].indexOf(parent.style.position) != -1) {
