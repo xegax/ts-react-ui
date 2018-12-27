@@ -1,0 +1,12 @@
+.checkicon {
+  opacity: 0.3;
+  cursor: pointer;
+}
+
+.checkicon.checked {
+  opacity: 1;
+}
+
+.checkicon.disabled {
+  color: silver;
+}

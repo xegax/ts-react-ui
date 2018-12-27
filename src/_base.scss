@@ -37,6 +37,10 @@ $bg-color-1: #d2e2ec;
   @include vert-panel(16px);
 }
 
+.vert-panel-5px {
+  @include vert-panel(5px);
+}
+
 // horz-panel
 
 .horz-panel-1 {
@@ -49,6 +53,10 @@ $bg-color-1: #d2e2ec;
 
 .horz-panel-3 {
   @include horz-panel(16px);
+}
+
+.horz-panel-5px {
+  @include horz-panel(5px);
 }
 
 // card
@@ -130,6 +138,7 @@ $bg-color-1: #d2e2ec;
 }
 
 .disabled {
+  color: silver;
   .border {
     border: 1px solid #dedede;
   }
@@ -237,3 +246,5 @@ $bg-color-1: #d2e2ec;
 @import './slider';
 @import './tabs';
 @import './app-comp-layout';
+@import './checkicon';
+@import './checkbox';

@@ -278,6 +278,9 @@ export class ListView extends React.Component<ListProps, State> implements IList
   }
 
   onKeyDown = (e: React.KeyboardEvent) => {
+    if (!this.props.onSelect)
+      return;
+
     let focus = this.state.model.getFocus();
     if (e.keyCode == KeyCode.ENTER && this.state.model.setValueByIndex(focus)) {
       return this.props.onSelect && this.props.onSelect(this.state.model.getSelect());
@@ -333,10 +336,13 @@ export class ListView extends React.Component<ListProps, State> implements IList
         title={this.getLabel(item)}
         className={cn(classes.item, select && classes.select, idx == this.state.model.getFocus() && classes.focus)}
         onClick={e => {
+          if (!this.props.onSelect)
+            return;
+
           this.state.model.setValue(item);
           this.state.model.notify();
 
-          this.props.onSelect && this.props.onSelect(item);
+          this.props.onSelect(item);
         }}
       >
         {jsx}
