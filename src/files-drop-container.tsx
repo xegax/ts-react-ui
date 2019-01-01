@@ -1,10 +1,12 @@
 import * as React from 'react';
-import './files-drop-container.scss';
 import { className as cn } from './common/common';
+import { findParent } from './common/dom';
 
 const classes = {
   overlay: 'files-drop-overlay',
-  content: 'files-drop-content'
+  overlay2: 'files-drop-overlay2',
+  content: 'files-drop-content',
+  text: 'files-drop-text'
 };
 
 export interface Props extends React.HTMLProps<HTMLDivElement> {
@@ -19,15 +21,15 @@ export interface State {
 
 export class FilesDropContainer extends React.Component<Props, State> {
   private dropTgt = React.createRef<HTMLDivElement>();
-  private ref = React.createRef<HTMLElement>();
-
   state: Readonly<State> = {};
+
+  preventDefault = (e: Event) => e.preventDefault();
 
   onDragEnter = (event: React.DragEvent<any>) => {
     if (this.state.drag)
       return;
 
-    const data = event.nativeEvent.dataTransfer;
+    const data = event.dataTransfer;
     if (!data.items)
       return;
 
@@ -61,55 +63,39 @@ export class FilesDropContainer extends React.Component<Props, State> {
   };
 
   onDragLeave = (event: React.DragEvent<any>) => {
-    const newTgt = event.relatedTarget;
-    if (newTgt == this.dropTgt.current)
+    const newTgt = event.relatedTarget as HTMLElement;
+    if (findParent(newTgt, this.dropTgt.current))
       return;
 
     this.setState({ drag: false, filesCount: 0 });
   };
 
-  renderFileDrop(container: JSX.Element): JSX.Element {
-    if (!this.state.drag)
-      return container;
-
-    return React.cloneElement(
-      container,
-      {},
-      [
-        ...React.Children.toArray(container.props.children),
-        <div
-          key='overlay'
-          className={cn(classes.overlay)}
-          ref={this.dropTgt}
-          onDrop={this.onDrop}
-          onDragOver={evt => evt.preventDefault()}
-          onDragEnter={this.onDragEnter}
-          onDragLeave={this.onDragLeave}
-        >
-          <div className={classes.content}>
-            drop {this.state.filesCount} files
-          </div>
-        </div>
-      ]
-    );
-  }
-
   render() {
-    const root = React.cloneElement(
-      React.Children.only(this.props.children),
-      {
-        ref: this.ref,
+    let childs = React.Children.toArray(this.props.children) as Array<JSX.Element>;
+    childs = [
+      React.cloneElement(childs[0], {
         onDragEnter: this.onDragEnter,
-        onDragLeave: this.onDragLeave,
-        onDragOver: evt => evt.preventDefault(),
-        onDrop: evt => evt.preventDefault()
-      }
-    );
+        children: [
+          ...React.Children.toArray(childs[0].props.children),
+          this.state.drag &&
+          <div
+            key='overlay'
+            className={cn(classes.overlay)}
+            ref={this.dropTgt}
+            onDrop={this.onDrop}
+            onDragOver={evt => evt.preventDefault()}
+            onDragEnter={this.onDragEnter}
+            onDragLeave={this.onDragLeave}
+          >
+            <div className={classes.overlay2}/>
+            <div className={classes.content}>
+              <div className={classes.text}>drop {this.state.filesCount} files</div>
+            </div>
+          </div>
+        ]
+      }),
+    ];
 
-    return (
-      <React.Fragment>
-        {this.renderFileDrop(root)}
-      </React.Fragment>
-    );
+    return childs;
   }
 }

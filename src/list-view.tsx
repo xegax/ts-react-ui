@@ -13,6 +13,7 @@ const classes = {
 
 export interface Item {
   value: string;
+  title?: string;
   render?: string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
 }
 
@@ -333,7 +334,7 @@ export class ListView extends React.Component<ListProps, State> implements IList
     return (
       <div
         key={idx}
-        title={this.getLabel(item)}
+        title={item.title || this.getLabel(item)}
         className={cn(classes.item, select && classes.select, idx == this.state.model.getFocus() && classes.focus)}
         onClick={e => {
           if (!this.props.onSelect)
