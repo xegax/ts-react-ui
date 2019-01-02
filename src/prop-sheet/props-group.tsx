@@ -70,7 +70,7 @@ export class PropsGroup extends React.Component<Props, State> {
     }).map(item => {
       return (
         React.cloneElement(item, {
-          disabled: this.props.disabled,
+          disabled: item.props.disabled || this.props.disabled,
           height: this.state.height || this.props.height,
           border: false
         })
