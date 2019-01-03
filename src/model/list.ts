@@ -1,5 +1,4 @@
 import { Publisher } from 'objio/common/publisher';
-import { Cancelable, ExtPromise } from 'objio';
 import { clamp } from '../common/common';
 
 export type EventType = 'select-row';
@@ -39,7 +38,7 @@ export class ListModel<T = Object> extends Publisher<EventType> {
   private cacheRange: Range = null;
   private loadingRange: Range = null; // null = nothing is loading
   protected cache = Array<T>();
-  private cancelable: Cancelable<Array<T>>;
+  private cancelable: Promise<Array<T>>;
   protected columns = Array<ListColumn>();
   private bufferSize: number = 1000;
 
@@ -122,7 +121,7 @@ export class ListModel<T = Object> extends Publisher<EventType> {
     });
 
     if (task instanceof Promise) {
-      this.cancelable = ExtPromise().cancelable(task);
+      this.cancelable = task;
       this.cancelable.then(updateData);
       return null;
     }

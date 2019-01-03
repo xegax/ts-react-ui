@@ -5,7 +5,6 @@ import { findParent } from './common/dom';
 import { ListView, ListViewModel, ListProps } from './list-view';
 import { className as cn } from './common/common';
 import { KeyCode } from './common/keycode';
-import { ExtPromise, Cancelable } from 'objio';
 
 export interface Item {
   render?: string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
@@ -182,7 +181,7 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
     return item.render(item, <>{item.value}</>);
   }
 
-  private filterTask: Cancelable;
+  private filterTask: Promise<any>;
   onFilter = () => {
     const filter = this.input.current.value;
     let filtered = this.props.onFilter(filter);
@@ -197,15 +196,13 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
       setFiltered( filtered );
     } else {
       this.filterTask && this.filterTask.cancel();
-      this.filterTask = ExtPromise()
-        .cancelable(
+      this.filterTask = 
           filtered
           .then(setFiltered)
           .catch(() => {  // filter from drop-down-loadable
             this.filterTask = null;
             this.setState({});
-          })
-        );
+          });
     }
   }
 

@@ -1,5 +1,4 @@
 import { Publisher } from 'objio/common/publisher';
-import { ExtPromise, Cancelable } from 'objio/common/ext-promise';
 import { clamp } from '../common/common';
 
 export type List2ItemData = { label?: string | JSX.Element } | string;
@@ -22,7 +21,7 @@ export class List2Model<T = Object, TEventType = string> extends Publisher<Event
   protected handler: Handler<T>;
   protected itemsPerLoad = 100;
   protected dataId: number = 0;
-  protected loading: Cancelable<Array< List2Item<T> >>;
+  protected loading: Promise<Array< List2Item<T> >>;
   protected selection = new Array<List2Item<T>>();
   protected selectable: SelectType = 'single-select';
   protected focusItem: number = -1;
@@ -177,11 +176,7 @@ export class List2Model<T = Object, TEventType = string> extends Publisher<Event
     if (this.loading)
       return this.loading;
 
-    this.loading = (
-      ExtPromise<Array< List2Item<T> >>()
-      .cancelable(this.handler.loadNext(this.items.length, this.itemsPerLoad) )
-    );
-
+    this.loading = this.handler.loadNext(this.items.length, this.itemsPerLoad);
     return (
       this.loading
       .then(res => {

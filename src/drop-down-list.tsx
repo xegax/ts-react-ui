@@ -132,7 +132,7 @@ export class DropDownList<T = List2ItemData> extends React.Component<Props<T>, S
 
   loadNext = (from: number, count: number): Promise< Array<List2Item<T>> > => {
     if (!Array.isArray(this.props.items))
-      return Promise.reject();
+      return Promise.reject(new Error('items must be array'));
 
     if (this.filtered)
       return Promise.resolve(this.filtered.slice(from, from + count));
