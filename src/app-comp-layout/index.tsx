@@ -67,16 +67,23 @@ export class AppCompLayout extends React.Component<Props, State> {
   }
 
   render() {
-    let content: React.ReactElement<any>;
+    let defaultContent: React.ReactElement<any>;
+    let selectContent: React.ReactElement<any>;
+
     let compProps: CompProps;
     const children = React.Children.toArray(this.props.children)
     .map((item: React.ReactElement<CompProps>) => {
+      const selectId = this.props.select || this.state.select;
       if (item.type == AppContent) {
-        content = item;
+        if (!item.props.id)
+          defaultContent = item;
+        else if (item.props.id == selectId)
+          selectContent = item;
+
         return null;
       }
 
-      const select = (this.props.select || this.state.select) == item.props.id;
+      const select = selectId == item.props.id;
       if (select)
         compProps = item.props;
 
@@ -92,7 +99,7 @@ export class AppCompLayout extends React.Component<Props, State> {
           {children}
         </div>
         {this.renderComponent(compProps)}
-        {content}
+        {selectContent || defaultContent}
       </div>
     );
   } 

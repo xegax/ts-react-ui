@@ -86,7 +86,6 @@ interface State {
 
 export class TextPropItem extends React.PureComponent<TextProps, State> {
   ref = React.createRef<HTMLInputElement>();
-  focusAfterUpdate = false;
 
   constructor(props: TextProps) {
     super(props);
@@ -110,11 +109,18 @@ export class TextPropItem extends React.PureComponent<TextProps, State> {
     this.setState({});
   }
 
-  componentDidUpdate() {
-    if (this.focusAfterUpdate)
+  getSnapshotBeforeUpdate() {
+    return {
+      focus: document.activeElement == this.ref.current,
+      value: this.ref.current.value
+    };
+  }
+
+  componentDidUpdate(p, s, ss: { focus: boolean, value: string }) {
+    if (ss.focus)
       this.ref.current.focus();
 
-    this.focusAfterUpdate = false;
+    this.ref.current.value = ss.value;
   }
 
   render() {
@@ -141,7 +147,6 @@ export class TextPropItem extends React.PureComponent<TextProps, State> {
             } else if (esc) {
               this.onCancel();
             }
-            this.focusAfterUpdate = true;
           }}
         />
       </PropItem>

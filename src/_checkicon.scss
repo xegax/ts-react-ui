@@ -10,3 +10,11 @@
 .checkicon.disabled {
   color: silver;
 }
+
+.checkicon.show-on-hover {
+  opacity: 0.3;
+}
+
+.checkicon.show-on-hover:hover {
+  opacity: 1;
+}

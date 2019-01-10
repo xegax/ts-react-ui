@@ -3,11 +3,13 @@ import { className as cn } from './common/common';
 
 const classes = {
   checkicon: 'checkicon',
-  checked: 'checked'
+  checked: 'checked',
+  showOnHover: 'show-on-hover'
 };
 
 export interface Props {
   disabled?: boolean;
+  showOnHover?: boolean;
   faIcon: string;
   value: boolean;
   title?: string;
@@ -15,8 +17,15 @@ export interface Props {
 }
 
 export function CheckIcon(props: Props) {
+  const className = cn(
+    classes.checkicon,
+    props.value && classes.checked,
+    props.disabled && 'disabled',
+    props.showOnHover && classes.showOnHover
+  );
+
   return (
-    <span className={cn(classes.checkicon, props.value && classes.checked, props.disabled && 'disabled')} title={props.title}>
+    <span className={className} title={props.title}>
       <i className={props.faIcon} onClick={() => {
         if (props.disabled)
           return;

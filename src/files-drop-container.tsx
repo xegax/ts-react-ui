@@ -72,6 +72,9 @@ export class FilesDropContainer extends React.Component<Props, State> {
 
   render() {
     let childs = React.Children.toArray(this.props.children) as Array<JSX.Element>;
+    if (!childs.length)
+      return this.props.children;
+
     childs = [
       React.cloneElement(childs[0], {
         onDragEnter: this.onDragEnter,
