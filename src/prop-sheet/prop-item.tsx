@@ -74,53 +74,45 @@ export const PropItem: React.SFC<Props> = (props: Props) => {
 }
 
 interface TextProps extends Props {
-  onChanged?(value: string);
-  onEnter?(value: string);
+  onChanged?(value: string): string | void;
+  onEnter?(value: string): string | void;
   onCancel?();
   autoFocus?: boolean;
 }
 
-interface State {
-  key?: number;
+interface TextState {
+  value: string;
+  propsValue: string;
 }
 
-export class TextPropItem extends React.PureComponent<TextProps, State> {
+export class TextPropItem extends React.PureComponent<TextProps, Partial<TextState>> {
   ref = React.createRef<HTMLInputElement>();
+  state: Readonly<Partial<TextState>> = {};
 
   constructor(props: TextProps) {
     super(props);
-    this.state = { key: 0 };
+
+    this.state = {
+      value: props.value,
+      propsValue: props.value
+    };
   }
 
-  static getDerivedStateFromProps(newProps: Props, prevState: State) {
-    return { key: prevState.key + 1 };
-  }
-
-  onChanged(value: string) {
-    this.props.onEnter && this.props.onEnter(value);
-    if (this.props.value == value)
-      return;
-
-    this.props.onChanged && this.props.onChanged(value);
+  onEnter(value: string) {
+    let newValue = this.props.onEnter && this.props.onEnter(value);
+    if (typeof newValue == 'string' && this.props.value == null)
+      this.setState({ value: newValue as string });
   }
 
   onCancel() {
     this.props.onCancel && this.props.onCancel();
-    this.setState({});
+    this.setState({ value: this.props.value });
   }
 
-  getSnapshotBeforeUpdate() {
-    return {
-      focus: document.activeElement == this.ref.current,
-      value: this.ref.current.value
-    };
-  }
-
-  componentDidUpdate(p, s, ss: { focus: boolean, value: string }) {
-    if (ss.focus)
-      this.ref.current.focus();
-
-    this.ref.current.value = ss.value;
+  static getDerivedStateFromProps(p: TextProps, s: TextState): TextState {
+    if (p.value != s.propsValue)
+      return { value: p.value == null ? '' : p.value, propsValue: p.value };
+    return { value: s.value, propsValue: p.value };
   }
 
   render() {
@@ -131,10 +123,9 @@ export class TextPropItem extends React.PureComponent<TextProps, State> {
           autoFocus={props.autoFocus}
           disabled={props.disabled}
           ref={this.ref}
-          key={this.state.key}
-          defaultValue={value}
+          value={this.state.value}
           onBlur={e => {
-            this.onChanged(e.currentTarget.value);
+            this.onEnter(e.currentTarget.value);
           }}
           onKeyDown={e => {
             const enter = e.keyCode == KeyCode.ENTER;
@@ -143,10 +134,14 @@ export class TextPropItem extends React.PureComponent<TextProps, State> {
               return;
 
             if (enter) {
-              this.onChanged(e.currentTarget.value);
+              this.onEnter(e.currentTarget.value);
             } else if (esc) {
               this.onCancel();
             }
+          }}
+          onChange={e => {
+            this.setState({ value: e.currentTarget.value });
+            this.props.onChanged && this.props.onChanged(e.currentTarget.value);
           }}
         />
       </PropItem>

@@ -37,10 +37,7 @@ export class Tabs extends React.Component<Props, State> {
   }
 
   static getDerivedStateFromProps(props: Props, state: State): State {
-    if (props.select != null)
-      return { select: props.select };
-
-    return null;
+    return { select: props.select || state.select };
   }
 
   onWheel = (e: React.WheelEvent) => {
