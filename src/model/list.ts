@@ -106,7 +106,6 @@ export class ListModel<T = Object> extends Publisher<EventType> {
     if (this.cancelable)
       this.cancelable.cancel();
 
-    console.log('loading', JSON.stringify(this.loadingRange));
     const task = this.handler.loadItems(this.loadingRange.from, this.loadingRange.count);
     const updateData = (data => {
       this.cancelable = null;
