@@ -33,6 +33,7 @@ export interface Props {
   range?: Array<number>;
 
   onChanged?(min: number, max: number);
+  onChanging?(min: number, max: number, element: 'left' | 'right' | 'thumb');
 }
 
 interface State {
@@ -86,6 +87,10 @@ export class RangeSliderImpl extends React.Component<Props, State> {
     this.props.onChanged && this.props.onChanged(this.state.range.from, this.state.range.to);
   }
 
+  protected onChanging = () => {
+    this.props.onChanging && this.props.onChanging(this.state.range.from, this.state.range.to, this.state.active);
+  }
+
   protected onMouseDown = (evt: React.MouseEvent, key: keyof Range) => {
     const model = this.state.model;
     const { width } = this.props;
@@ -99,7 +104,7 @@ export class RangeSliderImpl extends React.Component<Props, State> {
       onDragging: evt => {
         const range = {...model.getRange()};
         range[key] = model.getRenderForRange(evt.x, width);
-        this.setState({ range: model.calcRange(range) });
+        this.setState({ range: model.calcRange(range) }, this.onChanging);
       },
       onDragEnd: () => {
         this.onChanged();
@@ -128,7 +133,7 @@ export class RangeSliderImpl extends React.Component<Props, State> {
         let pos = model.getRenderForRange(evt.x, width);
         pos = Math.min(minMax[1], pos);
         pos = Math.max(minMax[0], pos);
-        this.setState({ range: model.calcRange({ from: pos, to: pos + len }) });
+        this.setState({ range: model.calcRange({ from: pos, to: pos + len }) }, this.onChanging);
       },
       onDragEnd: () => {
         this.onChanged();
