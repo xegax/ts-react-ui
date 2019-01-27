@@ -4,9 +4,11 @@ import { storiesOf } from '@storybook/react';
 import { RangeSlider, RangeSliderModel } from '../src/range-slider';
 
 const model = new RangeSliderModel();
-model.setMinMax({from: 1890, to: 2011});
+model.setMinMax({from: 0, to: 455});
 
-class Test extends React.Component<{}, {}> {
+class Test extends React.Component<{}, {pos: number}> {
+  state = { pos: 0 };
+  
   subscriber = () => {
     this.setState({});
   }
@@ -28,21 +30,28 @@ class Test extends React.Component<{}, {}> {
         <div>
           to: {model.getRange().to}
         </div>
+        <div>
+          pos: {this.state.pos}
+        </div>
         <div style={{marginLeft: 50, marginRight: 50, height: 20}}>
-          <RangeSlider model={model}/>
+          <RangeSlider
+            valueEnabled
+            model={model}
+            onSeek={pos => this.setState({pos})}
+          />
         </div>
         <div style={{height: 15}}>
-          <RangeSlider model={model}/>
+          <RangeSlider valueEnabled model={model}/>
         </div>
         <div style={{display: 'flex'}}>
           <div style={{flexGrow: 1}}>
-            <RangeSlider model={model}/>
+            <RangeSlider valueEnabled model={model}/>
           </div>
           <div style={{flexGrow: 1}}>
-            <RangeSlider model={model}/>
+            <RangeSlider valueEnabled model={model}/>
           </div>
           <div style={{flexGrow: 1}}>
-            <RangeSlider model={model}/>
+            <RangeSlider valueEnabled model={model}/>
           </div>
         </div>
       </div>

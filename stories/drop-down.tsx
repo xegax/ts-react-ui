@@ -1,10 +1,8 @@
 import * as React from 'react';
 import '../src/_base.scss';
 import { storiesOf } from '@storybook/react';
-import { DropDown, Item } from '../src/drop-down';
+import { Item } from '../src/drop-down';
 import { DropDownLoadable } from '../src/drop-down-loadable';
-import { ExtPromise } from 'objio/common/ext-promise';
-import { className } from '../src/common/common';
 
 let ddlist2 = [
   {value: '1111 111 1111'},
@@ -21,7 +19,7 @@ let ddlist3 = new Array(100).fill(null).map((item, i) => ({
 function getTestLoader() {
   return (from: number, count: number) => {
     const arr = Array(count).fill(null).map((v, i) => ({ value: 'loaded ' + (from + i + 1) }));
-    return ExtPromise().timer(100).then(() => arr);
+    return Promise.delay(100).then(() => arr);
   };
 }
 
@@ -45,8 +43,8 @@ class DataModel {
 
   loadNext(from: number, count: number): Promise< Array<Item> > {
     return (
-      ExtPromise()
-      .timer(this.timeout)
+      Promise
+      .delay(this.timeout)
       .then(() => {
         const arr: Array<Item> = (this.filteredItems || this.serverItems).slice(from, from + count);
         this.items.push(...arr);

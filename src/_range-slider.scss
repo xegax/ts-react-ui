@@ -1,23 +1,32 @@
 .range-slider-ctrl {
-  background-color: silver;
   position: relative;
   height: 20px;
   user-select: none;
 
   &-slider {
     position: absolute;
-    background-color: gray;
+    background-color: white;
     width: 10px;
     height: 20px;
     border: 1px solid black;
     box-sizing: border-box;
 
     &.slider-active {
-      background-color: rgb(87, 87, 87);
+      background-color: silver;
     }
   }
 
   &-thumb {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    background-color: gray;
+    &.slider-active {
+      background-color: rgb(87, 87, 87);
+    }
+  }
+
+  &-thumbrange {
     position: absolute;
     top: 5px;
     bottom: 5px;

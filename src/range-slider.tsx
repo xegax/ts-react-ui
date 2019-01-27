@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { RangeSliderModel, Range } from './model/range-slider';
-import './_range-slider.scss';
 import { startDragging } from './common/start-dragging';
-import { className as cn } from './common/common';
+import { className as cn, clamp } from './common/common';
 import { FitToParent } from './fittoparent';
-import { Subscriber } from './subscriber';
+import './_range-slider.scss';
 
 export {
   RangeSliderModel
@@ -12,11 +11,13 @@ export {
 
 const classes = {
   rangeSlider: 'range-slider-ctrl',
+  sliderValue: 'slider-value',
   slider: 'range-slider-ctrl-slider',
   sliderLeft: 'slider-left',
   sliderRight: 'slider-right',
   active: 'slider-active',
-  thumb: 'range-slider-ctrl-thumb'
+  thumb: 'range-slider-ctrl-thumb',
+  thumbRange: 'range-slider-ctrl-thumbrange'
 };
 
 export interface Props {
@@ -31,18 +32,24 @@ export interface Props {
   min?: number;
   max?: number;
   range?: Array<number>;
+  value?: number;
 
   onChanged?(min: number, max: number);
-  onChanging?(min: number, max: number, element: 'left' | 'right' | 'thumb');
+  onChanging?(min: number, max: number, element: 'left' | 'right' | 'thumb' | 'value');
+  onSeek?(value: number);
+  onSeeked?(value: number);
 }
 
 interface State {
-  active?: 'left' | 'right' | 'thumb';
+  active?: 'left' | 'right' | 'thumb' | 'value';
   range?: Range;
   model?: RangeSliderModel;
+  value?: number;
 }
 
 export class RangeSliderImpl extends React.Component<Props, State> {
+  private ref = React.createRef<HTMLDivElement>();
+
   constructor(props: Props) {
     super(props);
 
@@ -80,6 +87,10 @@ export class RangeSliderImpl extends React.Component<Props, State> {
     if (props.round != null)
       state.model.setRound(props.round);
 
+    if (props.height != null) {
+      state.model.setSliderSize(props.height);
+    }
+
     return null;
   }
 
@@ -104,7 +115,11 @@ export class RangeSliderImpl extends React.Component<Props, State> {
       onDragging: evt => {
         const range = {...model.getRange()};
         range[key] = model.getRenderForRange(evt.x, width);
-        this.setState({ range: model.calcRange(range) }, this.onChanging);
+        if (key == 'from')
+          range[key] = clamp(range[key], [model.getMinMax().from, range.to]);
+        else if (key == 'to')
+          range[key] = clamp(range[key], [range.from, model.getMinMax().to]);
+        this.setState({ range }, this.onChanging);
       },
       onDragEnd: () => {
         this.onChanged();
@@ -144,26 +159,60 @@ export class RangeSliderImpl extends React.Component<Props, State> {
     })(evt.nativeEvent);
   }
 
+  onSeek = (e: React.MouseEvent) => {
+    const skip = [classes.sliderLeft, classes.sliderRight, classes.thumbRange];
+    if ((e.target as HTMLElement).className.split(' ').some( v => skip.indexOf(v) != -1))
+      return;
+
+    const bbox = this.ref.current.getBoundingClientRect();
+    const p = e.pageX - bbox.left;
+    this.setState({ value: this.state.model.getPosition(this.props.width, p) });
+    startDragging({x: p, y: 0}, {
+      onDragging: evt => {
+        const minMax = this.state.model.getMinMax();
+        let newp = this.state.model.getPosition(this.props.width, evt.x);
+        newp = clamp(newp, [ minMax.from, minMax.to ]);
+        this.setState({ value: newp });
+        this.props.onSeek && this.props.onSeek(newp);
+      },
+      onDragEnd: () => {
+        this.props.onSeeked && this.props.onSeeked(this.state.value);
+      }
+    })(e.nativeEvent);
+  };
+
   render() {
     const model = this.state.model;
     const { width, height, className, extraClass, style } = this.props;
     const { active, range } = this.state;
+    const ssize = height;
+    const value = this.props.value != null ? this.props.value : this.state.value;
     const rrange = model.getRangeForRender(width, range);
+    const pos = model.getPositionForRender(width, value);
     return (
-      <div className={cn(className || classes.rangeSlider, extraClass)} style={{ ...style, height }}>
+      <div
+        ref={this.ref}
+        className={cn(className || classes.rangeSlider, extraClass)}
+        style={{ ...style, height }} onMouseDown={this.onSeek}
+      >
         <div
-          className={cn(classes.thumb, active == 'thumb' && classes.active)}
-          style={{ left: rrange.from, right: (width - model.getSliderSize() * 2) - rrange.to }}
+          className={cn(classes.thumbRange, active == 'thumb' && classes.active)}
+          style={{ left: 0, width, borderRadius: ssize / 2 }}
           onMouseDown={this.onMouseDownThumb}
         />
+        {(this.props.onSeeked || this.props.onSeek) &&
+          <div className={cn(classes.thumb)} style={{ left: 0, width: pos, backgroundColor: 'red', borderRadius: `${ssize / 2}px 0px 0px ${ssize / 2}px` }}/>
+        }
+        <div className={cn(classes.thumb)} style={{ left: 0, width: rrange.from + ssize / 2, opacity: 0.6, backgroundColor: 'white' }}/>
+        <div className={cn(classes.thumb)} style={{ left: rrange.to + ssize + ssize / 2, right: 0, opacity: 0.6, backgroundColor: 'white' }}/>
         <div
           className={cn(classes.slider, classes.sliderLeft, active == 'left' && classes.active)}
-          style={{ left: rrange.from, height }}
+          style={{ left: rrange.from, height: ssize, width: ssize, top: height / 2 - ssize / 2, borderRadius: ssize / 2 }}
           onMouseDown={evt => this.onMouseDown(evt, 'from')}
         />
         <div
           className={cn(classes.slider, classes.sliderRight, active == 'right' && classes.active)}
-          style={{ right: (width - model.getSliderSize() * 2) - rrange.to, height }}
+          style={{ right: (width - ssize * 2) - rrange.to, height: ssize, width: ssize, top: height / 2 - ssize / 2, borderRadius: ssize / 2 }}
           onMouseDown={evt => this.onMouseDown(evt, 'to')}
         />
       </div>

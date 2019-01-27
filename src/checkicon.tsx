@@ -8,6 +8,7 @@ const classes = {
 };
 
 export interface Props {
+  style?: React.CSSProperties;
   disabled?: boolean;
   showOnHover?: boolean;
   faIcon: string;
@@ -26,7 +27,7 @@ export function CheckIcon(props: Props) {
 
   return (
     <span className={className} title={props.title}>
-      <i className={props.faIcon} onClick={() => {
+      <i style={props.style} className={props.faIcon} onClick={() => {
         if (props.disabled)
           return;
 

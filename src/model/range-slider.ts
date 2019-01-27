@@ -30,6 +30,10 @@ export class RangeSliderModel extends Publisher<EventType> {
     return this.sliderSize;
   }
 
+  setSliderSize(size: number) {
+    this.sliderSize = size;
+  }
+
   getLastDrag(): LastDrag {
     return this.lastDrag;
   }
@@ -125,6 +129,36 @@ export class RangeSliderModel extends Publisher<EventType> {
       from: Math.round((range.from - this.minMaxRange.from) * ( width - this.sliderSize * 2 ) / size),
       to: Math.round((range.to - this.minMaxRange.from) * ( width - this.sliderSize * 2 ) / size)
     };
+  }
+
+  getPositionForRender(width: number, pos: number): number {
+    const size = this.minMaxRange.to - this.minMaxRange.from;
+    pos = Math.round((pos - this.minMaxRange.from) * (width - this.sliderSize * 2) / size);
+    const rrange = this.getRangeForRender(width, this.range);
+    if (pos > rrange.from)
+      pos += this.sliderSize;
+    if (pos - this.sliderSize > rrange.to)
+      pos += this.sliderSize;
+    return pos;
+  }
+
+  getPosition(width: number, pos: number): number {
+    const size = this.minMaxRange.to - this.minMaxRange.from;
+    const r = size / (width - this.sliderSize * 2);
+    let newPos = pos * r + this.minMaxRange.from;
+    const ssize = this.sliderSize * r;
+
+    if (newPos > this.range.to + ssize * 2)
+      return (pos - this.sliderSize * 2) * r + this.minMaxRange.from;
+    else if (newPos > this.range.to + ssize && newPos <= this.range.to + ssize * 2)
+      return this.range.to;
+
+    if (newPos > this.range.from + this.sliderSize * r)
+      return (pos - this.sliderSize) * r + this.minMaxRange.from;
+    else if (newPos > this.range.from && newPos <= this.range.from + this.sliderSize * r)
+      return this.range.from;
+
+    return newPos;
   }
 
   getRenderForRange(pos: number, width: number): number {
