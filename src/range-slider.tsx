@@ -33,6 +33,7 @@ export interface Props {
   max?: number;
   range?: Array<number>;
   value?: number;
+  dragThumb?: boolean;
 
   onChanged?(min: number, max: number);
   onChanging?(min: number, max: number, element: 'left' | 'right' | 'thumb' | 'value');
@@ -197,7 +198,7 @@ export class RangeSliderImpl extends React.Component<Props, State> {
       >
         <div
           className={cn(classes.thumbRange, active == 'thumb' && classes.active)}
-          style={{ left: 0, width, borderRadius: ssize / 2 }}
+          style={{ left: 0, width, borderRadius: ssize / 2, pointerEvents: this.props.dragThumb === false ? 'none' : null }}
           onMouseDown={this.onMouseDownThumb}
         />
         {(this.props.onSeeked || this.props.onSeek) &&
