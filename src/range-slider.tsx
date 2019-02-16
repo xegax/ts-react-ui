@@ -33,6 +33,7 @@ export interface Props {
   max?: number;
   range?: Array<number>;
   value?: number;
+  valueEnabled?: boolean;
   dragThumb?: boolean;
 
   onChanged?(min: number, max: number);
