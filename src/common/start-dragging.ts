@@ -36,6 +36,12 @@ try {
 } catch(e) {
 }
 
+let dragging = false;
+
+export function isDragging() {
+  return dragging;
+}
+
 let touchElement: HTMLElement = null;
 export function startDragging(args: Params, handler: DragHandler) {
   let touch = false;
@@ -54,7 +60,7 @@ export function startDragging(args: Params, handler: DragHandler) {
       let yOffs = pagePoint.y - clickPoint.y;
       
       if (!started && (minDist == 0 || Math.sqrt(xOffs * xOffs + yOffs * yOffs) > minDist)) {
-        started = true;
+        dragging = started = true;
         handler.onDragStart && handler.onDragStart({x: dragValues.x, y: dragValues.y, event});
       }
 
@@ -79,7 +85,7 @@ export function startDragging(args: Params, handler: DragHandler) {
         window.top.removeEventListener('mouseup', onMouseUp);
       }
       touchElement = null;
-      
+      dragging = false;
       if (!started)
         return;
 

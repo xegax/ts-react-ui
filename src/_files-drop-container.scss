@@ -1,18 +1,18 @@
 .files-drop {
   &-overlay {
-    @extend .absolute-fit;
+    @extend .abs-fit;
     background-color: transparent;
     display: flex;
   }
 
   &-overlay2 {
-    @extend .absolute-fit;
+    @extend .abs-fit;
     background-color: black;
     opacity: 0.5;
   }
 
   &-content {
-    @extend .absolute-fit;
+    @extend .abs-fit;
     display: flex;
     color: black;
     align-items: center;

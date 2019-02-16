@@ -28,7 +28,7 @@ class Dummy extends React.Component {
         <AppComponent faIcon='fa fa-taxi' id='taxi'>
         </AppComponent>
         <AppContent>
-          <div className='flex-grow' style={{backgroundColor: 'white'}}>
+          <div className='flex1' style={{backgroundColor: 'white'}}>
           </div>
         </AppContent>
       </AppCompLayout>

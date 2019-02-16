@@ -35,23 +35,22 @@ class Test extends React.Component<{}, {pos: number}> {
         </div>
         <div style={{marginLeft: 50, marginRight: 50, height: 20}}>
           <RangeSlider
-            valueEnabled
             model={model}
             onSeek={pos => this.setState({pos})}
           />
         </div>
         <div style={{height: 15}}>
-          <RangeSlider valueEnabled model={model}/>
+          <RangeSlider model={model}/>
         </div>
         <div style={{display: 'flex'}}>
           <div style={{flexGrow: 1}}>
-            <RangeSlider valueEnabled model={model}/>
+            <RangeSlider model={model}/>
           </div>
           <div style={{flexGrow: 1}}>
-            <RangeSlider valueEnabled model={model}/>
+            <RangeSlider model={model}/>
           </div>
           <div style={{flexGrow: 1}}>
-            <RangeSlider valueEnabled model={model}/>
+            <RangeSlider model={model}/>
           </div>
         </div>
       </div>

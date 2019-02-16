@@ -1,11 +1,13 @@
 import * as React from 'react';
-import { startDragging } from './common/start-dragging';
+import { startDragging, isDragging } from './common/start-dragging';
 import { FitToParent } from './fittoparent';
 import { clamp, className as cn } from './common/common';
+import { Textbox, Props as TextboxProps } from './textbox';
 
 const classes = {
   container: 'timeline-container',
   timeline: 'timeline',
+  timelineBar: 'timeline-bar',
   timeValue: 'time-value',
   timeSlider: 'time-slider',
   trim: 'trim',
@@ -15,7 +17,8 @@ const classes = {
   leftAlign: 'leftalign-text',
   rightAlign: 'rightalign-text',
   tag: 'timeline-tag',
-  details: 'timeline-details'
+  details: 'timeline-details',
+  editValue: 'editvalue'
 };
 
 export interface Range {
@@ -25,7 +28,6 @@ export interface Range {
 
 interface Props {
   height?: number;
-  width?: number;
 
   minValue: number;
   maxValue: number;
@@ -37,6 +39,10 @@ interface Props {
 
   onChangedTrim?(trim: Partial<Range>): void;
   onChangingTrim?(trim: Partial<Range>): void;
+
+  left?: Array<React.ReactChild> | React.ReactChild;
+  right?: Array<React.ReactChild> | React.ReactChild;
+  tags?: Array<React.ReactElement<Tag>>;
 }
 
 interface State {
@@ -44,25 +50,40 @@ interface State {
   trim: Range;
 }
 
-class EditValue extends React.Component<{value: string}> {
+interface EditProps {
+  value: string;
+  onChange?(value: string): void;
+}
+export class EditValue extends React.Component<EditProps, {}> {
+  state = {};
+  ref = React.createRef<HTMLDivElement>();
+  static edit: EditValue;
+
+  onEnter = (value: string) => {
+    this.props.onChange && this.props.onChange(value);
+    EditValue.edit = null;
+    this.setState({});
+  };
+
+  onCancel = () => {
+    EditValue.edit = null;
+    this.setState({});
+  };
+
   render() {
     return (
-      <input
-        style={{
-          textAlign: 'center',
-          backgroundColor: 'transparent',
-          border: 'none',
-          outline: 'none',
-          width: (this.props.value.length - 2) + 'em',
-          font: 'inherit'
-        }}
+      <Textbox
+        resizeable
+        className={classes.editValue}
         value={this.props.value}
+        onEnter={this.onEnter}
+        onCancel={this.onCancel}
       />
     );
   }
 }
 
-class TimelineImpl extends React.Component<Props, Partial<State>> {
+export class TimelineImpl extends React.Component<Props, Partial<State>> {
   static defaultProps: Partial<Props> = {
     height: 20
   };
@@ -70,23 +91,25 @@ class TimelineImpl extends React.Component<Props, Partial<State>> {
   timeline = React.createRef<HTMLDivElement>();
 
   getValueToRender(value?: number): number {
+    const width = this.timeline.current ? this.timeline.current.offsetWidth : 0;
     if (value == null)
       value = this.state.value != null ? this.state.value : this.props.value;
 
     const valLen = this.props.maxValue - this.props.minValue;
-    return this.props.minValue + (this.props.width / valLen) * value || 0;
+    return  (width / valLen) * (value - this.props.minValue) || 0;
   }
 
   getValueFromRender(rpos: number): number {
+    const width = this.timeline.current ? this.timeline.current.offsetWidth : 0;
     const valLen = this.props.maxValue - this.props.minValue;
-    let value = (rpos - this.props.minValue) * ( valLen / this.props.width );
+    let value = this.props.minValue + rpos * (valLen / width);
     return clamp(value, [this.props.minValue, this.props.maxValue]);
   }
 
   private onTimelineMouseDown = (e: React.MouseEvent) => {
     const bbox = this.timeline.current.getBoundingClientRect();
     const rpos = e.pageX - bbox.left;
-    startDragging({ x: 0, y: 0}, {
+    startDragging({ x: 0, y: 0 }, {
       onDragging: evt => {
         this.onChangingValue(this.getValueFromRender(rpos + evt.x));
       },
@@ -101,7 +124,7 @@ class TimelineImpl extends React.Component<Props, Partial<State>> {
     e.preventDefault();
 
     const rpos = this.getValueToRender();
-    startDragging({x: rpos, y: 0}, {
+    startDragging({ x: rpos, y: 0 }, {
       onDragging: evt => {
         this.onChangingValue(this.getValueFromRender(evt.x));
       },
@@ -116,14 +139,14 @@ class TimelineImpl extends React.Component<Props, Partial<State>> {
     e.preventDefault();
 
     const trim = this.getValueToRender(left);
-    startDragging({x: trim, y: 0}, {
+    startDragging({ x: trim, y: 0 }, {
       onDragging: evt => {
         document.body.style.cursor = 'w-resize';
-        this.onChangingTrim({from: this.getValueFromRender(evt.x)});
+        this.onChangingTrim({ from: this.getValueFromRender(evt.x) });
       },
       onDragEnd: evt => {
         document.body.style.cursor = null;
-        this.onChangedTrim({from: this.getValueFromRender(evt.x)});
+        this.onChangedTrim({ from: this.getValueFromRender(evt.x) });
       }
     })(e.nativeEvent);
   };
@@ -133,21 +156,21 @@ class TimelineImpl extends React.Component<Props, Partial<State>> {
     e.preventDefault();
 
     const trim = this.getValueToRender(right);
-    startDragging({x: trim, y: 0}, {
+    startDragging({ x: trim, y: 0 }, {
       onDragging: evt => {
         document.body.style.cursor = 'w-resize';
-        this.onChangingTrim({to: this.getValueFromRender(evt.x)});
+        this.onChangingTrim({ to: this.getValueFromRender(evt.x) });
       },
       onDragEnd: evt => {
         document.body.style.cursor = null;
-        this.onChangedTrim({to: this.getValueFromRender(evt.x)});
+        this.onChangedTrim({ to: this.getValueFromRender(evt.x) });
       }
     })(e.nativeEvent);
   };
 
   private onChangingTrim(trim: Partial<Range>) {
     if (trim)
-      trim = {...trim};
+      trim = { ...trim };
 
     if (this.props.onChangingTrim)
       this.props.onChangingTrim(trim);
@@ -163,7 +186,7 @@ class TimelineImpl extends React.Component<Props, Partial<State>> {
 
   private onChangedTrim(trim: Partial<Range>) {
     if (trim)
-      trim = {...trim};
+      trim = { ...trim };
 
     if (trim && trim.from == null)
       trim.from = this.props.trim ? this.props.trim.from : this.props.minValue;
@@ -246,9 +269,9 @@ class TimelineImpl extends React.Component<Props, Partial<State>> {
       >
         <div
           className={classes.timeValue}
-          style={{height, left: this.getValueToRender()}}
+          style={{ height, left: this.getValueToRender() }}
         >
-          <div className={classes.timeSlider} onMouseDown={this.onTimeValueMouseDown}/>
+          <div className={classes.timeSlider} onMouseDown={this.onTimeValueMouseDown} />
         </div>
         {this.renderTrim()}
         <div className={cn(classes.leftAlign, classes.text)}>
@@ -283,17 +306,39 @@ class TimelineImpl extends React.Component<Props, Partial<State>> {
 
   renderDetails() {
     return (
-      <div className={classes.details}>
+      <div className={cn(classes.details, 'horz-panel-1')}>
+        <Tag icon='fa fa-clock-o' color='#FFE1DD'>
+          {this.renderTimeValue(this.props.value)}
+        </Tag>
         <Tag
+          color='#ddeeff'
           show={!!(this.props.trim || this.state.trim)}
           icon='fa fa-cut'
           onRemove={() => this.onChangedTrim(null)}
         >
-          <>
-            <EditValue value={this.renderTimeValue(this.getTrimFrom())}/> - <EditValue value={this.renderTimeValue(this.getTrimTo())}/>
-            ({this.renderTimeValue(this.getTrimTo() - this.getTrimFrom())})
-          </>
+          <EditValue
+            value={this.renderTimeValue(this.getTrimFrom())}
+            onChange={value => {
+              this.onChangedTrim({ from: +value });
+            }}
+          />
+          <span> - </span>
+          <EditValue
+            value={this.renderTimeValue(this.getTrimTo())}
+            onChange={value => {
+              this.onChangedTrim({ to: +value });
+            }}
+          />
+          <span> (</span>
+          <EditValue
+            value={this.renderTimeValue(this.getTrimTo() - this.getTrimFrom())}
+            onChange={value => {
+              this.onChangedTrim({ to: this.getTrimFrom() + (+value) });
+            }}
+          />
+          <span>)</span>
         </Tag>
+        {(this.props.tags || []).map((node, i) => React.cloneElement(node, { key: node.key || i }))}
       </div>
     );
   }
@@ -301,7 +346,11 @@ class TimelineImpl extends React.Component<Props, Partial<State>> {
   render() {
     return (
       <div className={classes.container}>
-        {this.renderTimeline()}
+        <div className={cn(classes.timelineBar, 'horz-panel-1')}>
+          {this.props.left}
+          {this.renderTimeline()}
+          {this.props.right}
+        </div>
         {this.renderDetails()}
       </div>
     );
@@ -309,29 +358,60 @@ class TimelineImpl extends React.Component<Props, Partial<State>> {
 }
 
 interface TagProps {
+  color?: string;
   show?: boolean;
   icon?: string;
   onRemove?(): void;
-  children?: React.ReactChild;
+  children?: React.ReactNode | Array<React.ReactNode>;
 }
 
-function Tag(props: TagProps) {
-  return props.show == true && (
-    <div className={classes.tag}>
-      <i className={props.icon}/>
-      {props.children}
-      <i style={{cursor: 'pointer'}} className='fa fa-remove' onClick={props.onRemove}/>
-    </div>
-  );
+export class Tag extends React.Component<TagProps, {minWidth: number}> {
+  ref = React.createRef<HTMLDivElement>();
+  state = { minWidth: null };
+  drag = false;
+
+  componentDidUpdate() {
+    if (!this.ref.current)
+      return;
+
+    if (!this.state.minWidth || isDragging()) {
+      let minWidth = Math.ceil(Math.max(this.ref.current.offsetWidth, this.state.minWidth));
+      if (minWidth != this.state.minWidth)
+        this.setState({ minWidth });
+    } else if (!isDragging()) {
+      let minWidth = Math.ceil(this.ref.current.offsetWidth);
+      if (minWidth != this.state.minWidth)
+        this.setState({ minWidth });
+    }
+    this.drag = isDragging();
+  }
+
+  render() {
+    let minWidth = isDragging() ? this.state.minWidth : null;
+    return this.props.show != false && (
+      <div className={cn(classes.tag, 'horz-panel-1')} style={{ backgroundColor: this.props.color }}>
+        <i className={this.props.icon} />
+        <div style={{ display: 'inline-block', minWidth }} ref={this.ref}>
+          {this.props.children}
+        </div>
+        {this.props.onRemove &&
+          <i
+            style={{ cursor: 'pointer' }}
+            className='fa fa-remove'
+            onClick={this.props.onRemove}
+          />
+        }
+      </div>
+    );
+  }
 }
 
 export function Timeline(props: Props) {
   return (
     <FitToParent
-      render={w => {
+      render={() => {
         return (
           <TimelineImpl
-            width={w}
             {...props}
           />
         );

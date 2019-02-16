@@ -159,7 +159,7 @@ $bg-color-1: #d2e2ec;
   @extend .focus;
 }
 
-.absolute-fit {
+.abs-fit {
   position: absolute;
   top: 0px;
   left: 0px;
@@ -167,13 +167,55 @@ $bg-color-1: #d2e2ec;
   bottom: 0px;
 }
 
-.flex {
+.abs-fit-noscroll {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  overflow: hidden;
+}
+
+.flexrow {
   display: flex;
+  flex-direction: row;
+}
+
+.flexcol {
+  display: flex;
+  flex-direction: column;
+}
+
+.flexgrow1 {
   flex-grow: 1;
 }
 
-.flex-grow {
+.flexgrow0 {
+  flex-grow: 0;
+}
+
+.flexrow0 {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 0;
+}
+
+.flexrow1 {
+  display: flex;
+  flex-direction: row;
   flex-grow: 1;
+}
+
+.flexcol1 {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.flexcol0 {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 0;
 }
 
 .resizer {
@@ -249,4 +291,5 @@ $bg-color-1: #d2e2ec;
 @import './app-comp-layout';
 @import './checkicon';
 @import './checkbox';
+@import './textbox';
 @import './timeline';

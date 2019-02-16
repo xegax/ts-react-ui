@@ -2,6 +2,11 @@
   background-color: transparent;
   position: relative;
 
+  .timeline-bar {
+    display: flex;
+    align-items: center;
+  }
+
   .time-text {
     position: absolute;
     pointer-events: none;
@@ -19,9 +24,21 @@
     padding: 2px;
     border: 1px solid #abc2d9;
     border-radius: 3px;
-    font-size: small;
+    font-size: x-small;
     background-color: #ddeeff;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    .editvalue {
+      color: gray;
+      display: inline-block;
+      font: inherit;
+      border: none;
+      outline: none;
+      background-color: transparent;
+      &:focus {
+        color: black;
+      }
+    }
   }
 
   .timeline-details {
@@ -30,6 +47,7 @@
 }
 
 .timeline {
+  flex-grow: 1;
   position: relative;
   background-color: #ffead4;
 

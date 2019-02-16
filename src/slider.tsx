@@ -8,7 +8,7 @@ class SliderModel extends Publisher {
   private value: number = 0;
   private from: number = 0;
   private to: number = 1;
-  private sliderSize: number = 10;
+  private sliderSize: number = 15;
   private round: boolean = false;
 
   setMinMax(min?: number, max?: number): boolean {
@@ -48,14 +48,20 @@ class SliderModel extends Publisher {
   }
 
   getValueForRender(width: number, value?: number): number {
+    const slider = this.getSliderSize();
     value = value == null ? this.value : value;
     const size = this.to - this.from;
-    return Math.round((value - this.from) * ( width - this.sliderSize ) / size);
+    return Math.round((value - this.from) * ( width - slider ) / size);
   }
 
   getRenderForValue(pos: number, width: number): number {
+    const slider = this.getSliderSize();
     const size = this.to - this.from;
-    return this.from + size * pos / (width - this.sliderSize);
+    return this.from + size * pos / (width - slider);
+  }
+
+  getSliderSize() {
+    return this.sliderSize;
   }
 
   setRound(round: boolean) {
@@ -170,6 +176,7 @@ export class SliderImpl extends React.Component<Props, State> {
 
   render() {
     const model = this.state.model;
+    const sliderSize = model.getSliderSize();
     const { width, className, height, extraClass, style, disabled } = this.props;
     const rvalue = model.getValueForRender(width, this.dragging);
     return (
@@ -179,8 +186,15 @@ export class SliderImpl extends React.Component<Props, State> {
         style={{ ...style, height }}>
         <div className={cn(classes.thumb)} style={{ width }}/>
         <div
+          tabIndex={1}
           className={cn(classes.slider)}
-          style={{ left: rvalue, height, top: 0 }}
+          style={{
+            borderRadius: sliderSize,
+            left: rvalue,
+            width: sliderSize,
+            height: sliderSize,
+            top: height / 2 - sliderSize / 2
+          }}
           onMouseDown={evt => this.onMouseDown(evt)}
         />
       </div>
