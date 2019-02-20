@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { KeyCode } from '../common/keycode';
+import { KeyCode } from './common/keycode';
 
 export interface Props {
   resizeable?: boolean;

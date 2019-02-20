@@ -176,6 +176,11 @@ $bg-color-1: #d2e2ec;
   overflow: hidden;
 }
 
+.flex {
+  display: flex;
+  flex-grow: 1;
+}
+
 .flexrow {
   display: flex;
   flex-direction: row;
@@ -293,3 +298,4 @@ $bg-color-1: #d2e2ec;
 @import './checkbox';
 @import './textbox';
 @import './timeline';
+@import './volume-bar';

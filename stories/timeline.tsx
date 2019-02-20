@@ -4,16 +4,23 @@ import { Timeline, Range, Tag, EditValue } from '../src/timeline';
 import { Rect } from '../src/common/rect';
 import '../src/_base.scss';
 import { clamp } from '../src/common/common';
+import { startDragging, isDragging } from '../src/common/start-dragging';
+import { VolumeBar } from '../src/volume-bar';
 
 interface State {
   trim: Range;
   value: number;
   crop?: Rect;
-  range?: Array<number>
+  range?: Array<number>,
+  volume: number;
 }
 
 class Dummy extends React.Component<{}, Partial<State>> {
-  state: Partial<State> = { value: 25, crop: { x: 0, y: 0, width: 320, height: 240 } };
+  state: Partial<State> = {
+    value: 25,
+    crop: { x: 0, y: 0, width: 320, height: 240 },
+    volume: 0.5
+  };
 
   renderCrop() {
     if (!this.state.crop)
@@ -49,7 +56,7 @@ class Dummy extends React.Component<{}, Partial<State>> {
 
   render() {
     return (
-      <div>
+      <div style={{marginTop: 100}}>
         <div>
           <i
             className='fa fa-cut'
@@ -69,6 +76,18 @@ class Dummy extends React.Component<{}, Partial<State>> {
           maxValue={this.state.range ? this.state.range[1] : 50}
           trim={this.state.trim}
           value={this.state.value}
+          right={[
+            <VolumeBar
+              height={60}
+              value={this.state.volume}
+              onChanging={volume => {
+                this.setState({ volume });
+              }}
+              onChanged={volume => {
+                this.setState({ volume });
+              }}
+            />
+          ]}
           onChangingTrim={trim => {
             if (trim.from != null)
               this.setState({ value: trim.from });
