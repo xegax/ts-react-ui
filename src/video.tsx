@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FitToParent } from './fittoparent';
 import { CheckIcon } from './checkicon';
-import { Timeline, Range } from './timeline';
+import { Timeline, Range, Tag } from './timeline';
 import { VolumeBar } from './volume-bar';
 import { clamp } from './common/common';
 
@@ -15,6 +15,7 @@ interface Props {
   defaultTrim?: Range;
   defaultTime?: number;
   toolbar?: Array<JSX.Element>;
+  tags?: Array<React.ReactElement<Tag>>;
 }
 
 interface State {
@@ -127,6 +128,7 @@ export class Video extends React.Component<Props, State> {
           minValue={range.from}
           maxValue={range.to}
           trim={this.state.trim}
+          tags={this.props.tags}
           left={[
             <CheckIcon
               value
