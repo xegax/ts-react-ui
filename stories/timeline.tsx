@@ -95,7 +95,6 @@ class Dummy extends React.Component<{}, Partial<State>> {
               this.setState({ value: trim.to });
           }}
           onChangedTrim={(trim: Range) => {
-            console.log(trim);
             this.setState({ trim });
           }}
           onChangingValue={value => {
@@ -103,7 +102,6 @@ class Dummy extends React.Component<{}, Partial<State>> {
           }}
           onChangedValue={value => {
             this.setState({ value });
-            console.log('changed', value);
           }}
           tags={[this.renderCrop()].filter(v => v)}
         />

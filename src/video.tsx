@@ -16,6 +16,7 @@ interface Props {
   defaultTime?: number;
   toolbar?: Array<JSX.Element>;
   tags?: Array<React.ReactElement<Tag>>;
+  autoPlay?: boolean;
 }
 
 interface State {
@@ -46,6 +47,8 @@ export class Video extends React.Component<Props, State> {
       this.setState({});
       video.volume = this.state.volume;
       video.currentTime = this.state.time;
+      if (this.props.autoPlay)
+        video.play();
     });
 
     video.addEventListener('timeupdate', () => {
@@ -117,6 +120,32 @@ export class Video extends React.Component<Props, State> {
                 });
                 video.currentTime = time;
               }
+            }}
+          />
+          <CheckIcon
+            title='Trim start'
+            value
+            faIcon='fa fa-step-forward'
+            onChange={() => {
+              const trim: Range = {...this.state.trim};
+              trim.from = this.state.time;
+              if (trim.to == null)
+                trim.to = this.getRange().to;
+
+              this.setState({ trim });
+            }}
+          />
+          <CheckIcon
+            title='Trim end'
+            value
+            faIcon='fa fa-step-backward'
+            onChange={() => {
+              const trim: Range = {...this.state.trim};
+              trim.to = this.state.time;
+              if (trim.from == null)
+                trim.from = this.getRange().from;
+
+              this.setState({ trim });
             }}
           />
           {(this.props.toolbar || []).map((tool, i: number) => {
