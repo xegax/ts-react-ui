@@ -4,11 +4,13 @@ import { className as cn } from './common/common';
 const classes = {
   checkicon: 'checkicon',
   checked: 'checked',
+  hidden: 'hidden',
   showOnHover: 'show-on-hover'
 };
 
 export interface Props {
   style?: React.CSSProperties;
+  hidden?: boolean;
   disabled?: boolean;
   showOnHover?: boolean;
   faIcon: string;
@@ -22,7 +24,8 @@ export function CheckIcon(props: Props) {
     classes.checkicon,
     props.value && classes.checked,
     props.disabled && 'disabled',
-    props.showOnHover && classes.showOnHover
+    props.showOnHover && classes.showOnHover,
+    props.hidden && classes.hidden
   );
 
   return (

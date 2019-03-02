@@ -18,3 +18,8 @@
 .checkicon.show-on-hover:hover {
   opacity: 1;
 }
+
+.checkicon.hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
