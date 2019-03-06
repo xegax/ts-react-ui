@@ -80,7 +80,6 @@ export class PropsGroup extends React.Component<Props, State> {
 
     return (
       <div
-        style={this.props.scrollbars == false ? { overflow: 'hidden' } : {}}
         className = {cn(classes.group, this.props.className)}
         onDragEnter={this.props.onDragEnter}
         onDragLeave={this.props.onDragLeave}
@@ -93,7 +92,12 @@ export class PropsGroup extends React.Component<Props, State> {
             this.toggleGroup();
           }}
         >
-          <div className = {classes.wrap} style = {{ paddingLeft: depth * (this.props.levelPadding || 5) }}>
+          <div
+            className = {classes.wrap}
+            style = {{
+              paddingLeft: depth * (this.props.levelPadding || 5)
+            }}
+          >
             {this.props.faIcon && <i className={this.props.faIcon}/>}
             {this.props.label}
           </div>
@@ -104,7 +108,8 @@ export class PropsGroup extends React.Component<Props, State> {
           className = {cn(classes.wrap, this.props.itemWrap != false && classes.itemWrap)}
           style={{
             display: !isOpen ? 'none' : null,
-            height: this.props.height || this.state.height || this.props.defaultHeight
+            height: this.props.height || this.state.height || this.props.defaultHeight,
+            overflow: this.props.scrollbars == false ? 'hidden' : undefined
           }}
           onScroll = {e => {
             const active = DropDown.getActive();
