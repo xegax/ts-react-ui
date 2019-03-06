@@ -21,6 +21,7 @@ export interface Props {
   height?: number;
   width?: number;
   padding?: boolean;
+  scrollbars?: boolean;
 
   onDragEnter?(e: React.DragEvent);
   onDragLeave?(e: React.DragEvent);
@@ -71,7 +72,7 @@ export class PropsGroup extends React.Component<Props, State> {
       return (
         React.cloneElement(item, {
           disabled: item.props.disabled || this.props.disabled,
-          height: this.state.height || this.props.height,
+          height: this.state.height || this.props.height || this.props.defaultHeight,
           border: false
         })
       );
@@ -79,6 +80,7 @@ export class PropsGroup extends React.Component<Props, State> {
 
     return (
       <div
+        style={this.props.scrollbars == false ? { overflow: 'hidden' } : {}}
         className = {cn(classes.group, this.props.className)}
         onDragEnter={this.props.onDragEnter}
         onDragLeave={this.props.onDragLeave}

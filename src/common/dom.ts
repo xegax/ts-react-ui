@@ -8,3 +8,14 @@ export function findParent(start: HTMLElement, parent: HTMLElement): boolean {
 
   return false;
 }
+
+export function findParentByFunc(start: HTMLElement, func: (parent: HTMLElement) => boolean): HTMLElement {
+  while (start) {
+    if(func(start))
+      return start;
+
+    start = start.parentElement;
+  }
+
+  return null;
+}

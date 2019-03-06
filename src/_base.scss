@@ -79,6 +79,13 @@ $bg-color-1: #d2e2ec;
   @include card(14px);
 }
 
+.inline-block {
+  display: inline-block;
+}
+
+.inline-flex {
+  display: inline-flex;
+}
 
 // round-border
 .round-border-1 {
@@ -157,6 +164,10 @@ $bg-color-1: #d2e2ec;
 
 *:focus {
   @extend .focus;
+}
+
+.rel {
+  position: relative;
 }
 
 .abs-fit {

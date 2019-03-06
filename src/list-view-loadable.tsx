@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Item, ListViewModel, ListView, IListView, ListProps as ListPropsBase } from './list-view';
 
-export { ListPropsBase };
+export { ListPropsBase, Item };
 
 export class ListViewLoadableModel extends ListViewModel {
   appendValues(values: Array<Item>) {
@@ -57,7 +57,7 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
     const from = this.state.model.getCount();
     let count = this.props.itemsPerLoad;
     count = Math.min(from + count, totalValues) - from;
-    console.log({from, count}, totalValues);
+    
     this.loading = this.props.onLoadNext(from, count)
     .then(values => {
       this.loading = null;
@@ -75,9 +75,8 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
     if (this.scrollTop != null) {
       el.scrollTop = this.scrollTop;
       this.scrollTop = null;
-    } else {
-      const isTail = el.scrollHeight - el.scrollTop == el.offsetHeight;
-      if (isTail && this.loadNext()) {
+    } else if (el.scrollHeight - el.scrollTop - el.offsetHeight <= 0) {
+      if (this.loadNext()) {
         this.scrollTop = e.currentTarget.scrollTop;
       }
     }
@@ -89,6 +88,15 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
 
   scrollToSelect() {
     this.ref.current.scrollToSelect();
+  }
+
+  getModel(): ListViewLoadableModel {
+    return this.state.model;
+  }
+
+  reload() {
+    this.state.model.setValues([], true);
+    this.loadNext();
   }
 
   render() {

@@ -1,20 +1,41 @@
 import * as React from 'react';
-import { className as cn, clamp } from './common/common';
+import { className as cn, clamp, className } from './common/common';
 import { KeyCode } from './common/keycode';
 import { Publisher } from 'objio/common/publisher';
+import { startDragging } from './common/start-dragging';
+import { findParentByFunc } from './common/dom';
+import { Timer } from 'objio/common/timer';
+
+const DEFAULT_CARD_WIDTH = 200;
+const DEFAULT_CARD_HEIGHT = 300;
 
 const classes = {
   class: 'list-view-ctrl',
+  cards: 'cards',
   item: 'list-item',
+  cardItem: 'list-item-card',
   select: 'select',
   border: 'border',
-  focus: 'focus'
+  focus: 'focus',
+  dropInto: 'drop-into'
 };
 
 export interface Item {
   value: string;
   title?: string;
   render?: string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
+  className?: string;
+}
+
+interface DragAndDropArgs {
+  drag: Array<Item>;
+  drop: Item;
+}
+
+interface MoveToArgs {
+  drag: Array<Item>;
+  before?: Item;
+  after?: Item;
 }
 
 export interface ListProps {
@@ -23,17 +44,28 @@ export interface ListProps {
   defaultValue?: Item;
   border?: boolean;
   style?: React.CSSProperties;
-  dummy?: number;
+
+  cards?: boolean;        // render items as cards
+  cardWidth?: number;
+  cardHeight?: number;
 
   itemsPerPage?: number;
+  itemClassName?: string;
+
   width?: number;
   height?: number;
   maxHeight?: number;
   model?: ListViewModel;
 
+  tabIndex?: number;
+
   onSelect?(item: Item);
   onItemSize?(size: number);
   onScroll?(event: React.UIEvent);
+
+  onDragAndDropTo?(args: DragAndDropArgs): void;
+  onMoveTo?(args: MoveToArgs): void;
+
   noDataToDisplay?: JSX.Element;
   ref?: React.RefObject<any>;
 }
@@ -42,6 +74,8 @@ interface State {
   itemSize?: number;
   scrollTop?: number;
   model?: ListViewModel;
+  drag?: Item;
+  drop?: Item;
 }
 
 export class ListViewModel extends Publisher {
@@ -84,8 +118,8 @@ export class ListViewModel extends Publisher {
     if (this.select && this.isEqual(this.select, value))
       return;
 
-    let newSelect = this.select;
     let newFocus = this.focus;
+    let newSelect = this.select;
 
     const idx = this.values.findIndex(v => this.isEqual(value, v));
     if (idx != -1) {
@@ -144,11 +178,6 @@ export class ListView extends React.Component<ListProps, State> implements IList
     super(props);
 
     const model = props.model || new ListViewModel();
-    /*model.subscribe(() => {
-      if (this.ref && this.ref.current)
-        this.ref.current.scrollTop = 0;
-    }, 'values');*/
-
     model.setValues(props.values);
     this.state = { model };
   }
@@ -282,6 +311,9 @@ export class ListView extends React.Component<ListProps, State> implements IList
     if (!this.props.onSelect)
       return;
 
+    e.preventDefault();
+    e.stopPropagation();
+
     let focus = this.state.model.getFocus();
     if (e.keyCode == KeyCode.ENTER && this.state.model.setValueByIndex(focus)) {
       return this.props.onSelect && this.props.onSelect(this.state.model.getSelect());
@@ -303,7 +335,8 @@ export class ListView extends React.Component<ListProps, State> implements IList
       vect = 0;
     }
 
-    focus = clamp(focus + vect, [0, this.props.values.length - 1]);
+    const values = this.state.model.getValues();
+    focus = clamp(focus + vect, [0, values.length - 1]);
     if (focus == this.state.model.getFocus())
       return;
 
@@ -328,15 +361,35 @@ export class ListView extends React.Component<ListProps, State> implements IList
     else
       jsx = item.render(item, <>{item.value}</>);
 
-    if (typeof jsx == 'string' && jsx.trim() == '')
+    if (typeof jsx != 'string' && this.props.cards) {
+      jsx = React.cloneElement(jsx, { style: {...jsx.props.style, position: 'absolute', left: 0, top: 0, right: 0, bottom: 0} });
+    } else if (typeof jsx == 'string' && jsx.trim() == '') {
       jsx = <span style={{visibility: 'hidden'}}>?</span>;
+    }
+
+    const className = cn(
+      this.props.cards ? classes.cardItem : classes.item,
+      idx == this.state.model.getFocus() && classes.focus,
+      select && classes.select,
+      this.props.itemClassName,
+      item.className,
+      this.props.onDragAndDropTo && this.state.drop == item && classes.dropInto
+    );
+
+    const style = this.props.cards ? {
+      width: this.props.cardWidth || DEFAULT_CARD_WIDTH,
+      height: this.props.cardHeight || DEFAULT_CARD_HEIGHT
+    } : {};
 
     return (
       <div
+        data-itemidx={idx}
+        style={style}
         key={idx}
         title={item.title || this.getLabel(item)}
-        className={cn(classes.item, select && classes.select, idx == this.state.model.getFocus() && classes.focus)}
+        className={className}
         onClick={e => {
+          this.ref.current.focus();
           if (!this.props.onSelect)
             return;
 
@@ -345,11 +398,103 @@ export class ListView extends React.Component<ListProps, State> implements IList
 
           this.props.onSelect(item);
         }}
+        onMouseDown={e => this.onMouseDown(item, idx, e)}
       >
+        {this.renderMoveToLine(item)}
         {jsx}
       </div>
     );
   }
+
+  renderMoveToLine(item: Item) {
+    if (this.state.drop != item)
+      return null;
+
+    if (this.props.cards) {
+      return (
+        <div
+          style={{ position: 'absolute', opacity: 0.5, top: 0, bottom: 0, width: 5, backgroundColor: 'silver' }}
+        />
+      );
+    }
+
+    return (
+      <div
+        style={{position: 'absolute', opacity: 0.5, left: 0, right: 0, height: 5, backgroundColor: 'silver'}}
+      />
+    );
+  }
+
+  onMouseDown(item: Item, idx: number, e: React.MouseEvent) {
+    if (!this.props.onDragAndDropTo && !this.props.onMoveTo)
+      return;
+
+    this.ref.current.focus();
+    let dragTo: HTMLElement;
+    let scrollY: number = 0;
+
+    let timer: Timer = new Timer(() => {
+      this.ref.current.scrollTo(0, this.ref.current.scrollTop + scrollY * 5);
+    });
+
+    const bbox = this.ref.current.getBoundingClientRect();
+    startDragging({x: 0, y: 0, minDist: 5}, {
+      onDragStart: () => {
+        this.setState({ drag: item });
+        if (!this.props.onSelect)
+          return;
+
+        this.state.model.setValue(item);
+        this.state.model.notify();
+        this.props.onSelect(item);
+      },
+      onDragging: evt => {
+        const me: MouseEvent = evt.event as MouseEvent;
+        const ydiff = me.pageY - bbox.top;
+        if (ydiff > bbox.height) {
+          scrollY = 1;
+        } else if(me.pageY - bbox.top < 0) {
+          scrollY = -1;
+        } else {
+          scrollY = 0;
+          timer.stop();
+        }
+
+        if (scrollY != 0 && !timer.isRunning())
+          timer.runRepeat(20);
+
+        const el = findParentByFunc(evt.event.target as HTMLElement, (p => p.getAttribute('data-itemidx') != null));
+        if (dragTo == el)
+          return;
+
+        dragTo = el as HTMLElement;
+        if (!dragTo) {
+          this.setState({ drop: null });
+        } else {
+          const itemIdx = +dragTo.getAttribute('data-itemidx');
+          const values = this.state.model.getValues();
+          if (itemIdx == idx) {
+            this.setState({ drop: null });
+          } else if (itemIdx != null && itemIdx < values.length) {
+            this.setState({ drop: values[itemIdx] });
+          }
+        }
+      },
+      onDragEnd: () => {
+        timer.stop();
+        if (!this.state.drop)
+          return;
+
+        if (this.props.onDragAndDropTo) {
+          this.props.onDragAndDropTo({ drag: [ item ], drop: this.state.drop });
+        } else if (this.props.onMoveTo) {
+          this.props.onMoveTo({ drag: [ item ], before: this.state.drop });
+        }
+        this.state.model.setFocus( this.state.model.getValues().findIndex(v => v == item) );
+        this.setState({ drop: null });
+      }
+    })(e.nativeEvent);
+  };
 
   onScroll(e: React.UIEvent) {
     this.props.onScroll && this.props.onScroll(e);
@@ -367,11 +512,19 @@ export class ListView extends React.Component<ListProps, State> implements IList
       maxHeight
     };
 
+    const className = cn(
+      classes.class,
+      this.props.border != false && classes.border,
+      this.props.cards && classes.cards
+    );
+
     return (
       <div
+        tabIndex={this.props.tabIndex == null ? this.props.onSelect && 0 : this.props.tabIndex}
         ref={this.ref}
-        className={cn(classes.class, this.props.border != false && classes.border)}
+        className={className}
         style={style}
+        onKeyDown={this.onKeyDown}
         onScroll={e => this.onScroll(e)}
       >
         {this.renderValues()}

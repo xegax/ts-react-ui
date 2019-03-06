@@ -1,5 +1,6 @@
 const path = require("path");
 const include = path.resolve(__dirname, '../');
+const webpack = require('webpack');
 
 module.exports = {
   resolve: {
@@ -27,5 +28,10 @@ module.exports = {
 			}
 		  }
       ]
-  }
+  },
+  plugins: [
+    new webpack.ProvidePlugin({
+      Promise: 'bluebird'
+    }),
+  ]
 };
