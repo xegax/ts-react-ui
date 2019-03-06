@@ -1,9 +1,10 @@
 .list-view-ctrl {
   outline: none;
-  background-color: #f2f2f2;
+  background-color: white;
   overflow-y: auto;
 
   &.cards {
+    background-color: #f2f2f2;
     justify-content: space-evenly;
     flex-wrap: wrap;
     display: flex;
