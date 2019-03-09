@@ -120,14 +120,19 @@ export class TextPropItem extends React.PureComponent<TextProps, Partial<TextSta
     return (
       <PropItem {...props} fit>
         <input
+          tabIndex={0}
           autoFocus={props.autoFocus}
           disabled={props.disabled}
           ref={this.ref}
           value={this.state.value}
+          onClick={e => {
+            e.stopPropagation();
+          }}
           onBlur={e => {
             this.onEnter(e.currentTarget.value);
           }}
           onKeyDown={e => {
+            e.stopPropagation();
             const enter = e.keyCode == KeyCode.ENTER;
             const esc = e.keyCode == KeyCode.ESCAPE;
             if (!enter && !esc)

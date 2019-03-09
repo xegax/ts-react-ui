@@ -14,8 +14,8 @@ export interface Props {
 }
 
 interface State {
-  value: string;
-  propsValue: string;
+  value?: string;
+  propsValue?: string;
   width?: number;
   height?: number;
 }
@@ -25,7 +25,6 @@ export class Textbox extends React.PureComponent<Props, Partial<State>> {
     className: 'textbox'
   };
   private text = React.createRef<HTMLDivElement>();
-  private ref = React.createRef<HTMLInputElement>();
   state: Readonly<Partial<State>> = {};
 
   constructor(props: Props) {
@@ -55,6 +54,8 @@ export class Textbox extends React.PureComponent<Props, Partial<State>> {
     let newValue = this.props.onEnter && this.props.onEnter(value);
     if (typeof newValue == 'string' && this.props.value == null)
       this.setState({ value: newValue as string });
+    else
+      this.setState({ propsValue: null });
   }
 
   onCancel() {
@@ -62,10 +63,14 @@ export class Textbox extends React.PureComponent<Props, Partial<State>> {
     this.setState({ value: this.props.value });
   }
 
-  static getDerivedStateFromProps(p: Props, s: State): State {
-    if (p.value != s.propsValue)
-      return { value: p.value == null ? '' : p.value, propsValue: p.value };
-    return { value: s.value, propsValue: p.value };
+  static getDerivedStateFromProps(newp: Props, s: State): State {
+    let news: State = { propsValue: newp.value };
+
+    if (newp.value != s.propsValue) {
+      news.value = newp.value == null ? '' : newp.value;
+    }
+
+    return news;
   }
 
   render() {
@@ -97,7 +102,6 @@ export class Textbox extends React.PureComponent<Props, Partial<State>> {
           style={{...this.props.style, width, height}}
           autoFocus={props.autoFocus}
           disabled={props.disabled}
-          ref={this.ref}
           value={this.state.value}
           onBlur={e => {
             this.onEnter(e.currentTarget.value);

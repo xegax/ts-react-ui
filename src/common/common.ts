@@ -1,3 +1,7 @@
+export function clone<T = Object>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 export function className(...args: Array<string | boolean>): string {
   return args.filter(name => typeof name == 'string').map(name => name).join(' ');
 }

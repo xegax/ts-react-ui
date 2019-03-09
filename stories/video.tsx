@@ -1,21 +1,35 @@
 import * as React from 'react';
 import { storiesOf } from '@storybook/react';
-import { Video, Range } from '../src/video';
+import { Video, VideoData, CtrlData } from '../src/video';
 import { CheckIcon } from '../src/checkicon';
 import { DropDown } from '../src/drop-down';
 import '../src/_base.scss';
 
-interface Cut {
-  video?: string;
-  trim?: Range;
+interface State {
+  data: VideoData;
+  ctrl: CtrlData;
 }
 
-interface State {
-  video?: string;
-}
+let cuts: Array<VideoData> = [
+  {
+    src: 'contra.mp4',
+    trim: { from: 0, to: 3 }
+  }, {
+    src: 'contra.mp4',
+    trim: { from: 4, to: 5 }
+  }, {
+    src: 'contra.mp4'
+  }, {
+    src: 'contra.mp4',
+    trim: { from: 8, to: 10 }
+  }
+];
 
 class Dummy extends React.Component<{}, State> {
-  state: State = {};
+  state: State = {
+    data: null,
+    ctrl: { volume: 0.5 }
+  };
 
   render() {
     return (
@@ -24,21 +38,24 @@ class Dummy extends React.Component<{}, State> {
           <span>video:</span>
           <DropDown
             width={100}
-            values={[
-              { value: 'contra.mp4' },
-              { value: 'dance.mp4' }
-            ]}
+            values={cuts.map((v, i) => {
+              return { value: '' + i, render: v.src + ', ' + (i + 1) };
+            })}
             onSelect={video => {
-              this.setState({ video: video.value });
+              this.setState({ data: cuts[+video.value] });
             }}
           />
         </div>
         <div style={{position: 'relative', flexGrow: 1}}>
-          {this.state.video && 
+          {this.state.data && 
             <Video
-              key={this.state.video}
-              src={this.state.video}
-              defaultVolume={0.5}
+              ctrl={this.state.ctrl}
+              data={this.state.data}
+
+              onChangedCtrl={ctrl => {
+                this.setState({ ctrl });
+              }}
+
               toolbar={[
                 <CheckIcon value faIcon='fa fa-plus' />
               ]}
