@@ -16,7 +16,8 @@ export interface Props {
   faIcon: string;
   value: boolean;
   title?: string;
-  onChange?(newValue: boolean);
+  onChange?(newValue: boolean): void;
+  onClick?(e: React.MouseEvent): void;
 }
 
 export function CheckIcon(props: Props) {
@@ -30,11 +31,12 @@ export function CheckIcon(props: Props) {
 
   return (
     <span className={className} title={props.title}>
-      <i style={props.style} className={props.faIcon} onClick={() => {
+      <i style={props.style} className={props.faIcon} onClick={e => {
         if (props.disabled)
           return;
 
         props.onChange && props.onChange(!props.value);
+        props.onClick && props.onClick(e);
       }}/>
     </span>
   );
