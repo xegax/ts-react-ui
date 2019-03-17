@@ -257,7 +257,6 @@ export class Droppable extends React.Component<DropProps, {}> {
     const showDrop = dropModel.getShowDrop(this.props.types) && dropClasses.dndHighlight;
     return (
       React.cloneElement(child, {
-        ...this.props,
         className: cn(
           child.props.className,
           showDrop,
