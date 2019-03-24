@@ -17,6 +17,7 @@ interface Props {
   defaultWidth?: number;
   defaultSelect?: string;
   select?: string;
+  className?: string;
 
   onSelect?(id: string);
 }
@@ -94,7 +95,7 @@ export class AppCompLayout extends React.Component<Props, State> {
     }).filter(item => item);
 
     return (
-      <div className={cn(classes.appCompLayout, 'flex')}>
+      <div className={cn(classes.appCompLayout, 'flex', this.props.className)}>
         <div className={cn(classes.appCompIcons, 'padding-2', 'vert-panel-2')}>
           {children}
         </div>
