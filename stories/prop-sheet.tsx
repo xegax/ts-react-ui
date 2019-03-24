@@ -12,7 +12,7 @@ import {
 // import { prompt } from '../src/prompt';
 import { Item } from '../src/drop-down';
 import { Publisher } from 'objio';
-import { clamp } from '../common/common';
+import { clamp } from '../src/common/common';
 import { ListView } from '../src/list-view';
 import { Timer } from 'objio/common/timer';
 import { Tabs, Tab } from '../src/tabs';
