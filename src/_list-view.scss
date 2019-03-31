@@ -1,7 +1,7 @@
 .list-view-ctrl {
-  outline: none;
   background-color: white;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 
   &.cards {
     background-color: #f2f2f2;
@@ -10,72 +10,103 @@
     display: flex;
     padding-right: 10px;
     padding-bottom: 10px;
+
+    > .list-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-evenly;
+    }
   }
 
-  > .list-item {
-    background-color: white;
-    // position: relative;  // it can break drop-down
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    cursor: default;
-    padding-left: 5px;
-    padding-right: 5px;
-    padding-top: 1px;
-    padding-bottom: 1px;
+  > .list-header-wrap {
+    background-color: silver;
+    > .list-header {
+      min-height: 3em;
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-top: 1px;
+      padding-bottom: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
 
-    &:hover {
-      background-color: rgb(234, 252, 255);
+      > .list-item {
+        flex-grow: 1;
+      }
     }
+  } 
 
-    &.focus {
-      background-color: #e8f2ff;
-    }
+  > .list-wrapper {
+    overflow-y: auto;
+    outline: none;
 
-    &.select {
-      background-color: rgb(163, 218, 255);
+    > .list-item {
+      background-color: white;
+      // position: relative;  // it can break drop-down
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: default;
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-top: 1px;
+      padding-bottom: 1px;
 
       &:hover {
-        color: gray;
+        background-color: rgb(234, 252, 255);
+      }
+
+      &.focus {
+        background-color: #e8f2ff;
+      }
+
+      &.select {
+        background-color: rgb(163, 218, 255);
+
+        &:hover {
+          color: gray;
+        }
+      }
+
+      &.drop-into {
+        font-weight: bold;
       }
     }
 
-    &.drop-into {
-      font-weight: bold;
-    }
-  }
-
-  > .list-item-card {
-    position: relative;
-    cursor: default;
-    margin-left: 10px;
-    margin-top: 10px;
-    display: inline-flex;
-    border: 1px solid gray;
-    border-radius: 5px;
-    background-color: white;
-
-    &:hover {
-      background-color: rgb(234, 252, 255);
-    }
-
-    &.focus {
-      background-color: #e8f2ff;
-      border-color: #137cbd;
-    }
-
-    &.select {
-      background-color: rgb(204, 232, 255);
+    > .list-item-card {
+      position: relative;
+      cursor: default;
+      margin-left: 10px;
+      margin-top: 10px;
+      display: inline-flex;
+      border: 1px solid gray;
+      border-radius: 5px;
+      background-color: white;
 
       &:hover {
-        color: gray;
+        background-color: rgb(234, 252, 255);
       }
-    }
 
-    &.drop {
-      font-weight: bold;
-    }
+      &.focus {
+        background-color: #e8f2ff;
+        border-color: #137cbd;
+      }
+
+      &.select {
+        background-color: rgb(204, 232, 255);
+
+        &:hover {
+          color: gray;
+        }
+      }
+
+      &.drop {
+        font-weight: bold;
+      }
   }
+}
 
   &.border {
     border: 1px solid silver;

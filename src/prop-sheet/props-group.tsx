@@ -123,7 +123,7 @@ export class PropsGroup extends React.Component<Props, State> {
           style={{display: !isOpen ? 'none' : null}}
           width={this.props.width}
           size={() => this.getSize()}
-          onResize={newSize => {
+          onResizing={newSize => {
             const active = DropDown.getActive();
             active && active.hideList();
             this.setState({height: newSize});

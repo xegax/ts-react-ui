@@ -60,7 +60,7 @@ export class AppCompLayout extends React.Component<Props, State> {
             max={500}
             min={50}
             size={this.state.width}
-            onResize={newSize => this.setState({width: newSize})}
+            onResizing={newSize => this.setState({width: newSize})}
           />
         </div>
       </div>

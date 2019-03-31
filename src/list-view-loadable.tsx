@@ -75,7 +75,7 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
     if (this.scrollTop != null) {
       el.scrollTop = this.scrollTop;
       this.scrollTop = null;
-    } else if (el.scrollHeight - el.scrollTop - el.offsetHeight <= 0) {
+    } else if (Math.round(el.scrollHeight - el.scrollTop - el.offsetHeight) <= 0) {
       if (this.loadNext()) {
         this.scrollTop = e.currentTarget.scrollTop;
       }

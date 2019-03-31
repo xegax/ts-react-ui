@@ -244,8 +244,12 @@ $bg-color-1: #d2e2ec;
 }
 
 .vertical-resizer {
-  width: 5px;
+  opacity: 0.05;
+  width: 3px;
   cursor: e-resize;
+  &:hover {
+    opacity: 0.2;
+  }
 }
 
 .vertical-resizer.fit-to-abs {
@@ -310,3 +314,4 @@ $bg-color-1: #d2e2ec;
 @import './textbox';
 @import './timeline';
 @import './volume-bar';
+@import './grid';

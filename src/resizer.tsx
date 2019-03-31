@@ -6,18 +6,29 @@ export interface Props {
   size: number | (() => number);
   min?: number;
   max?: number;
-  onResize?(newSize: number);
+  onResizing?(newSize: number): void;
+  onResized?(newSize: number): void;
+  onDoubleClick?(e: React.MouseEvent): void;
   style?: React.CSSProperties;
 }
 
 export class VerticalResizer extends React.Component<Props & {height?: number}> {
-  onResize(newSize: number) {
+  onResizing(newSize: number) {
     if (this.props.min)
       newSize = Math.max(newSize, this.props.min);
     if (this.props.max)
       newSize = Math.min(newSize, this.props.max);
 
-    this.props.onResize && this.props.onResize(newSize);
+    this.props.onResizing && this.props.onResizing(newSize);
+  }
+
+  onResized(newSize: number) {
+    if (this.props.min)
+      newSize = Math.max(newSize, this.props.min);
+    if (this.props.max)
+      newSize = Math.min(newSize, this.props.max);
+
+    this.props.onResized && this.props.onResized(newSize);
   }
 
   render() {
@@ -26,9 +37,12 @@ export class VerticalResizer extends React.Component<Props & {height?: number}> 
         this.props.size :
         () => this.props.size as number;
 
-      startDragging({ x: size(), y: 0}, {
+      startDragging({ x: size(), y: 0, minDist: 5 }, {
         onDragging: event => {
-          this.onResize(event.x);
+          this.onResizing(event.x);
+        },
+        onDragEnd: event => {
+          this.onResized(event.x);
         }
       })(e);
     };
@@ -38,6 +52,10 @@ export class VerticalResizer extends React.Component<Props & {height?: number}> 
         style={this.props.style}
         className={cn('resizer', 'vertical-resizer', this.props.height == null && 'fit-to-abs')}
         onMouseDown={onMouseDown}
+        onDoubleClick={e => {
+          e.stopPropagation();
+          this.props.onDoubleClick && this.props.onDoubleClick(e);
+        }}
       />
     );
   }
@@ -52,7 +70,7 @@ export class HorizontalResizer extends React.Component<Props & { width: number }
     if (this.props.max)
       newSize = Math.min(newSize, this.props.max);
 
-    this.props.onResize && this.props.onResize(newSize);
+    this.props.onResizing && this.props.onResizing(newSize);
   }
 
   onMouseDown = e => {

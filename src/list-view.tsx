@@ -5,14 +5,18 @@ import { Publisher } from 'objio/common/publisher';
 import { startDragging } from './common/start-dragging';
 import { findParentByFunc } from './common/dom';
 import { Timer } from 'objio/common/timer';
+import { FitToParent } from './fittoparent';
 
 const DEFAULT_CARD_WIDTH = 200;
 const DEFAULT_CARD_HEIGHT = 300;
 
 const classes = {
+  header: 'list-header',
+  headerWrap: 'list-header-wrap',
   class: 'list-view-ctrl',
   cards: 'cards',
   item: 'list-item',
+  listWrapper: 'list-wrapper',
   cardItem: 'list-item-card',
   select: 'select',
   border: 'border',
@@ -40,6 +44,7 @@ interface MoveToArgs {
 
 export interface ListProps {
   values: Array<Item>;
+  header?: Item;
   value?: Item;
   defaultValue?: Item;
   border?: boolean;
@@ -76,6 +81,7 @@ interface State {
   model?: ListViewModel;
   drag?: Item;
   drop?: Item;
+  vertScrollSize?: number;
 }
 
 export class ListViewModel extends Publisher {
@@ -201,6 +207,7 @@ export class ListView extends React.Component<ListProps, State> implements IList
     this.updateFirstItemSize();
 
     this.state.model.subscribe(this.subscriber);
+    this.setState({});
   }
 
   componentWillUnmount() {
@@ -347,11 +354,53 @@ export class ListView extends React.Component<ListProps, State> implements IList
 
   renderValues() {
     const values = this.state.model.getValues();
-    if (values.length == 0)
-      return this.props.noDataToDisplay;
-
     const sel: Item = this.state.model.getSelect();
-    return values.map((item, idx) => this.renderItem(item, idx, sel && item.value == sel.value));
+    return (
+      <div
+        className={classes.listWrapper}
+        ref={this.ref}
+        tabIndex={this.props.tabIndex == null ? this.props.onSelect && 0 : this.props.tabIndex}
+        onKeyDown={this.onKeyDown}
+        onScroll={e => this.onScroll(e)}
+      >
+        {values.length == 0 && this.props.noDataToDisplay}
+        {values.map((item, idx) => this.renderItem(item, idx, sel && item.value == sel.value))}
+      </div>
+    );
+  }
+
+  renderHeader(item: Item) {
+    if (!item || this.props.cards)
+      return null;
+
+    let jsx: JSX.Element | string;
+    if (typeof item.render != 'function')
+      jsx = item.render || item.value || '';
+    else
+      jsx = item.render(item, <>{item.value}</>);
+
+    if (typeof jsx != 'string' && this.props.cards) {
+      jsx = React.cloneElement(jsx, { style: {...jsx.props.style, position: 'absolute', left: 0, top: 0, right: 0, bottom: 0} });
+    } else if (typeof jsx == 'string' && jsx.trim() == '') {
+      jsx = <span style={{visibility: 'hidden'}}>?</span>;
+    }
+
+    return (
+      <div className={classes.headerWrap}>
+        <FitToParent
+          render={() => {
+            const w = this.ref.current ? this.ref.current.offsetWidth - this.ref.current.clientWidth : 0;
+            return (
+              <div className={classes.header} style={{ marginRight: w }}>
+                <div className={classes.item}>
+                  {jsx}
+                </div>
+              </div>
+            );
+          }}
+        />
+      </div>
+    );
   }
 
   renderItem(item: Item, idx: number, select: boolean) {
@@ -520,13 +569,10 @@ export class ListView extends React.Component<ListProps, State> implements IList
 
     return (
       <div
-        tabIndex={this.props.tabIndex == null ? this.props.onSelect && 0 : this.props.tabIndex}
-        ref={this.ref}
         className={className}
         style={style}
-        onKeyDown={this.onKeyDown}
-        onScroll={e => this.onScroll(e)}
       >
+        {this.renderHeader(this.props.header)}
         {this.renderValues()}
       </div>
     );

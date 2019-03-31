@@ -72,6 +72,7 @@ class Dummy extends React.Component<{}, State> {
       <div style={{display: 'flex', flexDirection: 'column', flexGrow: 1}}>
         <FitToParent wrapToFlex>
           <ListViewLoadable
+            header={this.makeItem(0)}
             cards={this.state.viewType == 'cards'}
             itemsPerLoad={100}
             values={null}
