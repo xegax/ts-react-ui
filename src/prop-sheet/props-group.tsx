@@ -69,10 +69,14 @@ export class PropsGroup extends React.Component<Props, State> {
     children = children.filter((item: React.ReactElement<ItemProps>) => {
       return item.props.show != false;
     }).map(item => {
+      let height = this.state.height || this.props.height || this.props.defaultHeight;
+      if (height != null)
+        height -= 10; // padding
+
       return (
         React.cloneElement(item, {
           disabled: item.props.disabled || this.props.disabled,
-          height: this.state.height || this.props.height || this.props.defaultHeight,
+          height,
           border: false
         })
       );

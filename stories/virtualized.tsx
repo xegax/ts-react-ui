@@ -177,7 +177,7 @@ class DummyLoadable extends React.Component<{}, State> {
     return (
       <GridLoadable
         ref={this.ref}
-        rowsCount={15}
+        rowsCount={50}
         colsCount={this.cols.length}
         loader={(from, count) => {
           return (

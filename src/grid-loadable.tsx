@@ -3,12 +3,17 @@ import {
   Grid,
   CellProps,
   HeaderProps,
-  ScrollParams
+  ScrollParams,
+  RowsRange
 } from './grid';
 import { Publisher } from 'objio';
 
-interface CellPropsExt extends CellProps {
+export interface CellPropsExt extends CellProps {
   data: string;
+}
+
+export {
+  HeaderProps
 }
 
 export interface Props {
@@ -57,16 +62,22 @@ export class GridLoadable extends React.Component<Props, State> {
   }
 
   onScroll = (params: ScrollParams) => {
+    // this.ref.current.ref.current;
     const diff = Math.round(params.scrollHeight - (params.scrollTop + params.clientHeight));
     if (diff <= 0)
       this.state.model.loadNext();
   };
 
   renderCell = (props: CellProps) => {
+    const { cells, bunchIdx } = this.state.model.getCells(props.row);
+    const bunch = this.state.model.getBunch(bunchIdx);
+    if (!bunch)
+      this.state.model.reloadBunch({ bunchIdx });
+
     return this.props.renderCell({
       row: props.row,
       col: props.col,
-      data: this.state.model.getRow(props.row)[props.col]
+      data: cells ? cells[props.col] : '?'
     });
   }
 
@@ -82,6 +93,7 @@ export class GridLoadable extends React.Component<Props, State> {
         renderCell={this.renderCell}
         renderHeader={this.props.renderHeader}
         onScroll={this.onScroll}
+        onRowsRangeInfo={model.setRowsRange}
       />
     );
   }
@@ -99,13 +111,25 @@ export interface GirdModelArgs {
   loader?: Loader;
 }
 
+interface RowData {
+  cells: Array<string>;
+}
+
+interface Bunch {
+  task?: Promise<Bunch>;
+  rows?: Array< RowData >;
+}
+
 export class GridModel extends Publisher {
-  private rows = Array<Array<string>>();
-  private loadTask: Promise<Array<Row>>;
+  private bunch: {[bunchIdx: number]: Bunch} = {};
+  private rowsPerBunch: number = 50;
+  private loadedRows: number = 0;
+
+  private loadTask: Promise<Bunch>;
   private dataLoader: Loader;
   private rowsCount: number;
   private colsCount: number;
-  private rowsPerLoad: number = 50;
+  private rowsRange: RowsRange = { firstRow: 0, rowsCount: 0 };
 
   constructor(args: GirdModelArgs) {
     super();
@@ -115,16 +139,31 @@ export class GridModel extends Publisher {
     this.dataLoader = args.loader;
   }
 
+  setRowsRange = (range: RowsRange) => {
+    this.rowsRange.firstRow = range.firstRow;
+    this.rowsRange.rowsCount = range.rowsCount;
+  }
+
   setDataLoader(loader: Loader) {
     this.dataLoader = loader;
   }
 
   getRowsCount() {
-    return this.rows.length;
+    return this.loadedRows;
   }
 
-  getRow(rowIdx: number): Array<string> {
-    return this.rows[rowIdx];
+  getBunch(idx: number) {
+    return this.bunch[idx];
+  }
+
+  getCells(rowIdx: number): { cells: Array<string>, bunchIdx: number } {
+    const bunchIdx = Math.floor(rowIdx / this.rowsPerBunch);
+    const bunch = this.bunch[ bunchIdx ];
+    rowIdx = rowIdx - bunchIdx * this.rowsPerBunch;
+    if (!bunch || !bunch.rows || bunch.rows[rowIdx] == null)
+      return { cells: null, bunchIdx };
+
+    return { cells: bunch.rows[rowIdx].cells, bunchIdx };
   }
 
   getTotalRowsCount() {
@@ -137,29 +176,75 @@ export class GridModel extends Publisher {
 
   reload(args?: { cols?: number, rows?: number }) {
     args = args || {};
+    if (this.loadTask) {
+      this.loadTask.cancel();
+      this.loadTask = null;
+    }
+
     if (args.cols != null)
       this.colsCount = args.cols;
 
-    if (args.rows != null)
+    if (args.rows != null) {
       this.rowsCount = args.rows;
-
-    this.rows = [];
-    return this.loadNext();
+      this.loadedRows = 0;
+      this.bunch = {};
+      this.loadNext();
+    } else {
+      const startBunch = Math.floor(this.rowsRange.firstRow / this.rowsPerBunch);
+      const endBunch = Math.floor((this.rowsRange.firstRow + this.rowsRange.rowsCount) / this.rowsPerBunch);
+      
+      this.bunch = {};
+      for (let n = startBunch; n <= endBunch; n++)
+        this.reloadBunch({ bunchIdx: n, cancel: true });
+    }
   }
 
-  loadNext(): Promise<Array<Row>> {
+  reloadBunch(args: { bunchIdx: number, cancel?: boolean }) {
+    const from = args.bunchIdx * this.rowsPerBunch;
+    const count = Math.min(from + this.rowsPerBunch, this.rowsCount) - from;
+    let bunch: Bunch = this.bunch[args.bunchIdx];
+    if (!bunch)
+      bunch = (this.bunch[args.bunchIdx] = { rows: [] });
+
+    if (bunch.task && args.cancel) {
+      bunch.task.cancel();
+      bunch.task = null;
+    }
+
+    if (bunch.task)
+      return bunch.task;
+
+    console.log('load bunch', args.bunchIdx, `${from} : ${count}`);
+    bunch.task = this.dataLoader(from, count)
+    .then(rows => {
+      bunch.task = null;
+
+      bunch.rows = [];
+      for (let row of rows)
+        bunch.rows.push( { cells: Object.keys(row).map(v => row[v]) } );
+      this.delayedNotify({ type: 'load' });
+
+      return bunch;
+    });
+
+    return bunch.task;
+  }
+
+  loadNext(): Promise< Bunch > {
     if (this.loadTask)
       return this.loadTask;
 
-    const from = this.rows.length;
-    const count = Math.min(from + this.rowsPerLoad, this.rowsCount) - from;
-    this.loadTask = this.dataLoader(from, count)
-    .then(rows => {
-      this.loadTask = null;
-      for (let row of rows)
-        this.rows.push( Object.keys(row).map(v => row[v]) );
-      this.delayedNotify({ type: 'load' });
-      return rows;
-    });
+    const bunchIdx = Math.floor(this.loadedRows / this.rowsPerBunch);
+    if (this.bunch[bunchIdx])
+      return Promise.resolve(this.bunch[bunchIdx]);
+
+    return (
+      this.loadTask = this.reloadBunch({ bunchIdx })
+      .then(bunch => {
+        this.loadTask = null;
+        this.loadedRows += bunch.rows.length;
+        return bunch;
+      })
+    );
   }
 }

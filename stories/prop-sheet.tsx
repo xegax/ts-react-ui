@@ -10,12 +10,13 @@ import {
   SwitchPropItem
 } from '../src/prop-sheet';
 // import { prompt } from '../src/prompt';
-import { Item } from '../src/drop-down';
+import { Item, DropDown } from '../src/drop-down';
 import { Publisher } from 'objio';
 import { clamp } from '../src/common/common';
 import { ListView } from '../src/list-view';
 import { Timer } from 'objio/common/timer';
 import { Tabs, Tab } from '../src/tabs';
+import { ForwardProps } from '../src/forward-props';
 
 class Model extends Publisher {
   private id: string = '4215';
@@ -170,6 +171,26 @@ class View extends React.Component<{ model: Model }, State> {
               backgroundSize: 'contain',
               backgroundRepeat: 'no-repeat'
             }}
+            />
+          </PropsGroup>
+          <PropsGroup label='table' defaultHeight={200}>
+            <ForwardProps
+              render={(props: { height?: number }) => {
+                return (
+                  <div className='vert-panel-1' style={{ display: 'flex', flexDirection: 'column', height: props.height }}>
+                    <DropDown
+                      values={[]}
+                    />
+                    <ListView
+                      height={0}
+                      style={{ flexGrow: 1 }}
+                      border={false}
+                      header={{ value: 'columns' }}
+                      values={new Array(10).fill(null).map((v, i) => ({ value: 'col ' + i }))}
+                    />
+                  </div>
+                );
+              }}
             />
           </PropsGroup>
           <PropsGroup label='object'>

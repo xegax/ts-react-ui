@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Publisher } from 'objio/common/publisher';
 import { MultiGrid, GridCellProps, ScrollParams } from 'react-virtualized';
-import { CheckIcon } from './checkicon';
 import { className as cn } from './common/common';
 import { VerticalResizer } from './resizer';
 import { FitToParent } from './fittoparent';
@@ -21,6 +20,11 @@ export interface CellProps {
   col: number;
 }
 
+export interface RowsRange {
+  firstRow: number;
+  rowsCount: number;
+}
+
 export interface Props {
   className?: string;
   rowsCount: number;
@@ -36,6 +40,7 @@ export interface Props {
   renderHeader?(props: HeaderProps): React.ReactChild;
   renderCell(props: CellProps): React.ReactChild;
   onScroll?(props: ScrollParams): void;
+  onRowsRangeInfo?(props: RowsRange): void;
 }
 
 export class Grid extends React.Component<Props, State> {
@@ -43,6 +48,9 @@ export class Grid extends React.Component<Props, State> {
     headerBorder: true,
     bodyBorder: true
   };
+
+  rowStartIndex: number;
+  rowCount: number;
 
   state = {
     gd: new GridData()
@@ -90,6 +98,8 @@ export class Grid extends React.Component<Props, State> {
     const hdr: React.CSSProperties = {
       ...props.style
     };
+    if (hdr.height)
+      hdr.lineHeight = hdr.height + 'px';
 
     const className = cn(
       'grid-header-col',
@@ -143,8 +153,14 @@ export class Grid extends React.Component<Props, State> {
       (row == this.state.gd.getRowsNum() - 1) && 'last-row'
     );
   
+    const style: React.CSSProperties = {
+      ...props.style
+    };
+    if (style.height)
+      style.lineHeight = props.style.height + 'px';
+
     return (
-      <div className={className} style={props.style}>
+      <div className={className} style={style}>
         {this.props.renderCell({ row, col: props.columnIndex })}
       </div>
     );
@@ -154,7 +170,6 @@ export class Grid extends React.Component<Props, State> {
     const gd = this.state.gd;
     const rows = gd.getRowsNum();
     const cols = gd.getColsNum();
-    console.log('rows:', rows, 'cols:', cols);
     return (
       <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, padding: 5 }}>
         <FitToParent
@@ -164,6 +179,11 @@ export class Grid extends React.Component<Props, State> {
 
             return (
               <MultiGrid
+                onSectionRendered={p => {
+                  this.rowStartIndex = p.rowStartIndex;
+                  this.rowCount = gd.getRowsNum() ? (p.rowStopIndex - p.rowStartIndex) + 1 : 0;
+                  this.props.onRowsRangeInfo && this.props.onRowsRangeInfo({ firstRow: this.rowStartIndex, rowsCount: this.rowCount });
+                }}
                 ref={this.ref}
                 width={w}
                 height={h}
