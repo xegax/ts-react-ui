@@ -2,15 +2,32 @@ $prop-name-color: #e9e9e9;
 $prop-group-color: lightgray;
 
 .prop-sheet {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
   outline: none;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid gray;
   display: flex;
   flex-direction: column;
   background-color: white;
-  width: 100%;
   box-sizing: border-box;
   user-select: none;
+
+  &-wrap {
+    position: relative;
+
+    &.fit-to-abs {
+      left: 0px;
+      right: 0px;
+      position: absolute;
+      top: 0px;
+      bottom: 0px;
+    }
+  }
 
   .prop-group {
     outline: none;

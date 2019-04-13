@@ -244,16 +244,16 @@ $bg-color-1: #d2e2ec;
 }
 
 .vertical-resizer {
-  opacity: 0.05;
+  opacity: 0;
   width: 3px;
   cursor: e-resize;
   &:hover {
-    opacity: 0.2;
+    opacity: 0.8;
   }
 }
 
 .vertical-resizer.fit-to-abs {
-  right: 0px;
+  right: -3px;
   top: 0px;
   bottom: 0px;
   left: unset;

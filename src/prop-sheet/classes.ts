@@ -1,4 +1,6 @@
 export const classes = {
+  propSheetWrap: 'prop-sheet-wrap',
+  fitToAbs: 'fit-to-abs',
   propSheet: 'prop-sheet',
   item: 'prop-item',
   itemWrap: 'prop-item-wrap',

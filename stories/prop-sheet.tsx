@@ -136,11 +136,11 @@ class Model extends Publisher {
   }
 }
 
-interface State {
-  scene?: string;
-}
+class View extends React.Component<{ model: Model, defaultWidth?: number, fitToAbs?: boolean }, { width: number }> {
+  state = {
+    width: 200
+  };
 
-class View extends React.Component<{ model: Model }, State> {
   subscriber = () => {
     this.setState({});
   }
@@ -153,16 +153,116 @@ class View extends React.Component<{ model: Model }, State> {
     this.props.model.unsubscribe(this.subscriber);
   }
 
+  group1() {
+    return (
+      <PropsGroup label='object'>
+        <Tabs defaultSelect='t1'>
+          <Tab label='tab 1 1 1 1 1 1' id='t1'>
+            <SwitchPropItem
+              label='on'
+              value={model.isOn()}
+              onChanged={v => model.setOn(v)}
+            />
+            <PropItem label='id' value={model.getID()} />
+            <SliderPropItem
+              label='frame'
+              round
+              min={model.getFrameMin()}
+              max={model.getFrameMax()}
+              value={model.getFrame()}
+              onChanged={value => model.setFrame(value)}
+              onChange={value => model.setFrame(value)}
+            />
+            <SliderPropItem
+              inline={false}
+              label='frame'
+              min={model.getFrameMin()}
+              max={model.getFrameMax()}
+              value={model.getFrame()}
+              onChanged={value => model.setFrame(value)}
+              onChange={value => model.setFrame(value)}
+              left={[
+                <i
+                  className={model.isPlaying() ? 'fa fa-pause' : 'fa fa-play'}
+                  title='play'
+                  onClick={e => model.togglePlay()}
+                />
+              ]}
+            />
+            <TextPropItem
+              label='frame'
+              value={model.getFrame()}
+              onChanged={value => model.setFrame(+value)}
+            />
+          </Tab>
+          <Tab label='tab 2' id='t2'>
+            <TextPropItem
+              label='name'
+              value={model.getName()}
+              onChanged={value => model.setName(value)}
+            />
+            <TextPropItem
+              label='name 2'
+              value={model.getName()}
+              onChanged={value => model.setName(value)}
+            />
+          </Tab>
+          <Tab label='tab 3' id='t3'>
+            <DropDownPropItem
+              label='scenes 1 2 3 4'
+              inline={false}
+              values={model.getScenes()}
+              value={model.getSelectImage()}
+              onSelect={scene => model.setImage(scene)}
+            />
+            <DropDownPropItem
+              label='scenes'
+              values={model.getScenes()}
+              value={model.getSelectImage()}
+              onSelect={scene => model.setImage(scene)}
+            />
+            <PropItem label='scenes' inline={false}>
+              <ListView values={model.getScenes()} />
+            </PropItem>
+          </Tab>
+        </Tabs>
+      </PropsGroup>
+    );
+  }
+
+  group2() {
+    return (
+      <PropsGroup label='table' defaultHeight={200}>
+        <ForwardProps render={(props: { height?: number }) => {
+          return (
+            <div className='vert-panel-1' style={{ display: 'flex', flexDirection: 'column', height: props.height }}>
+              <DropDown
+                values={[]}
+              />
+              <ListView
+                height={0}
+                style={{ flexGrow: 1 }}
+                border={false}
+                header={{ value: 'columns' }}
+                values={new Array(10).fill(null).map((v, i) => ({ value: 'col ' + i }))}
+              />
+            </div>
+          );
+        }}
+        />
+      </PropsGroup>
+    );
+  }
+
   render() {
     const model = this.props.model;
     const select = model.getSelectImage();
     return (
-      <div style={{ backgroundColor: 'silver', width: 200 }}>
-        <PropSheet width={200}>
+        <PropSheet defaultWidth={this.props.defaultWidth} fitToAbs={this.props.fitToAbs} resize>
           <PropsGroup label='list'>
             <ListView values={model.getScenes()} />
           </PropsGroup>
-          <PropsGroup label='wiki'>
+          <PropsGroup label='wiki' defaultOpen={false}>
             <div>{select && select.render}</div>
             <div style={{
               height: 200,
@@ -173,108 +273,30 @@ class View extends React.Component<{ model: Model }, State> {
             }}
             />
           </PropsGroup>
-          <PropsGroup label='table' defaultHeight={200}>
-            <ForwardProps
-              render={(props: { height?: number }) => {
-                return (
-                  <div className='vert-panel-1' style={{ display: 'flex', flexDirection: 'column', height: props.height }}>
-                    <DropDown
-                      values={[]}
-                    />
-                    <ListView
-                      height={0}
-                      style={{ flexGrow: 1 }}
-                      border={false}
-                      header={{ value: 'columns' }}
-                      values={new Array(10).fill(null).map((v, i) => ({ value: 'col ' + i }))}
-                    />
-                  </div>
-                );
-              }}
-            />
-          </PropsGroup>
-          <PropsGroup label='object'>
-            <Tabs defaultSelect='t1'>
-              <Tab label='tab 1 1 1 1 1 1' id='t1'>
-                <SwitchPropItem
-                  label='on'
-                  value={model.isOn()}
-                  onChanged={v => model.setOn(v)}
-                />
-                <PropItem label='id' value={model.getID()} />
-                <SliderPropItem
-                  label='frame'
-                  round
-                  min={model.getFrameMin()}
-                  max={model.getFrameMax()}
-                  value={model.getFrame()}
-                  onChanged={value => model.setFrame(value)}
-                  onChange={value => model.setFrame(value)}
-                />
-                <SliderPropItem
-                  inline={false}
-                  label='frame'
-                  min={model.getFrameMin()}
-                  max={model.getFrameMax()}
-                  value={model.getFrame()}
-                  onChanged={value => model.setFrame(value)}
-                  onChange={value => model.setFrame(value)}
-                  left={[
-                    <i
-                      className={model.isPlaying() ? 'fa fa-pause' : 'fa fa-play'}
-                      title='play'
-                      onClick={e => model.togglePlay()}
-                    />
-                  ]}
-                />
-                <TextPropItem
-                  label='frame'
-                  value={model.getFrame()}
-                  onChanged={value => model.setFrame(+value)}
-                />
-              </Tab>
-              <Tab label='tab 2' id='t2'>
-                <TextPropItem
-                  label='name'
-                  value={model.getName()}
-                  onChanged={value => model.setName(value)}
-                />
-                <TextPropItem
-                  label='name 2'
-                  value={model.getName()}
-                  onChanged={value => model.setName(value)}
-                />
-              </Tab>
-              <Tab label='tab 3' id='t3'>
-                <DropDownPropItem
-                  label='scenes 1 2 3 4'
-                  inline={false}
-                  values={model.getScenes()}
-                  value={model.getSelectImage()}
-                  onSelect={scene => model.setImage(scene)}
-                />
-                <DropDownPropItem
-                  label='scenes'
-                  values={model.getScenes()}
-                  value={model.getSelectImage()}
-                  onSelect={scene => model.setImage(scene)}
-                />
-                <PropItem label='scenes' inline={false}>
-                  <ListView values={model.getScenes()} />
-                </PropItem>
-              </Tab>
-            </Tabs>
-          </PropsGroup>
+          {this.group2()}
+          {this.group1()}
         </PropSheet>
-      </div>
     );
   }
 }
 
 let model = new Model();
 storiesOf('Prop sheet', module)
-  .add('property', () => {
+  .add('property in abs container', () => {
     return (
-      <View model={model} />
+      <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
+        <View model={model} fitToAbs/>
+      </div>
     );
-  });
+  })
+  .add('property in flex container', () => {
+    return (
+      <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden', display: 'flex' }}>
+        <div style={{ position: 'relative', display: 'flex', flexGrow: 1}}>
+          <View model={model} defaultWidth={150}/>
+          <div style={{ flexGrow: 1, backgroundColor: 'silver', border: '1px solid green', margin: '5px' }}>
+          </div>
+        </div>
+      </div>
+    );
+  });;

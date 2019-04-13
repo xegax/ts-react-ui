@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { FitToParent } from '../fittoparent';
 import { classes } from './classes';
 export { PropsGroup } from './props-group';
 export {
@@ -9,35 +8,53 @@ export {
   SliderPropItem,
   SwitchPropItem
 } from './prop-item';
+import { VerticalResizer } from '../resizer';
+import { cn } from '../common/common';
 
 export interface Props {
-  width?: number;
+  defaultWidth?: number;
   disabled?: boolean;
   children?: React.ReactChild | Array<React.ReactChild>;
+  fitToAbs?: boolean;
+  resize?: boolean;
 }
 
-export const PropSheetImpl: React.SFC<Props> = (props: Props) => {
-  return (
-    <div className={classes.propSheet}>
-      {React.Children.map(props.children, child => {
-        if (!child)
-          return null;
-
-        return (
-          React.cloneElement(child as any, {
-            disabled: props.disabled,
-            width: props.width - 2
-          })
-        );
-      })}
-    </div>
-  );
+interface State {
+  width?: number;
 }
 
-export const PropSheet: React.SFC<Props> = (props: Props) => {
-  return (
-    <FitToParent calcH = {false}>
-      <PropSheetImpl {...props}/>
-    </FitToParent>
-  );
+export class PropSheet extends React.Component<Props, State> {
+  state: State = {};
+  ref = React.createRef<HTMLDivElement>();
+
+  render() {
+    const width = this.state.width == null ? this.props.defaultWidth : this.state.width;
+
+    return (
+      <div ref={this.ref} style={{ width }} className={cn(classes.propSheetWrap, this.props.fitToAbs && classes.fitToAbs)}>
+        <div className={classes.propSheet}>
+          {React.Children.map(this.props.children, child => {
+            if (!child)
+              return null;
+
+            return (
+              React.cloneElement(child as any, {
+                disabled: this.props.disabled,
+                width: width - 2
+              })
+            );
+          })}
+        </div>
+        {this.props.resize && <VerticalResizer
+          size={width}
+          onResizing={width => {
+            this.setState({ width });
+          }}
+          onDoubleClick={() => {
+            this.setState({ width: this.props.defaultWidth });
+          }}
+        />}
+      </div>
+    );
+  }
 }
