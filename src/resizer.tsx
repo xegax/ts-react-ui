@@ -61,7 +61,7 @@ export class VerticalResizer extends React.Component<Props & {height?: number}> 
   }
 }
 
-export class HorizontalResizer extends React.Component<Props & { width: number }> {
+export class HorizontalResizer extends React.Component<Props> {
   ref = React.createRef<HTMLDivElement>();
 
   onResize(newSize: number) {
@@ -93,8 +93,12 @@ export class HorizontalResizer extends React.Component<Props & { width: number }
           ...this.props.style,
           width: this.ref.current && this.ref.current.parentElement.offsetWidth || null
         }}
-        className={cn('resizer', 'horizontal-resizer')}
+        className={cn('resizer', 'horizontal-resizer', 'fit-to-abs')}
         onMouseDown={this.onMouseDown}
+        onDoubleClick={e => {
+          e.stopPropagation();
+          this.props.onDoubleClick && this.props.onDoubleClick(e);
+        }}
       />
     );
   }

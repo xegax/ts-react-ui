@@ -16,7 +16,7 @@ import { clamp } from '../src/common/common';
 import { ListView } from '../src/list-view';
 import { Timer } from 'objio/common/timer';
 import { Tabs, Tab } from '../src/tabs';
-import { ForwardProps } from '../src/forward-props';
+import { Popover, Classes } from '../src/popover';
 
 class Model extends Publisher {
   private id: string = '4215';
@@ -232,24 +232,47 @@ class View extends React.Component<{ model: Model, defaultWidth?: number, fitToA
 
   group2() {
     return (
-      <PropsGroup label='table' defaultHeight={200}>
-        <ForwardProps render={(props: { height?: number }) => {
-          return (
-            <div className='vert-panel-1' style={{ display: 'flex', flexDirection: 'column', height: props.height }}>
-              <DropDown
-                values={[]}
-              />
-              <ListView
-                height={0}
-                style={{ flexGrow: 1 }}
-                border={false}
-                header={{ value: 'columns' }}
-                values={new Array(10).fill(null).map((v, i) => ({ value: 'col ' + i }))}
-              />
-            </div>
-          );
-        }}
+      <PropsGroup label='table' defaultHeight={200} flex>
+        <DropDown
+          values={[]}
         />
+        <ListView
+          height={0}
+          style={{ flexGrow: 1 }}
+          border={false}
+          header={{ value: 'columns' }}
+          values={new Array(10).fill(null).map((v, i) => ({ value: 'col ' + i }))}
+        />
+        <div style={{ textAlign: 'right' }}>
+          <Popover>
+            <button>popper</button>
+            <ListView
+              itemClassName={Classes.POPOVER_DISMISS}
+              border={false}
+              values={new Array(15).fill(null).map((v, i) => ({ value: 'sel ' + i }))}
+              height={100}
+              width={150}
+              onSelect={item => {
+                console.log(item);
+              }}
+            />
+          </Popover>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <Popover>
+            <button>popper 2</button>
+            <ListView
+              itemClassName={Classes.POPOVER_DISMISS}
+              border={false}
+              values={new Array(15).fill(null).map((v, i) => ({ value: 'sel ' + i }))}
+              height={100}
+              width={150}
+              onSelect={item => {
+                console.log(item);
+              }}
+            />
+          </Popover>
+        </div>
       </PropsGroup>
     );
   }
@@ -258,24 +281,24 @@ class View extends React.Component<{ model: Model, defaultWidth?: number, fitToA
     const model = this.props.model;
     const select = model.getSelectImage();
     return (
-        <PropSheet defaultWidth={this.props.defaultWidth} fitToAbs={this.props.fitToAbs} resize>
-          <PropsGroup label='list'>
-            <ListView values={model.getScenes()} />
-          </PropsGroup>
-          <PropsGroup label='wiki' defaultOpen={false}>
-            <div>{select && select.render}</div>
-            <div style={{
-              height: 200,
-              backgroundImage: select && select.value,
-              backgroundPosition: 'center',
-              backgroundSize: 'contain',
-              backgroundRepeat: 'no-repeat'
-            }}
-            />
-          </PropsGroup>
-          {this.group2()}
-          {this.group1()}
-        </PropSheet>
+      <PropSheet defaultWidth={this.props.defaultWidth} fitToAbs={this.props.fitToAbs} resize>
+        <PropsGroup label='list'>
+          <ListView values={model.getScenes()} />
+        </PropsGroup>
+        <PropsGroup label='wiki' defaultOpen={false}>
+          <div>{select && select.render}</div>
+          <div style={{
+            height: 200,
+            backgroundImage: select && select.value,
+            backgroundPosition: 'center',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat'
+          }}
+          />
+        </PropsGroup>
+        {this.group2()}
+        {this.group1()}
+      </PropSheet>
     );
   }
 }
@@ -285,15 +308,15 @@ storiesOf('Prop sheet', module)
   .add('property in abs container', () => {
     return (
       <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
-        <View model={model} fitToAbs/>
+        <View model={model} fitToAbs />
       </div>
     );
   })
   .add('property in flex container', () => {
     return (
       <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden', display: 'flex' }}>
-        <div style={{ position: 'relative', display: 'flex', flexGrow: 1}}>
-          <View model={model} defaultWidth={150}/>
+        <div style={{ position: 'relative', display: 'flex', flexGrow: 1 }}>
+          <View model={model} defaultWidth={150} />
           <div style={{ flexGrow: 1, backgroundColor: 'silver', border: '1px solid green', margin: '5px' }}>
           </div>
         </div>

@@ -2,6 +2,10 @@
   background-color: white;
   user-select: none;
 
+  .pt-popover-wrapper {
+    display: block;
+  }
+
   &.disabled * {
     color: silver !important;
   }

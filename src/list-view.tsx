@@ -64,6 +64,7 @@ export interface ListProps {
 
   tabIndex?: number;
 
+  onDidMount?(list: ListView): void;
   onSelect?(item: Item);
   onItemSize?(size: number);
   onScroll?(event: React.UIEvent);
@@ -204,6 +205,7 @@ export class ListView extends React.Component<ListProps, State> implements IList
   }
 
   componentDidMount() {
+    this.props.onDidMount && this.props.onDidMount(this);
     this.updateFirstItemSize();
 
     this.state.model.subscribe(this.subscriber);

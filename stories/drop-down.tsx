@@ -1,27 +1,10 @@
 import * as React from 'react';
 import '../src/_base.scss';
 import { storiesOf } from '@storybook/react';
-import { Item } from '../src/drop-down';
+import { Item, DropDown } from '../src/drop-down';
 import { DropDownLoadable } from '../src/drop-down-loadable';
 
-let ddlist2 = [
-  {value: '1111 111 1111'},
-  {value: '222 22222 222222 2222'},
-  {value: '333 3333 3333 3333'}
-];
-
-let ddl2Value: Item;
-let ddlist3 = new Array(100).fill(null).map((item, i) => ({
-  value: 'item ' + (i + 1),
-  render: <div style={{height: 18, color: i % 2 == 0 ? 'red' : null }}>{'item ' + (i + 1)}</div>
-}));
-
-function getTestLoader() {
-  return (from: number, count: number) => {
-    const arr = Array(count).fill(null).map((v, i) => ({ value: 'loaded ' + (from + i + 1) }));
-    return Promise.delay(100).then(() => arr);
-  };
-}
+const dd2 = new Array(50).fill(null).map((item, i) => ({ value: 'item - ' + Math.random().toString(16).substr(2) }));
 
 class DataModel {
   private pref: string;
@@ -43,8 +26,7 @@ class DataModel {
 
   loadNext(from: number, count: number): Promise< Array<Item> > {
     return (
-      Promise
-      .delay(this.timeout)
+      (Promise.delay(this.timeout) as any as Promise<void>)
       .then(() => {
         const arr: Array<Item> = (this.filteredItems || this.serverItems).slice(from, from + count);
         this.items.push(...arr);
@@ -102,6 +84,11 @@ class Control extends React.Component {
           }}>
             item 233
           </button>
+        </div>
+        <div className='horz-panel-1'>
+          <DropDown
+            values={dd2}
+          />
         </div>
       </div>
     );

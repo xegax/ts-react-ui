@@ -5,6 +5,7 @@ import { findParent } from './common/dom';
 import { ListView, ListViewModel, ListProps } from './list-view';
 import { className as cn } from './common/common';
 import { KeyCode } from './common/keycode';
+import { Popover, Classes } from './popover';
 
 export interface Item {
   render?: string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
@@ -22,7 +23,7 @@ export interface Props {
   defaultValue?: Item;
 
   onSelect?(item: Item);
-  onFilter?(filter: string): Array<Item> | Promise< Array<Item> >;
+  onFilter?(filter: string): Array<Item> | Promise<Array<Item>>;
   onScroll?(event: React.UIEvent);
   renderList?(props: ListProps): JSX.Element;
 
@@ -37,21 +38,21 @@ interface State {
   itemSize?: number;
   filter?: string;
   filtered?: Array<Item>;
-  offset?: number;
   maxHeight?: number;
+  key?: number;
 }
 
 const classes = {
-  disabled:       'disabled',
-  dropDown:       'drop-down-ctrl',
-  dropDownPanel:  'drop-down-panel',
-  showList:       'show-list',
-  wrapper:        'drop-down-ctrl-wrapper',
-  input:          'input-box',
-  inputWrap:      'input-wrap',
-  button:         'button',
-  focus:          'focus',
-  noData:         'no-data'
+  disabled: 'disabled',
+  dropDown: 'drop-down-ctrl',
+  dropDownPanel: 'drop-down-panel',
+  showList: 'show-list',
+  wrapper: 'drop-down-ctrl-wrapper',
+  input: 'input-box',
+  inputWrap: 'input-wrap',
+  button: 'button',
+  focus: 'focus',
+  noData: 'no-data'
 };
 
 export class DropDown<T extends Props = Props> extends React.Component<T, State> {
@@ -68,76 +69,18 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
   private input = React.createRef<HTMLInputElement>();
   private ref = React.createRef<HTMLDivElement>();
   private list = React.createRef<ListView>();
-  state: Readonly<Partial<State>> = {};
-  _state: Readonly<Partial<State>> = {};
-
-  setState(state: Partial<State>, callback?: () => void) {
-    this._state = { ...this.state, ...state };
-    super.setState(state, callback);
-  }
+  state: Readonly<Partial<State>> = { key: 0 };
 
   componentDidMount() {
     if (this.props.autoFocus && this.ref && this.ref.current)
       this.ref.current.focus();
   }
 
-  static getDerivedStateFromProps(props: ListProps, state: State): State {
-    return null;
-  }
-
-  getBottomOffset() {
-    if (!this.ref.current)
-      return null;
-
-    const bottom = this.ref.current.getBoundingClientRect().bottom;
-    let parent: HTMLElement = this.ref.current;
-    while (parent) {
-      if (['relative', 'absolute'].indexOf(parent.style.position) != -1) {
-        let rect = parent.getBoundingClientRect();
-        return {
-          offset: bottom - rect.top,
-          maxHeight: window.innerHeight - ( bottom - rect.top )
-        };
-      }
-      parent = parent.parentElement;
-    }
-
-    
-    return {
-      offset: bottom,
-      maxHeight: window.innerHeight - bottom
-    };
-  }
-
-  toggleList() {
-    if (this.props.disabled)
-      return;
-
-    const showList = !this._state.showList;
-    const showInput = this.isFilterable() && showList;
-    let offset = this._state.offset;
-    let maxHeight = this._state.maxHeight;
-    if (showList) {
-      DropDown.active = this;
-      const res = this.getBottomOffset();
-      if (res) {
-        offset = res.offset;
-        maxHeight = res.maxHeight;
-      }
-    } else {
-      DropDown.active = null;
-    }
-
-    this.setState({ showList, showInput, offset, maxHeight }, () => {
-      this._state.showList && !this._state.showInput && this.ref.current.focus();
-      this._state.showList && this.list.current.scrollToSelect();
-    });
-  }
-
   hideList() {
     DropDown.active = null;
     this.setState({
       showList: false,
+      key: this.state.key + 1,
       filtered: null,
       showInput: false
     });
@@ -193,11 +136,11 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
 
     this.setState({ filter });
     if (Array.isArray(filtered)) {
-      setFiltered( filtered );
+      setFiltered(filtered);
     } else {
       this.filterTask && this.filterTask.cancel();
-      this.filterTask = 
-          filtered
+      this.filterTask =
+        filtered
           .then(setFiltered)
           .catch(() => {  // filter from drop-down-loadable
             this.filterTask = null;
@@ -211,17 +154,16 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
       <div className={classes.input}>
         <input
           autoFocus
-          ref = {this.input}
-          placeholder = {this.getValueText()}
-          defaultValue = {this.state.filter}
-          onClick = {e => {
+          ref={this.input}
+          placeholder={this.getValueText()}
+          defaultValue={this.state.filter}
+          onClick={e => {
             if (!this.state.showList)
               return;
 
             e.stopPropagation();
-            e.preventDefault();
           }}
-          onChange = {this.onFilter}
+          onChange={this.onFilter}
         />
       </div>
     );
@@ -238,17 +180,10 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
         {select ? (
           this.renderItem(select)
         ) : (
-          <div style={{ width: 0, color: 'silver' }}>-- nothing --</div>
-        )}
+            <div style={{ width: 0, color: 'silver' }}>-- nothing --</div>
+          )}
       </div>
     );
-  }
-
-  onInputBlur = (event: React.FocusEvent<any>) => {
-    if(findParent(event.relatedTarget as HTMLElement, this.ref.current))
-      return;
-
-    this.hideList();
   }
 
   onSelect = (value: Item) => {
@@ -257,7 +192,8 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
       value: value || this.state.value,
       showList: false,
       showInput: false,
-      filtered: null
+      filtered: null,
+      key: this.state.key + 1
     }, () => {
       if (this.ref && this.ref.current)
         this.ref.current.focus();
@@ -268,17 +204,14 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
     if (e.keyCode == KeyCode.TAB)
       return;
 
-    if (!this.isListShown()) {
-      this.toggleList();
-    } else if (this.list.current) {
+    const listKeys = [
+      KeyCode.ARROW_DOWN,
+      KeyCode.ARROW_UP,
+      KeyCode.ENTER
+    ];
+
+    if (this.isListShown() && this.list.current && listKeys.indexOf(e.keyCode) != -1)
       this.list.current.onKeyDown(e);
-    }
-
-    if (this.input.current && [ KeyCode.ARROW_DOWN, KeyCode.ARROW_UP ].indexOf(e.keyCode) == -1)
-      return;
-
-    e.preventDefault();
-    e.stopPropagation();
   }
 
   isFilterable(): boolean {
@@ -293,19 +226,21 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
   }
 
   renderList = (width: number) => {
+    const minWidth = this.ref.current ? this.ref.current.getBoundingClientRect().width : undefined;
     const style: React.CSSProperties = {
-      width,
-      visibility: !this.props.itemsPerPage || this.state.itemSize ? null : 'hidden',
-      top: this.state.offset
+      minWidth 
     };
-  
+
     const renderList = this.props.renderList || ((props: ListProps) => {
       return (
-        <ListView {...props}/>
+        <ListView
+          {...props}
+        />
       );
     });
 
     const props: ListProps = {
+      itemClassName: Classes.POPOVER_DISMISS,
       maxHeight: this.state.maxHeight,
       ref: this.list,
       model: this.props.listModel,
@@ -316,9 +251,14 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
       onSelect: item => this.onSelect(item),
       onScroll: this.props.onScroll,
       onItemSize: itemSize => this.setState({ itemSize }),
-      noDataToDisplay: (<div className={classes.noData}>No data</div>)
+      noDataToDisplay: (<div className={classes.noData}>No data</div>),
+      onDidMount: () => {
+        setTimeout(() => {
+          this.list.current.scrollToSelect();
+        }, 1);
+      }
     };
-  
+
     return (
       <div className={cn(classes.dropDownPanel, 'border')} style={style}>
         {renderList(props)}
@@ -334,9 +274,6 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
         <div
           className={cn(classes.inputWrap, 'border')}
           style={{ width: this.props.width }}
-          onClick={() => {
-            this.toggleList();
-          }}
         >
           {this.renderValue()}
           <div className={cn(classes.button, 'border')}>
@@ -345,7 +282,6 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
             />
           </div>
         </div>
-        <FitToParent render={this.renderList}/>
       </div>
     );
   }
@@ -359,9 +295,9 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
     const title = select && (typeof select.render == 'string' && select.render || select.value) || '';
     return (
       <div
+        tabIndex={this.props.disabled ? null : 0}
         title={title}
         ref={this.ref}
-        tabIndex={this.props.disabled ? null : 0}
         className={cn(
           classes.dropDown,
           this.isListShown() && classes.showList,
@@ -370,9 +306,20 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
         )}
         style={style}
         onKeyDown={this.onKeyDown}
-        onBlur={this.onInputBlur}
       >
-        {this.renderCtrl()}
+        <Popover
+          key={this.state.key}
+          autoFocus={false}
+          popoverWillOpen={() => {
+            this.setState({ showList: true, showInput: this.props.onFilter != null });
+          }}
+          popoverWillClose={() => {
+            this.setState({ showList: false, showInput: false, key: this.state.key + 1 });
+          }}
+        >
+          {this.renderCtrl()}
+          {this.renderList(this.props.width)}
+        </Popover>
       </div>
     );
   }

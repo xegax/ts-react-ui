@@ -6,7 +6,6 @@ import { classes } from './classes';
 import { className as cn } from '../common/common';
 import { HorizontalResizer } from '../resizer';
 import { findParent } from '../common/dom';
-import { ForwardProps } from '../forward-props';
 
 export interface Props {
   disabled?: boolean;
@@ -69,14 +68,9 @@ export class PropsGroup extends React.Component<Props, State> {
       return children;
 
     return (
-      <ForwardProps render={(props: { height?: number }) => {
-        return (
-          <div className='vert-panel-1' style={{ display: 'flex', flexDirection: 'column', height: props.height }}>
-            {children}
-          </div>
-        );
-      }}
-      />
+      <div className='vert-panel-1 flexcol flexgrow1'>
+        {children}
+      </div>
     );
   }
 
@@ -94,7 +88,7 @@ export class PropsGroup extends React.Component<Props, State> {
       return (
         React.cloneElement(item, {
           disabled: item.props.disabled || this.props.disabled,
-          height,
+          // height,
           border: false
         })
       );
@@ -143,12 +137,14 @@ export class PropsGroup extends React.Component<Props, State> {
         </div>
         <HorizontalResizer
           style={{ display: !isOpen ? 'none' : null }}
-          width={this.props.width}
           size={() => this.getSize()}
           onResizing={newSize => {
             const active = DropDown.getActive();
             active && active.hideList();
             this.setState({ height: newSize });
+          }}
+          onDoubleClick={() => {
+            this.setState({ height: null });
           }}
         />
       </div>

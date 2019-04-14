@@ -31,8 +31,11 @@ $prop-group-color: lightgray;
 
   .prop-group {
     outline: none;
+    position: relative;
 
     > .wrap {
+      display: flex;
+      flex-direction: column;
       overflow-y: auto;
     }
 
