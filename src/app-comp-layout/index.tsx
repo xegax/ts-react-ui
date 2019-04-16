@@ -56,7 +56,7 @@ export class AppCompLayout extends React.Component<Props, State> {
         <div className={classes.componentWrap} style={props.style}>{props.children}</div>
         <div style={{position: 'relative'}}>
           <VerticalResizer
-            style={{ left: 0, right: 'unset' }}
+            side='left'
             max={500}
             min={50}
             size={this.state.width}

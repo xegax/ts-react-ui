@@ -2,7 +2,8 @@ import * as React from 'react';
 import { startDragging } from './common/start-dragging';
 import { className as cn } from './common/common';
 
-export interface Props {
+export interface Props<T = 'left' | 'center' | 'right'> {
+  side?: T;
   size: number | (() => number);
   min?: number;
   max?: number;
@@ -50,7 +51,7 @@ export class VerticalResizer extends React.Component<Props & {height?: number}> 
     return (
       <div
         style={this.props.style}
-        className={cn('resizer', 'vertical-resizer', this.props.height == null && 'fit-to-abs')}
+        className={cn('resizer', 'vertical-resizer', this.props.height == null && 'fit-to-abs', this.props.side || 'right')}
         onMouseDown={onMouseDown}
         onDoubleClick={e => {
           e.stopPropagation();
@@ -61,7 +62,7 @@ export class VerticalResizer extends React.Component<Props & {height?: number}> 
   }
 }
 
-export class HorizontalResizer extends React.Component<Props> {
+export class HorizontalResizer extends React.Component<Props<'top' | 'center' | 'bottom'>> {
   ref = React.createRef<HTMLDivElement>();
 
   onResize(newSize: number) {
@@ -93,7 +94,7 @@ export class HorizontalResizer extends React.Component<Props> {
           ...this.props.style,
           width: this.ref.current && this.ref.current.parentElement.offsetWidth || null
         }}
-        className={cn('resizer', 'horizontal-resizer', 'fit-to-abs')}
+        className={cn('resizer', 'horizontal-resizer', 'fit-to-abs', this.props.side || 'bottom')}
         onMouseDown={this.onMouseDown}
         onDoubleClick={e => {
           e.stopPropagation();
