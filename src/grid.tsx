@@ -7,6 +7,19 @@ import { FitToParent } from './fittoparent';
 
 export { ScrollParams };
 
+const scss = {
+  gridCustom: 'grid-custom',
+  gridHeaderCol: 'grid-header-col',
+  gridCell: 'grid-cell',
+  gridSelRow: 'grid-sel-row',
+  lastCol: 'last-col',
+  lastRow: 'last-row',
+  labelWrapper: 'label-wrapper',
+  fixedCol: 'fixed-col',
+  border: 'border',
+  last: 'last'
+};
+
 interface State {
   gd: GridData;
 }
@@ -18,6 +31,7 @@ export interface HeaderProps {
 export interface CellProps {
   row: number;
   col: number;
+  rowSelect: boolean;
 }
 
 export interface RowsRange {
@@ -60,15 +74,16 @@ export class Grid extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    this.state.gd.subscribe(this.subscriber);
-    this.state.gd.subscribe(this.resized, 'resize');
+    const gd = this.state.gd;
+    gd.subscribe(this.subscriber);
+    gd.subscribe(this.resized, 'resize');
 
-    this.state.gd.setRowsCount(props.rowsCount);
-    this.state.gd.setColsCount(props.colsCount);
+    gd.setRowsCount(props.rowsCount);
+    gd.setColsCount(props.colsCount);
     if (props.autoresize != null)
-      this.state.gd.setAutoresize(props.autoresize);
+      gd.setAutoresize(props.autoresize);
 
-    this.state.gd.setColumnSizeGetter(this.props.getColumnSize);
+    gd.setColumnSizeGetter(this.props.getColumnSize);
   }
 
 
@@ -102,20 +117,19 @@ export class Grid extends React.Component<Props, State> {
       hdr.lineHeight = hdr.height + 'px';
 
     const className = cn(
-      'grid-header-col',
-      this.state.gd.isColFixed(props.columnIndex) && 'fixed-col',
-      this.props.headerBorder && 'border',
-      props.columnIndex == this.state.gd.getColsNum() - 1 && 'last'
+      scss.gridHeaderCol,
+      this.state.gd.isColFixed(props.columnIndex) && scss.fixedCol,
+      this.props.headerBorder && scss.border,
+      props.columnIndex == this.state.gd.getColsNum() - 1 && scss.last
     );
 
     const jsx = this.props.renderHeader ? this.props.renderHeader({ col: props.columnIndex }) : null;
     return (
       <div style={hdr} className={className}>
-        <div className={cn('horz-panel-1', 'label-wrapper')}>
+        <div className={cn('horz-panel-1', scss.labelWrapper)}>
           {jsx}
         </div>
         <VerticalResizer
-          style={{ backgroundColor: 'blue' }}
           size={+props.style.width}
           onResizing={size => {
             this.state.gd.setColSize(props.columnIndex, size);
@@ -146,11 +160,13 @@ export class Grid extends React.Component<Props, State> {
       return this.renderHeaderCell(props);
 
     const row = hdr ? props.rowIndex - 1 : props.rowIndex;
+    const rowSelect = this.state.gd.isRowSelect(row);
     const className = cn(
-      'grid-cell',
-      this.props.bodyBorder && 'border',
-      (props.columnIndex == this.state.gd.getColsNum() - 1) && 'last-col',
-      (row == this.state.gd.getRowsNum() - 1) && 'last-row'
+      scss.gridCell,
+      scss.gridSelRow && rowSelect,
+      this.props.bodyBorder && scss.border,
+      (props.columnIndex == this.state.gd.getColsNum() - 1) && scss.lastCol,
+      (row == this.state.gd.getRowsNum() - 1) && scss.lastRow
     );
   
     const style: React.CSSProperties = {
@@ -161,7 +177,7 @@ export class Grid extends React.Component<Props, State> {
 
     return (
       <div className={className} style={style}>
-        {this.props.renderCell({ row, col: props.columnIndex })}
+        {this.props.renderCell({ row, col: props.columnIndex, rowSelect })}
       </div>
     );
   }
@@ -194,7 +210,7 @@ export class Grid extends React.Component<Props, State> {
                 columnWidth={gd.getColWidth}
                 rowHeight={gd.getRowHeight}
                 cellRenderer={this.renderCell}
-                className='grid-custom'
+                className={scss.gridCustom}
                 onScroll={this.props.onScroll}
               />
             );
@@ -207,7 +223,7 @@ export class Grid extends React.Component<Props, State> {
   render() {
     return (
       <div
-        className={cn('grid-custom', this.props.className)} 
+        className={cn(scss.gridCustom, this.props.className)} 
         style={{
           position: 'absolute',
           left: 0, top: 0, right: 0, bottom: 0,
@@ -322,6 +338,14 @@ class GridData extends Publisher {
   setColSize(col: number, size: number) {
     this.colsWith['' + col] = size;
     this.recalcFixedSizes();
+  }
+
+  isRowSelect(row: number): boolean {
+    return false;
+  }
+
+  isCellSelect(row: number, col: number): boolean {
+    return false;
   }
 
   private recalcFixedSizes() {

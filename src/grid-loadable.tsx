@@ -77,7 +77,8 @@ export class GridLoadable extends React.Component<Props, State> {
     return this.props.renderCell({
       row: props.row,
       col: props.col,
-      data: cells ? cells[props.col] : '?'
+      data: cells ? cells[props.col] : '?',
+      rowSelect: false
     });
   }
 
