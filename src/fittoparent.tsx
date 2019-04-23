@@ -11,6 +11,7 @@ export interface Props extends React.HTMLProps<any> {
   wrapToFlex?: boolean;
   calcW?: boolean;
   calcH?: boolean;
+  onSize?(width: number, height: number): void;
   render?(width: number, height: number): JSX.Element;
 }
 
@@ -46,6 +47,7 @@ export class FitToParent extends React.Component<Props, State> {
       width,
       height
     });
+    this.props.onSize && this.props.onSize(width, height);
   }
 
   private getChildren(): JSX.Element {

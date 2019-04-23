@@ -1,19 +1,36 @@
 import * as React from 'react';
 import { storiesOf } from '@storybook/react';
-import { Grid } from '../src/grid';
-import { GridLoadable, Row } from '../src/grid-loadable';
+import { Grid, GridModel, CellProps, HeaderProps } from '../src/grid/grid';
+import { GridLoadable, Row } from '../src/grid/grid-loadable';
 import { CheckIcon } from '../src/checkicon';
 
 interface State {
   autoresize?: boolean;
   header?: boolean;
   rnd?: number;
+  rows?: number;
 }
 
+interface RowData {
+  id: string;
+  time: number;
+  rnd: number;
+  idx: number;
+  rIdx: number;
+}
+
+let idCounter = 0;
 class Dummy extends React.Component<{}, State> {
   state: State = { rnd: Math.random() };
-  ref = React.createRef<Grid>();
-  colSize: {[c: string]: number} = {};
+  cols: Array<keyof RowData> = [ 'id', 'time', 'rnd', 'idx', 'rIdx' ];
+  rows = Array< RowData >();
+  model = new GridModel();
+
+  constructor(props) {
+    super(props);
+
+    this.model.setReverse(true);
+  }
 
   renderButtons() {
     return (
@@ -29,10 +46,10 @@ class Dummy extends React.Component<{}, State> {
         </button>
         <button onClick={() => {
             this.setState({ rnd: Math.random() }, () => {
-              this.ref.current.ref.current.forceUpdateGrids();
+              this.model.render();
             });
           }}>
-          update tems data
+          update items data
         </button>
         <button onClick={() => this.setState({ autoresize: !this.state.autoresize })}>
           autoresize
@@ -40,39 +57,69 @@ class Dummy extends React.Component<{}, State> {
         <button onClick={() => this.setState({ header: !this.state.header })}>
           header
         </button>
+        <button onClick={() => {
+          for (let n = 0; n < 15; n++) {
+            let row: RowData = {
+              id: '' + idCounter++,
+              time: Date.now(),
+              rnd: Math.random(),
+              idx: 0,
+              rIdx: 0
+            };
+            this.rows.push( row );
+          }
+          this.model.setRowsCount( this.rows.length );
+        }}>
+          add row
+        </button>
+        <button onClick={() => {
+          this.model.setReverse(!this.model.getReverse());
+        }}>
+          reverse
+        </button>
       </div>
     );
   }
 
+  renderCell = (props: CellProps) => {
+    const rnd = Math.round(this.state.rnd * 100) / 100;
+    const col: keyof RowData = this.cols[props.col];
+    let cell = this.rows[props.row][col];
+    if (col == 'idx')
+      cell = props.row;
+    else if (col == 'rIdx')
+      cell = this.model.getRowsCount() - props.row - 1;
+
+    return (
+      <div style={{ width: '100%', textAlign: 'center' }}>
+        {cell} {rnd}
+      </div>
+    );
+  };
+
+  renderHeader = (props: HeaderProps) => {
+    return (
+      <>
+        <CheckIcon
+          value
+          showOnHover
+          faIcon='fa fa-futbol-o'
+        />
+        <span>{this.cols[props.col]}</span>
+      </>
+    );
+  };
+
   renderView() {
     return (
       <Grid
-        ref={this.ref}
+        model={this.model}
         autoresize={this.state.autoresize}
         headerBorder
         bodyBorder
-        rowsCount={50000}
-        colsCount={5}
-        renderHeader={this.state.header ? props => {
-          return (
-            <>
-              <CheckIcon
-                value
-                showOnHover
-                faIcon='fa fa-futbol-o'
-              />
-              <span>col {props.col}</span>
-            </>
-          );
-        } : null }
-        renderCell={props => {
-          const rnd = Math.round(this.state.rnd * 100) / 100;
-          return <div style={{ width: '100%', textAlign: 'center' }}>{props.row + 'x' + props.col} {rnd}</div>;
-        }}
-        /*setColumnSize={(col, size) => {
-          this.colSize[col] = size;
-        }}
-        getColumnSize={col => this.colSize[col]}*/
+        colsCount={this.cols.length}
+        renderHeader={this.state.header ? this.renderHeader : null }
+        renderCell={this.renderCell}
       />
     );
   }
@@ -155,7 +202,7 @@ class DummyLoadable extends React.Component<{}, State> {
           list
         </button>
         <button>
-          update tems data
+          update items data
         </button>
         <button onClick={() => this.setState({ autoresize: !this.state.autoresize })}>
           autoresize

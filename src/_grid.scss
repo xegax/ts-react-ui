@@ -49,6 +49,14 @@
   white-space: nowrap;
   background-color: white;
 
+  &.grid-sel-row {
+    background-color: #cce8ff;
+  }
+
+  &.grid-focus-row {
+    background-color: #e5f3ff;
+  }
+
   &.border {
     border-left: 1px solid silver;
     border-right: 1px solid transparent;
