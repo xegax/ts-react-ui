@@ -1,11 +1,14 @@
 import { Publisher } from 'objio/common/publisher';
 import { clamp } from '../common/common';
 
-export type EventType = 'resize' | 'render' | 'select';
+export type EventType = 'resize' | 'render' | 'select' | 'resize-row';
+export type SelectType = 'none' | 'rows' | 'cells';
+export type SelectCells = {[row: number]: Set<number>};
 
 export class GridModel extends Publisher<EventType> {
   private defaultColWidth = 100;
   private defaultRowHeight = 30;
+  private headerHeight = 50;
 
   private columnWidth: { [colIdx: number]: number } = {};
   private fixedWidth: number = 0;
@@ -17,16 +20,29 @@ export class GridModel extends Publisher<EventType> {
   private colsCount = 0;
   private autosize = true;
   private reverse = false;
-  private rowSelect = new Set<number>();
-  private colSelect =  new Set<number>();
+  private selection: SelectCells = {};
   private focusRow = -1;
+  private focusCol = -1;
   private firstRenderRow: number = 0;
   private renderRowCount: number = 0;
   private header: boolean = true;
+  private selectType: SelectType = 'cells';
 
   private naturalIdx = (idx: number) => idx;
   private reverseIdx = (idx: number) => this.rowsCount - idx - 1;
   getRowIdx = this.naturalIdx;
+
+  setSelectType(type: SelectType) {
+    if (this.selectType == type)
+      return;
+
+    this.selectType = type;
+    this.delayedNotify({ type: 'render' });
+  }
+
+  getSelectType() {
+    return this.selectType;
+  }
 
   setHeader(header: boolean) {
     if (header == this.header)
@@ -40,6 +56,10 @@ export class GridModel extends Publisher<EventType> {
     return this.header;
   }
 
+  getHeaderSize() {
+    return this.headerHeight;
+  }
+
   setRenderRange(firstRow: number, rowsCount: number) {
     this.firstRenderRow = firstRow;
     this.renderRowCount = rowsCount;
@@ -48,7 +68,7 @@ export class GridModel extends Publisher<EventType> {
   getRenderRange() {
     return {
       firstRow: this.firstRenderRow,
-      rowCount: this.header ? this.renderRowCount - 1 : this.renderRowCount
+      rowCount: this.renderRowCount
     };
   }
 
@@ -71,6 +91,10 @@ export class GridModel extends Publisher<EventType> {
 
     this.autosize = autosize;
     this.delayedNotify({ type: 'resize' });
+  }
+
+  getAutosize() {
+    return this.autosize;
   }
 
   setRowsCount(rowsCount: number) {
@@ -130,7 +154,30 @@ export class GridModel extends Publisher<EventType> {
   }
 
   getRowHeight = (row: { index: number }) => {
+    if (this.header && row.index == 0)
+      return this.headerHeight;
+
     return this.defaultRowHeight;
+  }
+
+  setRowSize(size: number) {
+    if (this.defaultRowHeight == size)
+      return;
+
+    this.defaultRowHeight = size;
+    this.delayedNotify({ type: 'resize-row' });
+  }
+
+  getRowSize() {
+    return this.defaultRowHeight;
+  }
+
+  setHeaderSize(size: number) {
+    if (size == this.headerHeight)
+      return;
+
+    this.headerHeight = size;
+    this.delayedNotify({ type: 'resize-row' });
   }
 
   resetColSize(col: number) {
@@ -149,58 +196,95 @@ export class GridModel extends Publisher<EventType> {
     return this.focusRow;
   }
 
-  isRowSelect(row: number): boolean {
-    return this.rowSelect.has(row);
+  getColFocus() {
+    return this.focusCol;
   }
 
-  isColSelect(col: number): boolean {
-    return this.colSelect.has(col);
+  isRowSelect(row: number): boolean {
+    if (this.selectType == 'none')
+      return;
+
+    return this.selection[row] != null;
   }
 
   isCellSelect(row: number, col: number): boolean {
-    return this.rowSelect.has(row) && this.colSelect.has(col);
+    if (this.selectType != 'cells')
+      return false;
+
+    const cells = this.selection[row];
+    if (!cells)
+      return false;
+    return cells.has(col);
   }
 
   clearSelect() {
-    if (!this.rowSelect.size && !this.colSelect.size)
-      return;
+    let rowArr = Object.keys(this.selection);
+    for (let n = 0; n < rowArr.length; n++) {
+      if (!this.selection[ rowArr[n] ])
+        continue;
 
-    this.rowSelect.clear();
-    this.colSelect.clear();
-
-    this.delayedNotify({ type: 'select' });
+      this.selection = {};
+      this.delayedNotify({ type: 'select' });
+      break;
+    }
   }
 
-  setSelect(args: { row?: number, col?: number, select: boolean, multiple?: boolean }) {
-    let change = 0;
-    [
-      { set: this.rowSelect, idx: args.row, max: this.rowsCount - 1 },
-      { set: this.colSelect, idx: args.col, max: this.colsCount - 1 }
-    ].forEach(p => {
-      if (p.idx == null)
-        return;
+  getSelectRows(): Array<number> {
+    return Object.keys(this.selection).map(r => +r);
+  }
 
-      const idx = clamp(p.idx, [0, p.max]);
-      const hasIdx = p.set.has(idx);
-      if (!args.select && !hasIdx || args.select && hasIdx)
-        return;
+  getSelectCells(): SelectCells {
+    return this.selection;
+  }
 
-      if (args.select) {
-        if (!args.multiple)
-          this.clearSelect();
-        p.set.add(idx);
-      } else {
-        p.set.delete(idx);
-      }
-
-      change++;
-    });
-
-    if (!change)
+  setSelect(args: { row: number, col?: number, select: boolean, multiple?: boolean }) {
+    if (this.selectType == 'none')
       return;
 
-    if (args.row != null)
+    const rowIdx = clamp(args.row, [0, this.rowsCount - 1]);
+    let colIdx = args.col != null ? clamp(args.col, [0, this.colsCount - 1]) : null;
+    if (this.selectType == 'rows')
+      colIdx = null;
+
+    const row = this.selection[rowIdx] || new Set();
+    if (args.select) {
+      if (colIdx == null && this.selection[rowIdx])
+        return;
+      else if (colIdx != null && row.has(colIdx))
+        return;
+    } else {
+      if (colIdx == null && !this.selection[rowIdx])
+        return;
+      else if (colIdx != null && !row.has(colIdx))
+        return;
+    }
+
+    if (!args.multiple) {
+      row.clear();
+      this.selection = {};
+    }
+
+    this.selection[rowIdx] = row;
+
+    if (!args.select) {         // remove selection
+      if (colIdx != null) {     // cell selection
+        row.delete(colIdx);
+      } else {                  // row selection
+        delete this.selection[rowIdx];
+      }
+    } else {                    // add selection
+      if (colIdx != null) {     // cell selection
+        row.add(colIdx);
+      } else {                  // row selection
+        this.selection[rowIdx] = row;
+      }
+    }
+
+    if (rowIdx != null)
       this.focusRow = args.row;
+
+    if (colIdx != null)
+      this.focusCol = colIdx;
 
     this.delayedNotify({ type: 'select' });
   }

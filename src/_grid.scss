@@ -49,8 +49,13 @@
   white-space: nowrap;
   background-color: white;
 
-  &.grid-sel-row {
+  &.grid-row-sel {
     background-color: #cce8ff;
+  }
+
+  &.grid-cell-sel {
+    background-color: #74b9f3;
+    color: white;
   }
 
   &.grid-focus-row {

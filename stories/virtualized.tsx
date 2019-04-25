@@ -3,9 +3,17 @@ import { storiesOf } from '@storybook/react';
 import { Grid, GridModel, CellProps, HeaderProps } from '../src/grid/grid';
 import { GridLoadable, Row } from '../src/grid/grid-loadable';
 import { CheckIcon } from '../src/checkicon';
+import {
+  PropSheet,
+  PropsGroup,
+  PropItem,
+  TextPropItem,
+  SwitchPropItem,
+  DropDownPropItem
+} from '../src/prop-sheet';
+import { SelectType } from '../src/grid/grid-model';
 
 interface State {
-  autoresize?: boolean;
   header?: boolean;
   rnd?: number;
   rows?: number;
@@ -30,6 +38,9 @@ class Dummy extends React.Component<{}, State> {
     super(props);
 
     this.model.setReverse(true);
+    this.model.subscribe(() => {
+      this.setState({});
+    });
   }
 
   renderButtons() {
@@ -51,12 +62,6 @@ class Dummy extends React.Component<{}, State> {
           }}>
           update items data
         </button>
-        <button onClick={() => this.setState({ autoresize: !this.state.autoresize })}>
-          autoresize
-        </button>
-        <button onClick={() => this.setState({ header: !this.state.header })}>
-          header
-        </button>
         <button onClick={() => {
           for (let n = 0; n < 15; n++) {
             let row: RowData = {
@@ -71,11 +76,6 @@ class Dummy extends React.Component<{}, State> {
           this.model.setRowsCount( this.rows.length );
         }}>
           add row
-        </button>
-        <button onClick={() => {
-          this.model.setReverse(!this.model.getReverse());
-        }}>
-          reverse
         </button>
       </div>
     );
@@ -114,11 +114,10 @@ class Dummy extends React.Component<{}, State> {
     return (
       <Grid
         model={this.model}
-        autoresize={this.state.autoresize}
         headerBorder
         bodyBorder
         colsCount={this.cols.length}
-        renderHeader={this.state.header ? this.renderHeader : null }
+        renderHeader={this.renderHeader}
         renderCell={this.renderCell}
       />
     );
@@ -135,8 +134,68 @@ class Dummy extends React.Component<{}, State> {
       }}
       >
         {this.renderButtons()}
-        <div style={{ position: 'relative', flexGrow: 1}}>
-          {this.renderView()}
+        <div style={{ display: 'flex', position: 'relative', flexGrow: 1}}>
+          <PropSheet defaultWidth={200} resize>
+            <PropsGroup label='grid'>
+              <PropItem
+                label='rows'
+                value={this.model.getRowsCount()}
+              />
+              <SwitchPropItem
+                label='header'
+                value={this.model.getHeader()}
+                onChanged={() => {
+                  this.model.setHeader(!this.model.getHeader());
+                }}
+              />
+              <TextPropItem
+                label='header size'
+                show={this.model.getHeader()}
+                value={this.model.getHeaderSize()}
+                onEnter={v => {
+                  this.model.setHeaderSize(+v);
+                }}
+              />
+              <TextPropItem
+                label='row size'
+                value={this.model.getRowSize()}
+                onEnter={v => {
+                  this.model.setRowSize(+v);
+                }}
+              />
+              <SwitchPropItem
+                label='reverse'
+                value={this.model.getReverse()}
+                onChanged={() => {
+                  this.model.setReverse(!this.model.getReverse());
+                }}
+              />
+              <SwitchPropItem
+                label='autosize'
+                value={this.model.getAutosize()}
+                onChanged={() => {
+                  this.model.setAutosize(!this.model.getAutosize());
+                }}
+              />
+              <DropDownPropItem
+                label='select'
+                value={{ value: this.model.getSelectType() }}
+                values={[
+                  {
+                    value: 'none'
+                  }, {
+                    value: 'rows'
+                  }, {
+                    value: 'cells'
+                  }
+                ]}
+                onSelect={v => this.model.setSelectType(v.value as any)}
+              />
+            </PropsGroup>
+          </PropSheet>
+          <div style={{ position: 'relative', flexGrow: 1 }}>
+            {this.renderView()}
+          </div>
         </div>
       </div>
     );
@@ -203,9 +262,6 @@ class DummyLoadable extends React.Component<{}, State> {
         </button>
         <button>
           update items data
-        </button>
-        <button onClick={() => this.setState({ autoresize: !this.state.autoresize })}>
-          autoresize
         </button>
         <button onClick={() => this.setState({ header: !this.state.header })}>
           header

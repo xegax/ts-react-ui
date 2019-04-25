@@ -12,7 +12,8 @@ const scss = {
   gridCustom: 'grid-custom',
   gridHeaderCol: 'grid-header-col',
   gridCell: 'grid-cell',
-  gridSelRow: 'grid-sel-row',
+  gridSelRow: 'grid-row-sel',
+  gridSelCell: 'grid-cell-sel',
   gridFocusRow: 'grid-focus-row',
   lastCol: 'last-col',
   lastRow: 'last-row',
@@ -24,6 +25,7 @@ const scss = {
 
 interface State {
   model: GridModel;
+  key?: number;
 }
 
 export interface HeaderProps {
@@ -74,6 +76,7 @@ export class Grid extends React.Component<Props, State> {
     this.state = { model: m };
     m.subscribe(this.onSubscriber);
     m.subscribe(this.onResized, 'resize');
+    m.subscribe(this.onResizedRow, 'resize-row');
     m.subscribe(this.onRender, 'render');
     m.subscribe(this.onSelect, 'select');
 
@@ -91,8 +94,6 @@ export class Grid extends React.Component<Props, State> {
     if (p.colsCount != null)
       m.setColsCount(p.colsCount);
 
-    m.setHeader(p.renderHeader != null);
-
     return null;
   }
 
@@ -104,6 +105,13 @@ export class Grid extends React.Component<Props, State> {
     this.ref.current.recomputeGridSize();
   }
 
+  private onResizedRow = () => {
+    const s = {...this.ref.current.state};
+    this.setState({ key: (this.state.key || 0) + 1 }, () => {
+      this.ref.current.setState(s);
+    });
+  }
+
   private onRender = () => {
     this.ref.current.forceUpdateGrids();
   }
@@ -111,12 +119,15 @@ export class Grid extends React.Component<Props, State> {
   private onSelect = () => {
     const m = this.state.model;
     const range = m.getRenderRange();
-    if (m.getRowFocus() + 1 > range.firstRow + range.rowCount) {
-      const rh = m.getRowHeight({ index: 0 });
-      const h = m.getHeight() + (m.getHeader() ? -rh : 0);
+
+    const header = m.getHeader();
+    const headerH = header ? m.getRowHeight({ index: 0 }) : 0;
+    if (m.getRowFocus() + 2 > range.firstRow + range.rowCount) {
+      const rh = m.getRowHeight({ index: 1 });
+      const h = m.getHeight() - headerH;
       this.ref.current.setState({ scrollTop: (m.getRowFocus() + 1) * rh - h });
     } else if (m.getRowFocus() <= range.firstRow) {
-      const rh = m.getRowHeight({ index: 0 });
+      const rh = m.getRowHeight({ index: 1 });
       this.ref.current.setState({ scrollTop: m.getRowFocus() * rh });
     }
 
@@ -163,7 +174,7 @@ export class Grid extends React.Component<Props, State> {
 
   renderCell = (props: GridCellProps) => {
     const m = this.state.model;
-    const hdr = this.props.renderHeader;
+    const hdr = m.getHeader() && this.props.renderHeader;
     if (hdr && props.rowIndex == 0)
       return this.renderHeaderCell(props);
 
@@ -171,9 +182,11 @@ export class Grid extends React.Component<Props, State> {
     const row = hdr ? props.rowIndex - 1 : props.rowIndex;
     const rowDataIdx = m.getRowIdx(row);
     const rowSelect = m.isRowSelect(row);
+    const cellSelect = m.isCellSelect(row, col);
     const className = cn(
       scss.gridCell,
       rowSelect && scss.gridSelRow,
+      cellSelect && scss.gridSelCell,
       this.props.bodyBorder && scss.border,
       (props.columnIndex == m.getColsCount() - 1) && scss.lastCol,
       (row == m.getRowsCount() - 1) && scss.lastRow
@@ -193,6 +206,7 @@ export class Grid extends React.Component<Props, State> {
         onClick={e => {
           m.setSelect({
             row,
+            col,
             select: true,
             multiple: e.ctrlKey
           });
@@ -214,14 +228,25 @@ export class Grid extends React.Component<Props, State> {
           e.stopPropagation();
           e.preventDefault();
 
-          let row = Math.max(0, m.getRowFocus());
+          let row = 0;
+          let col = 0;
           if (e.keyCode == KeyCode.ARROW_DOWN) {
             row += 1;
           } else if (e.keyCode == KeyCode.ARROW_UP) {
             row += -1;
+          } else if (e.keyCode == KeyCode.ARROW_LEFT) {
+            col += -1;
+          } else if (e.keyCode == KeyCode.ARROW_RIGHT) {
+            col += 1;
           }
 
-          m.setSelect({ row, select: true });
+          if (row || col) {
+            m.setSelect({
+              row: m.getRowFocus() + row,
+              col: m.getColFocus() + col,
+              select: true
+            });
+          }
         }}
       >
         <FitToParent
@@ -230,8 +255,10 @@ export class Grid extends React.Component<Props, State> {
             m.setSize(w, h);
           }}
           render={(w, h) => {
+            const header = m.getHeader() ? this.props.renderHeader != null : false;
             return (
               <MultiGrid
+                key={this.state.key}
                 onSectionRendered={p => {
                   const firstRow = p.rowStartIndex;
                   const rowsCount = rows ? (p.rowStopIndex - p.rowStartIndex) + 1 : 0;
@@ -242,8 +269,8 @@ export class Grid extends React.Component<Props, State> {
                 width={w}
                 height={h}
                 autoContainerWidth
-                fixedRowCount={this.props.renderHeader ? 1 : 0}
-                rowCount={rows + (this.props.renderHeader ? 1 : 0)}
+                fixedRowCount={header ? 1 : 0}
+                rowCount={rows + (header ? 1 : 0)}
                 columnCount={cols}
                 columnWidth={m.getColWidth}
                 rowHeight={m.getRowHeight}
