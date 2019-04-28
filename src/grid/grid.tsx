@@ -57,6 +57,7 @@ export interface Props {
   renderHeader?(props: HeaderProps): React.ReactChild;
   renderCell(props: CellProps): React.ReactChild;
   onScroll?(props: ScrollParams): void;
+  onScrollToBottom?(props: ScrollParams): void;
   onRowsRangeInfo?(props: RowsRange): void;
 }
 
@@ -133,6 +134,13 @@ export class Grid extends React.Component<Props, State> {
 
     this.ref.current.setState({});
   }
+
+  onScroll = (params: ScrollParams) => {
+    this.props.onScroll && this.props.onScroll(params);
+    const diff = Math.round(params.scrollHeight - (params.scrollTop + params.clientHeight));
+    if (diff <= 0)
+      this.props.onScrollToBottom && this.props.onScrollToBottom(params);
+  };
 
   renderHeaderCell = (props: GridCellProps) => {
     const m = this.state.model;
@@ -276,7 +284,7 @@ export class Grid extends React.Component<Props, State> {
                 rowHeight={m.getRowHeight}
                 cellRenderer={this.renderCell}
                 className={scss.gridCustom}
-                onScroll={this.props.onScroll}
+                onScroll={this.onScroll}
               />
             );
           }}

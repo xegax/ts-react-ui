@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import { Grid, GridModel, CellProps, HeaderProps } from '../src/grid/grid';
+import { GridLoadableModel, Row as Row2 } from '../src/grid/grid-loadable-model';
 import { GridLoadable, Row } from '../src/grid/grid-loadable';
 import { CheckIcon } from '../src/checkicon';
 import {
@@ -11,7 +12,6 @@ import {
   SwitchPropItem,
   DropDownPropItem
 } from '../src/prop-sheet';
-import { SelectType } from '../src/grid/grid-model';
 
 interface State {
   header?: boolean;
@@ -31,16 +31,37 @@ let idCounter = 0;
 class Dummy extends React.Component<{}, State> {
   state: State = { rnd: Math.random() };
   cols: Array<keyof RowData> = [ 'id', 'time', 'rnd', 'idx', 'rIdx' ];
-  rows = Array< RowData >();
-  model = new GridModel();
+  model = new GridLoadableModel<RowData>();
 
   constructor(props) {
     super(props);
 
-    this.model.setReverse(true);
+    // this.model.setReverse(true);
     this.model.subscribe(() => {
       this.setState({});
     });
+
+    this.model.setRowsCount(500);
+    this.model.setLoader((from, count) => Promise.resolve(this.getRows(count)) );
+  }
+
+  getRows(num: number): Array<Row2<RowData>> {
+    let rows = Array<Row2<RowData>>();
+    for (let n = 0; n < num; n++) {
+      let raw: RowData = {
+        id: '' + idCounter++,
+        time: Date.now(),
+        rnd: Math.random(),
+        idx: 0,
+        rIdx: 0
+      };
+      rows.push({
+        raw,
+        col: Object.keys(raw).map(k => raw[k])
+      });
+    }
+
+    return rows;
   }
 
   renderButtons() {
@@ -62,21 +83,6 @@ class Dummy extends React.Component<{}, State> {
           }}>
           update items data
         </button>
-        <button onClick={() => {
-          for (let n = 0; n < 15; n++) {
-            let row: RowData = {
-              id: '' + idCounter++,
-              time: Date.now(),
-              rnd: Math.random(),
-              idx: 0,
-              rIdx: 0
-            };
-            this.rows.push( row );
-          }
-          this.model.setRowsCount( this.rows.length );
-        }}>
-          add row
-        </button>
       </div>
     );
   }
@@ -84,11 +90,15 @@ class Dummy extends React.Component<{}, State> {
   renderCell = (props: CellProps) => {
     const rnd = Math.round(this.state.rnd * 100) / 100;
     const col: keyof RowData = this.cols[props.col];
-    let cell = this.rows[props.row][col];
+    const rowObj = this.model.getRow(props.row);
+    if (!rowObj)
+      return;
+
+    let cell = rowObj.col[props.col];
     if (col == 'idx')
-      cell = props.row;
+      cell = '' + props.row;
     else if (col == 'rIdx')
-      cell = this.model.getRowsCount() - props.row - 1;
+      cell = (this.model.getRowsCount() - props.row - 1) + '';
 
     return (
       <div style={{ width: '100%', textAlign: 'center' }}>
@@ -119,6 +129,9 @@ class Dummy extends React.Component<{}, State> {
         colsCount={this.cols.length}
         renderHeader={this.renderHeader}
         renderCell={this.renderCell}
+        onScrollToBottom={() => {
+          this.model.loadNext();
+        }}
       />
     );
   }
@@ -193,6 +206,9 @@ class Dummy extends React.Component<{}, State> {
               />
             </PropsGroup>
           </PropSheet>
+          <div style={{ position: 'relative', flexGrow: 1 }}>
+            {this.renderView()}
+          </div>
           <div style={{ position: 'relative', flexGrow: 1 }}>
             {this.renderView()}
           </div>

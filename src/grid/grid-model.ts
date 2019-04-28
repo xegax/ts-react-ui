@@ -16,8 +16,8 @@ export class GridModel extends Publisher<EventType> {
   private width: number = 0;
   private height: number = 0;
 
-  private rowsCount = 0;
-  private colsCount = 0;
+  protected rowsCount = 0;
+  protected colsCount = 0;
   private autosize = true;
   private reverse = false;
   private selection: SelectCells = {};
