@@ -1,7 +1,7 @@
 import { Publisher } from 'objio/common/publisher';
 import { clamp } from '../common/common';
 
-export type EventType = 'resize' | 'render' | 'select' | 'resize-row';
+export type EventType = 'resize' | 'render' | 'select' | 'resize-row' | 'scroll-top';
 export type SelectType = 'none' | 'rows' | 'cells';
 export type SelectCells = {[row: number]: Set<number>};
 
@@ -19,18 +19,32 @@ export class GridModel extends Publisher<EventType> {
   protected rowsCount = 0;
   protected colsCount = 0;
   private autosize = true;
-  private reverse = false;
+  protected reverse = false;
   private selection: SelectCells = {};
   private focusRow = -1;
   private focusCol = -1;
   private firstRenderRow: number = 0;
   private renderRowCount: number = 0;
+  private bodyBorder: boolean = true;
   private header: boolean = true;
   private selectType: SelectType = 'cells';
 
-  private naturalIdx = (idx: number) => idx;
-  private reverseIdx = (idx: number) => this.rowsCount - idx - 1;
+  protected naturalIdx = (idx: number) => idx;
+  protected reverseIdx = (idx: number) => this.rowsCount - idx - 1;
   getRowIdx = this.naturalIdx;
+  
+
+  setBodyBorder(border: boolean) {
+    if (this.bodyBorder == border)
+      return;
+
+    this.bodyBorder = border;
+    this.delayedNotify();
+  }
+
+  getBodyBorder() {
+    return this.bodyBorder;
+  }
 
   setSelectType(type: SelectType) {
     if (this.selectType == type)
@@ -74,11 +88,12 @@ export class GridModel extends Publisher<EventType> {
 
   setReverse(reverse: boolean) {
     if (reverse == this.reverse)
-      return;
+      return false;
 
     this.reverse = reverse;
     this.getRowIdx = reverse ? this.reverseIdx : this.naturalIdx;
-    this.delayedNotify({ type: 'render' });
+    this.delayedNotify({ type: 'scroll-top' });
+    return true;
   }
 
   getReverse() {

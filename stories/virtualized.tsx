@@ -17,20 +17,43 @@ interface State {
   header?: boolean;
   rnd?: number;
   rows?: number;
+  cellData?: string | number;
+  dataVersion?: string;
 }
 
 interface RowData {
   id: string;
   time: number;
   rnd: number;
-  idx: number;
-  rIdx: number;
+  hexRnd: string;
+  bigRnd: string;
+}
+
+function rndHex() {
+  return Math.random().toString(16).substr(2);
 }
 
 let idCounter = 0;
+let remoteData = Array<RowData>();
+let remoteDataVersion = rndHex();
+for (let n = 0; n < 500; n++) {
+  let raw: RowData = {
+    id: '' + idCounter++,
+    time: Date.now(),
+    rnd: Math.random(),
+    hexRnd: rndHex(),
+    bigRnd: [
+      Math.random().toString(31).substr(2),
+      Math.random().toString(31).substr(2),
+      Math.random().toString(31).substr(2)
+    ].join('-')
+  };
+  remoteData.push(raw);
+}
+
 class Dummy extends React.Component<{}, State> {
-  state: State = { rnd: Math.random() };
-  cols: Array<keyof RowData> = [ 'id', 'time', 'rnd', 'idx', 'rIdx' ];
+  state: State = { rnd: Math.random(), };
+  cols: Array<keyof RowData> = [ 'id', 'time', 'rnd', 'hexRnd', 'bigRnd' ];
   model = new GridLoadableModel<RowData>();
 
   constructor(props) {
@@ -41,27 +64,32 @@ class Dummy extends React.Component<{}, State> {
       this.setState({});
     });
 
-    this.model.setRowsCount(500);
-    this.model.setLoader((from, count) => Promise.resolve(this.getRows(count)) );
+    this.model.setRowsCount(remoteData.length);
+    this.model.setLoader((from, count) => {
+      return (
+        (Promise.delay(1) as any as Promise<void>)
+        .then(() => this.getRows(from, count))
+      );
+    });
+    this.model.subscribe(() => {
+      const sel = this.model.getSelectCells();
+      const rows = Object.keys(sel);
+      if (!rows.length)
+        return;
+
+      const curCol = this.model.getColFocus();
+      const curRow = this.model.getRowFocus();
+      const cursor = {
+        cellData: this.model.getRow(curRow).cell[ curCol ] || ''
+      };
+
+      this.setState(cursor);
+    }, 'select');
   }
 
-  getRows(num: number): Array<Row2<RowData>> {
-    let rows = Array<Row2<RowData>>();
-    for (let n = 0; n < num; n++) {
-      let raw: RowData = {
-        id: '' + idCounter++,
-        time: Date.now(),
-        rnd: Math.random(),
-        idx: 0,
-        rIdx: 0
-      };
-      rows.push({
-        raw,
-        col: Object.keys(raw).map(k => raw[k])
-      });
-    }
-
-    return rows;
+  getRows(from: number, count: number): Array< Row2<RowData> > {
+    const rawArr = remoteData.slice(from, from + count);
+    return rawArr.map(obj => ({ obj }));
   }
 
   renderButtons() {
@@ -89,17 +117,11 @@ class Dummy extends React.Component<{}, State> {
 
   renderCell = (props: CellProps) => {
     const rnd = Math.round(this.state.rnd * 100) / 100;
-    const col: keyof RowData = this.cols[props.col];
-    const rowObj = this.model.getRow(props.row);
+    const rowObj = this.model.getRowOrLoad(props.row);
     if (!rowObj)
       return;
 
-    let cell = rowObj.col[props.col];
-    if (col == 'idx')
-      cell = '' + props.row;
-    else if (col == 'rIdx')
-      cell = (this.model.getRowsCount() - props.row - 1) + '';
-
+    let cell = rowObj.cell[props.col];
     return (
       <div style={{ width: '100%', textAlign: 'center' }}>
         {cell} {rnd}
@@ -125,7 +147,6 @@ class Dummy extends React.Component<{}, State> {
       <Grid
         model={this.model}
         headerBorder
-        bodyBorder
         colsCount={this.cols.length}
         renderHeader={this.renderHeader}
         renderCell={this.renderCell}
@@ -153,6 +174,13 @@ class Dummy extends React.Component<{}, State> {
               <PropItem
                 label='rows'
                 value={this.model.getRowsCount()}
+              />
+              <SwitchPropItem
+                label='border'
+                value={this.model.getBodyBorder()}
+                onChanged={() => {
+                  this.model.setBodyBorder(!this.model.getBodyBorder());
+                }}
               />
               <SwitchPropItem
                 label='header'
@@ -204,11 +232,22 @@ class Dummy extends React.Component<{}, State> {
                 ]}
                 onSelect={v => this.model.setSelectType(v.value as any)}
               />
+              <TextPropItem
+                value={this.state.cellData}
+                onEnter={v => {
+                  const row = this.model.getRowFocus(true);
+
+                  const col = this.model.getColFocus();
+                  const prev = remoteData[row][ this.cols[col] ];
+                  if (prev == v)
+                    return;
+
+                  remoteData[row][ this.cols[col] ] = v;
+                  this.model.reloadCurrent();
+                }}
+              />
             </PropsGroup>
           </PropSheet>
-          <div style={{ position: 'relative', flexGrow: 1 }}>
-            {this.renderView()}
-          </div>
           <div style={{ position: 'relative', flexGrow: 1 }}>
             {this.renderView()}
           </div>

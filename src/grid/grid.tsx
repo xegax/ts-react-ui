@@ -62,11 +62,6 @@ export interface Props {
 }
 
 export class Grid extends React.Component<Props, State> {
-  static defaultProps: Partial<Props> = {
-    headerBorder: true,
-    bodyBorder: true
-  };
-
   state: State;
   ref = React.createRef<MultiGrid>();
 
@@ -80,6 +75,7 @@ export class Grid extends React.Component<Props, State> {
     m.subscribe(this.onResizedRow, 'resize-row');
     m.subscribe(this.onRender, 'render');
     m.subscribe(this.onSelect, 'select');
+    m.subscribe(this.onScrollTop, 'scroll-top');
 
     Grid.getDerivedStateFromProps(props, this.state);
   }
@@ -95,6 +91,9 @@ export class Grid extends React.Component<Props, State> {
     if (p.colsCount != null)
       m.setColsCount(p.colsCount);
 
+    if (p.bodyBorder != null)
+      m.setBodyBorder(p.bodyBorder);
+
     return null;
   }
 
@@ -102,22 +101,29 @@ export class Grid extends React.Component<Props, State> {
     this.setState({});
   };
 
+  private onScrollTop = () => {
+    this.ref.current && this.ref.current.setState({ scrollTop: 0 }, () => {
+      this.ref.current && this.ref.current.forceUpdateGrids();
+    });
+  }
+
   private onResized = () => {
-    this.ref.current.recomputeGridSize();
+    this.ref.current && this.ref.current.recomputeGridSize();
   }
 
   private onResizedRow = () => {
     const s = {...this.ref.current.state};
     this.setState({ key: (this.state.key || 0) + 1 }, () => {
-      this.ref.current.setState(s);
+      this.ref.current && this.ref.current.setState(s);
     });
   }
 
   private onRender = () => {
-    this.ref.current.forceUpdateGrids();
+    this.ref.current && this.ref.current.forceUpdateGrids();
   }
 
   private onSelect = () => {
+    const ref = this.ref.current;
     const m = this.state.model;
     const range = m.getRenderRange();
 
@@ -126,13 +132,13 @@ export class Grid extends React.Component<Props, State> {
     if (m.getRowFocus() + 2 > range.firstRow + range.rowCount) {
       const rh = m.getRowHeight({ index: 1 });
       const h = m.getHeight() - headerH;
-      this.ref.current.setState({ scrollTop: (m.getRowFocus() + 1) * rh - h });
+      ref.setState({ scrollTop: (m.getRowFocus() + 1) * rh - h });
     } else if (m.getRowFocus() <= range.firstRow) {
       const rh = m.getRowHeight({ index: 1 });
-      this.ref.current.setState({ scrollTop: m.getRowFocus() * rh });
+      ref.setState({ scrollTop: m.getRowFocus() * rh });
     }
 
-    this.ref.current.setState({});
+    ref.setState({});
   }
 
   onScroll = (params: ScrollParams) => {
@@ -195,7 +201,7 @@ export class Grid extends React.Component<Props, State> {
       scss.gridCell,
       rowSelect && scss.gridSelRow,
       cellSelect && scss.gridSelCell,
-      this.props.bodyBorder && scss.border,
+      m.getBodyBorder() && scss.border,
       (props.columnIndex == m.getColsCount() - 1) && scss.lastCol,
       (row == m.getRowsCount() - 1) && scss.lastRow
     );
