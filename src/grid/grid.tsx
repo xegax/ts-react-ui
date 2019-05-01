@@ -26,6 +26,7 @@ const scss = {
 interface State {
   model: GridModel;
   key?: number;
+  view?: Grid;
 }
 
 export interface HeaderProps {
@@ -69,15 +70,18 @@ export class Grid extends React.Component<Props, State> {
     super(props);
 
     const m = props.model || new GridModel();
-    this.state = { model: m };
+    this.state = { model: m, view: this };
+    Grid.getDerivedStateFromProps(props, this.state);
+    this.subscribe(m);
+  }
+
+  subscribe(m: GridModel) {
     m.subscribe(this.onSubscriber);
     m.subscribe(this.onResized, 'resize');
     m.subscribe(this.onResizedRow, 'resize-row');
     m.subscribe(this.onRender, 'render');
     m.subscribe(this.onSelect, 'select');
     m.subscribe(this.onScrollTop, 'scroll-top');
-
-    Grid.getDerivedStateFromProps(props, this.state);
   }
 
   static getDerivedStateFromProps(p: Props, s: State): State {
@@ -94,7 +98,15 @@ export class Grid extends React.Component<Props, State> {
     if (p.bodyBorder != null)
       m.setBodyBorder(p.bodyBorder);
 
-    return null;
+    let newState: State = null;
+    if (p.model != s.model) {
+      newState = newState || {...s};
+      newState.key = (newState.key || 0) + 1;
+      newState.model = p.model;
+      s.view.subscribe(newState.model);
+    }
+
+    return newState;
   }
 
   private onSubscriber = () => {

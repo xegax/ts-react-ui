@@ -5,6 +5,12 @@ export type EventType = 'resize' | 'render' | 'select' | 'resize-row' | 'scroll-
 export type SelectType = 'none' | 'rows' | 'cells';
 export type SelectCells = {[row: number]: Set<number>};
 
+export interface GridModelArgs<T = GridModel> {
+  rowsCount: number;
+  colsCount: number;
+  prev?: T;
+}
+
 export class GridModel extends Publisher<EventType> {
   private defaultColWidth = 100;
   private defaultRowHeight = 30;
@@ -32,7 +38,29 @@ export class GridModel extends Publisher<EventType> {
   protected naturalIdx = (idx: number) => idx;
   protected reverseIdx = (idx: number) => this.rowsCount - idx - 1;
   getRowIdx = this.naturalIdx;
-  
+  constructor(args?: GridModelArgs) {
+    super();
+
+    if (args) {
+      this.rowsCount = args.rowsCount;
+      this.colsCount = args.colsCount;
+      this.restoreStateFrom(args.prev);
+    }
+  }
+
+  restoreStateFrom(m: GridModel) {
+    if (!m)
+      return;
+
+    this.header = m.header;
+    this.selectType = m.selectType;
+    this.reverse = m.reverse;
+    this.bodyBorder = m.bodyBorder;
+    this.autosize = m.autosize;
+    this.headerHeight = m.headerHeight;
+    this.width = m.width;
+    this.height = m.height;
+  }
 
   setBodyBorder(border: boolean) {
     if (this.bodyBorder == border)

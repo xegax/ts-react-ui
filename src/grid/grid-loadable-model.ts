@@ -1,4 +1,4 @@
-import { GridModel } from './grid-model';
+import { GridModel, GridModelArgs } from './grid-model';
 
 export interface Row<T = Object> {
   obj: T;
@@ -26,6 +26,10 @@ export class GridLoadableModel<T = Object> extends GridModel {
   private rowsPerBlock = 50;
   private loadedRows: number = 0;
   private loader: Loader<T>;
+
+  constructor(args?: GridModelArgs) {
+    super(args);
+  }
 
   setRowsCount(count: number) {
     if (this.rowsCount == count)
@@ -171,5 +175,9 @@ export class GridLoadableModel<T = Object> extends GridModel {
 
   getRowsCount() {
     return this.loadedRows;
+  }
+
+  getTotalRowsCount() {
+    return this.rowsCount;
   }
 }
