@@ -84,26 +84,41 @@ export class Grid extends React.Component<Props, State> {
     m.subscribe(this.onScrollTop, 'scroll-top');
   }
 
+  unsubscribe(m: GridModel) {
+    m.unsubscribe(this.onSubscriber);
+    m.unsubscribe(this.onResized, 'resize');
+    m.unsubscribe(this.onResizedRow, 'resize-row');
+    m.unsubscribe(this.onRender, 'render');
+    m.unsubscribe(this.onSelect, 'select');
+    m.unsubscribe(this.onScrollTop, 'scroll-top');
+  }
+
+  componentWillUnmount() {
+    this.unsubscribe(this.state.model);
+  }
+
   static getDerivedStateFromProps(p: Props, s: State): State {
-    const m = s.model;
+    const curr = s.model;
     if (p.autoresize != null)
-      m.setAutosize(p.autoresize);
+      curr.setAutosize(p.autoresize);
 
     if (p.rowsCount != null)
-      m.setRowsCount(p.rowsCount);
+      curr.setRowsCount(p.rowsCount);
 
     if (p.colsCount != null)
-      m.setColsCount(p.colsCount);
+      curr.setColsCount(p.colsCount);
 
     if (p.bodyBorder != null)
-      m.setBodyBorder(p.bodyBorder);
+      curr.setBodyBorder(p.bodyBorder);
 
     let newState: State = null;
-    if (p.model != s.model) {
+    const next = p.model;
+    if (next != curr) {
       newState = newState || {...s};
       newState.key = (newState.key || 0) + 1;
-      newState.model = p.model;
-      s.view.subscribe(newState.model);
+      newState.model = next;
+      s.view.unsubscribe(curr);
+      s.view.subscribe(next);
     }
 
     return newState;
