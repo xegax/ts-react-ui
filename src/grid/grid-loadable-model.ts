@@ -67,7 +67,7 @@ export class GridLoadableModel<T = Object> extends GridModel {
   getRow(row: number): Row2<T> {
     const bIdx = Math.floor(row / this.rowsPerBlock);
     const block = this.rowBlock[bIdx];
-    if (!block)
+    if (!block || !block.row)
       return null;
 
     return block.row[row - bIdx * this.rowsPerBlock];
@@ -82,6 +82,9 @@ export class GridLoadableModel<T = Object> extends GridModel {
   }
 
   loadNext() {
+    if (this.loadedRows >= this.rowsCount)
+      return;
+    
     this.getRowOrLoad(this.loadedRows);
   }
 
