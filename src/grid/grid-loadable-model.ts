@@ -37,6 +37,8 @@ export class GridLoadableModel<T = Object> extends GridModel {
 
     this.loadedRows = Math.min(this.loadedRows, count);
     super.setRowsCount(count);
+    if (count == 0)
+      this.rowBlock = {};
   }
 
   setReverse(reverse: boolean) {
