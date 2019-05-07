@@ -45,7 +45,6 @@
   padding-right: 5px;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: center;
   white-space: nowrap;
   background-color: white;
 
@@ -75,5 +74,17 @@
     &.last-row {
       border-bottom: 1px solid silver;
     }
+  }
+
+  &.cell-align-left {
+    text-align: left;
+  }
+
+  &.cell-align-center {
+    text-align: center;
+  }
+
+  &.cell-align-right {
+    text-align: right;
   }
 }

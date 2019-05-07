@@ -34,9 +34,10 @@ export interface HeaderProps {
 }
 
 export interface CellProps {
-  row: number;
-  col: number;
-  rowSelect: boolean;
+  readonly row: number;
+  readonly col: number;
+  readonly rowSelect: boolean;
+  className?: string;
 }
 
 export interface RowsRange {
@@ -224,10 +225,18 @@ export class Grid extends React.Component<Props, State> {
     const rowDataIdx = m.getRowIdx(row);
     const rowSelect = m.isRowSelect(row);
     const cellSelect = m.isCellSelect(row, col);
+    const cellProps: CellProps = {
+      row: rowDataIdx,
+      col,
+      rowSelect,
+      className: 'cell-align-center'
+    };
+    const jsx = this.props.renderCell(cellProps);
     const className = cn(
       scss.gridCell,
       rowSelect && scss.gridSelRow,
       cellSelect && scss.gridSelCell,
+      cellProps.className,
       m.getBodyBorder() && scss.border,
       (props.columnIndex == m.getColsCount() - 1) && scss.lastCol,
       (row == m.getRowsCount() - 1) && scss.lastRow
@@ -253,7 +262,7 @@ export class Grid extends React.Component<Props, State> {
           });
         }}
       >
-        {this.props.renderCell({ row: rowDataIdx, col, rowSelect })}
+        {jsx}
       </div>
     );
   }
