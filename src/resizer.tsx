@@ -5,6 +5,7 @@ import { className as cn } from './common/common';
 export interface Props<T = 'left' | 'center' | 'right'> {
   side?: T;
   size: number | (() => number);
+  scale?: number;
   min?: number;
   max?: number;
   onResizing?(newSize: number): void;
@@ -38,12 +39,15 @@ export class VerticalResizer extends React.Component<Props & {height?: number}> 
         this.props.size :
         () => this.props.size as number;
 
-      startDragging({ x: size(), y: 0, minDist: 5 }, {
+      let sizeValue = size();
+      let newSize = sizeValue;
+      startDragging({ x: 0, y: 0, minDist: 5 }, {
         onDragging: event => {
-          this.onResizing(event.x);
+          newSize = sizeValue + event.x * (this.props.scale || 1);
+          this.onResizing(newSize);
         },
         onDragEnd: event => {
-          this.onResized(event.x);
+          this.onResized(newSize);
         }
       })(e);
     };

@@ -137,9 +137,14 @@ class DropModel extends Publisher {
   }
 
   checkDragEvent(event: MouseEvent, data: any): void {
-    const drop = this.dropList.slice().reverse().find(drop => {
+    const arr = this.dropList.slice().reverse();
+    const predicate = (drop, i) => {
       return findParent(event.srcElement as HTMLElement, drop.getElement())
-    });
+    };
+    const dropIdx = arr.findIndex(predicate);
+    let drop = arr[dropIdx];
+    if (drop && drop.props.holder)
+      drop = arr.slice(dropIdx + 1).find(predicate) || drop;
 
     if (this.currDrop != drop) {
       this.currDrop && this.onDragLeave(this.currDrop);
@@ -218,6 +223,7 @@ export interface DropArgs<TDrag = Object, TDrop = Object> {
 export interface DropProps {
   types?: Array<string>;
   dropData?: any;
+  holder?: boolean; // holder for droppable elements
 
   onDragEnter?(args: DropArgs): void;
   onDragLeave?(): void;
