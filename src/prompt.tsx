@@ -1,7 +1,17 @@
 import * as React from 'react';
 import { showModal } from './show-modal';
-import { Dialog, FormGroup, Button, Intent, Classes as cs } from '@blueprintjs/core';
-import { className as cn } from './common/common';
+import {
+  Dialog,
+  FormGroup,
+  Button,
+  Intent,
+  Callout,
+  Classes as cs,
+  IconName
+} from '@blueprintjs/core';
+import { cn } from './common/common';
+
+export { Intent };
 
 export interface PromptArgs {
   title?: string;
@@ -128,4 +138,98 @@ export function select(args: SelectArgs): Promise<string> {
 
     const dlg = showModal(<Select {...args} onOk={onOk} onCancel={onCancel}/>);
   });
+}
+
+export interface Action {
+  text?: string;
+  intent?: Intent;
+  onAction(): void;
+}
+
+export interface ActionProps {
+  icon?: IconName;
+  intent?: Intent;
+  title?: string;
+  text: string;
+  actions?: Array<Action>;
+}
+
+export class ActionPrompt extends React.Component<ActionProps, {}> {
+  onClick(action: Action) {
+    action.onAction();
+  }
+
+  render() {
+    return (
+      <Dialog isOpen isCloseButtonShown={false} icon={this.props.icon}>
+        <div className={cs.DIALOG_BODY}>
+          <Callout icon={this.props.icon} intent={this.props.intent} title={this.props.title}>
+            {this.props.text}
+          </Callout>
+        </div>
+        <div className={cs.DIALOG_FOOTER}>
+          <div className={cs.DIALOG_FOOTER_ACTIONS}>
+            {(this.props.actions || []).map(a => {
+              return (
+                <Button
+                  text={a.text}
+                  intent={a.intent || Intent.NONE}
+                  onClick={() => {
+                    this.onClick(a);
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </Dialog>
+    );
+  }
+}
+
+export function action<T extends Action = Action>(props: ActionProps) {
+  return new Promise<T>(resolve => {
+    const actionProps = {...props};
+    const onAction = (action: Action) => {
+      dlg.close();
+      resolve(action as T);
+    };
+
+    actionProps.actions = props.actions.map(a => {
+      return {
+        ...a,
+        onAction: () => onAction(a)
+      };
+    });
+
+    const dlg = showModal(<ActionPrompt {...actionProps}/>);
+  });
+}
+
+export function confirm<T extends Action = Action>(props: ActionProps) {
+  props = {...props};
+  props.icon = props.icon || 'warning-sign';
+  props.title = props.title || 'Confirm';
+  props.intent = props.intent || Intent.WARNING;
+
+  const OK: Action = {
+    text: 'OK',
+    intent: Intent.WARNING,
+    onAction: () => {}
+  };
+
+  const Cancel: Action = {
+    text: 'Cancel',
+    onAction: () => {}
+  };
+
+  props.actions = props.actions || [ OK, Cancel ];
+  return (
+    action<T>(props)
+    .then(action => {
+      if (action == Cancel)
+        return Promise.reject(new Error('cancel'));
+      return Promise.resolve(action);
+    })
+  );
 }
