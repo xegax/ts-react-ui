@@ -1,10 +1,10 @@
 {
   "name": "ts-react-ui",
-  "version": "0.1.38",
+  "version": "0.1.40",
   "dependencies": {
     "@types/bluebird": "^3.5.25",
     "font-awesome": "^4.7.0",
-    "objio": "^0.0.37",
+    "objio": "^0.0.40",
     "react": "^16.4.1",
     "react-dom": "^16.4.1"
   },
