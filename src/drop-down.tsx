@@ -1,7 +1,5 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { FitToParent } from './fittoparent';
-import { findParent } from './common/dom';
 import { ListView, ListViewModel, ListProps } from './list-view';
 import { className as cn } from './common/common';
 import { KeyCode } from './common/keycode';
@@ -61,6 +59,13 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
   static getActive(): DropDown {
     return DropDown.active;
   }
+
+  static NOTHING_SELECT: Readonly<Item> = {
+    value: '-- nothing --',
+    render: (item: Item) => (
+      <div style={{ width: 0, color: 'silver' }}>{item.value}</div>
+    )
+  };
 
   static defaultProps: Partial<Props> = {
     itemsPerPage: 10
@@ -174,14 +179,10 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
       return this.renderInput();
     }
 
-    const select = this.getValue();
+    const select = this.getValue() || DropDown.NOTHING_SELECT;
     return (
       <div className={classes.input}>
-        {select ? (
-          this.renderItem(select)
-        ) : (
-            <div style={{ width: 0, color: 'silver' }}>-- nothing --</div>
-          )}
+        {this.renderItem(select)}
       </div>
     );
   }
