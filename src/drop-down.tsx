@@ -311,6 +311,7 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
         <Popover
           key={this.state.key}
           autoFocus={false}
+          disabled={this.props.disabled}
           popoverWillOpen={() => {
             this.setState({ showList: true, showInput: this.props.onFilter != null });
           }}
