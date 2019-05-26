@@ -2,6 +2,7 @@
 build
 src/**/*.ts
 !src/**/*.d.ts
+public
 *.ts
 !*.d.ts
 tsconfig.json

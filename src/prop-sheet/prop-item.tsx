@@ -63,9 +63,9 @@ export const PropItem: React.SFC<Props> = (props: Props) => {
       title={props.label}
       key={props.key}
     >
-      <div className={classes.nameWrap}>
+      {props.label && <div className={classes.nameWrap}>
         {props.label}
-      </div>
+      </div>}
       <div className={vc} onMouseDown={scrollIntoView} title={typeof value == 'string' ? value : null}>
         {value}
       </div>
