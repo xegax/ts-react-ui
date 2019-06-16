@@ -20,6 +20,7 @@ export interface Props {
   open?: boolean;
   levelPadding?: number;
   defaultHeight?: number;
+  maxHeight?: number;
   height?: number;
   width?: number;
   padding?: boolean;
@@ -124,6 +125,7 @@ export class PropsGroup extends React.Component<Props, State> {
           className={cn(classes.wrap, this.props.itemWrap != false && classes.itemWrap)}
           style={{
             display: !isOpen ? 'none' : null,
+            maxHeight: this.props.maxHeight,
             height: this.props.height || this.state.height || this.props.defaultHeight,
             overflow: this.props.scrollbars == false ? 'hidden' : undefined
           }}

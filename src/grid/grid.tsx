@@ -205,6 +205,7 @@ export class Grid extends React.Component<Props, State> {
           }}
           onResized={size => {
             m.setColSize(props.columnIndex, size);
+            m.delayedNotify({ type: 'col-resized' });
           }}
           onDoubleClick={() => {
             m.resetColSize(props.columnIndex);

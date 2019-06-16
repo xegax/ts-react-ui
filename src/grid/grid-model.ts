@@ -1,7 +1,7 @@
 import { Publisher } from 'objio/common/publisher';
 import { clamp } from '../common/common';
 
-export type EventType = 'resize' | 'render' | 'select' | 'resize-row' | 'scroll-top';
+export type EventType = 'resize' | 'col-resized' | 'render' | 'select' | 'resize-row' | 'scroll-top';
 export type SelectType = 'none' | 'rows' | 'cells';
 export type SelectCells = {[row: number]: Set<number>};
 
@@ -227,6 +227,7 @@ export class GridModel extends Publisher<EventType> {
     delete this.columnWidth[col];
     this.recalcFixedSizes();
     this.delayedNotify({ type: 'resize' });
+    this.delayedNotify({ type: 'col-resized' });
   }
 
   setColSize(col: number, size: number) {
