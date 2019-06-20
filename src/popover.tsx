@@ -8,7 +8,7 @@ export {
 };
 
 export interface Props extends bp.IPopoverProps {
-  children: Array<React.ReactChild>;
+  children: Array<React.ReactChild>;  // children[0] target, children[1] list
 }
 
 export function Popover(props: Props) {

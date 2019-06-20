@@ -150,7 +150,7 @@ export interface ActionProps {
   icon?: IconName;
   intent?: Intent;
   title?: string;
-  text: string;
+  body: string | JSX.Element;
   actions?: Array<Action>;
 }
 
@@ -164,7 +164,7 @@ export class ActionPrompt extends React.Component<ActionProps, {}> {
       <Dialog isOpen isCloseButtonShown={false} icon={this.props.icon}>
         <div className={cs.DIALOG_BODY}>
           <Callout icon={this.props.icon} intent={this.props.intent} title={this.props.title}>
-            {this.props.text}
+            {this.props.body}
           </Callout>
         </div>
         <div className={cs.DIALOG_FOOTER}>

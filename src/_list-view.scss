@@ -45,7 +45,7 @@
 
     > .list-item {
       background-color: white;
-      // position: relative;  // it can break drop-down
+      position: relative;  // without this can break reordering line
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;

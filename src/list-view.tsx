@@ -536,11 +536,12 @@ export class ListView extends React.Component<ListProps, State> implements IList
         if (!this.state.drop)
           return;
 
-        if (this.props.onDragAndDropTo) {
+        if (this.props.onDragAndDropTo)
           this.props.onDragAndDropTo({ drag: [ item ], drop: this.state.drop });
-        } else if (this.props.onMoveTo) {
+
+        if (this.props.onMoveTo)
           this.props.onMoveTo({ drag: [ item ], before: this.state.drop });
-        }
+
         this.state.model.setFocus( this.state.model.getValues().findIndex(v => v == item) );
         this.setState({ drop: null });
       }
