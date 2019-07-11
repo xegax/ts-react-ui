@@ -1,11 +1,8 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { DropDown } from '../drop-down';
 import { Props as ItemProps } from './prop-item';
 import { classes } from './classes';
 import { className as cn } from '../common/common';
 import { HorizontalResizer } from '../resizer';
-import { findParent } from '../common/dom';
 
 export interface Props {
   disabled?: boolean;
@@ -129,11 +126,6 @@ export class PropsGroup extends React.Component<Props, State> {
             height: this.props.height || this.state.height || this.props.defaultHeight,
             overflow: this.props.scrollbars == false ? 'hidden' : undefined
           }}
-          onScroll={e => {
-            const active = DropDown.getActive();
-            if (e.currentTarget == e.target && active && findParent(ReactDOM.findDOMNode(active) as HTMLElement, this.ref.current))
-              active.hideList();
-          }}
         >
           {this.renderChildren(children)}
         </div>
@@ -141,8 +133,6 @@ export class PropsGroup extends React.Component<Props, State> {
           style={{ display: !isOpen ? 'none' : null }}
           size={() => this.getSize()}
           onResizing={newSize => {
-            const active = DropDown.getActive();
-            active && active.hideList();
             this.setState({ height: newSize });
           }}
           onDoubleClick={() => {

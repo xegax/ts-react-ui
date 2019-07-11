@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { startDragging } from './common/start-dragging';
-import { className as cn, clamp } from './common/common';
+import { cn, clamp } from './common/common';
 import { FitToParent } from './fittoparent';
 import { Publisher } from 'objio';
 

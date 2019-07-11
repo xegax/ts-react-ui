@@ -17,7 +17,7 @@ storiesOf('prompts', module)
           text prompt
         </button>
         <button onClick={() => {
-          confirm({ text: 'Are you sure to delete?' })
+          confirm({ body: 'Are you sure to delete?' })
           .then(() => console.log('delete'))
           .catch(() => {});
         }}

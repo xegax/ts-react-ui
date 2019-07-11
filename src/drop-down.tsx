@@ -54,12 +54,6 @@ const classes = {
 };
 
 export class DropDown<T extends Props = Props> extends React.Component<T, State> {
-  private static active: DropDown;
-
-  static getActive(): DropDown {
-    return DropDown.active;
-  }
-
   static NOTHING_SELECT: Readonly<Item> = {
     value: '-- nothing --',
     render: (item: Item) => (
@@ -79,16 +73,6 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
   componentDidMount() {
     if (this.props.autoFocus && this.ref && this.ref.current)
       this.ref.current.focus();
-  }
-
-  hideList() {
-    DropDown.active = null;
-    this.setState({
-      showList: false,
-      key: this.state.key + 1,
-      filtered: null,
-      showInput: false
-    });
   }
 
   isListView(e: HTMLDivElement) {

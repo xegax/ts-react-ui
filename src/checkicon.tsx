@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { className as cn } from './common/common';
+import { cn } from './common/common';
 
 const classes = {
   checkicon: 'checkicon',
@@ -31,13 +31,15 @@ export function CheckIcon(props: Props) {
 
   return (
     <span className={className} title={props.title}>
-      <i style={props.style} className={props.faIcon} onClick={e => {
-        if (props.disabled)
-          return;
+      <i style={props.style} className={props.faIcon}
+        onClick={e => {
+          if (props.disabled)
+            return;
 
-        props.onChange && props.onChange(!props.value);
-        props.onClick && props.onClick(e);
-      }}/>
+          props.onChange && props.onChange(!props.value);
+          props.onClick && props.onClick(e);
+        }}
+      />
     </span>
   );
 }

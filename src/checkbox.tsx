@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { className as cn, className } from './common/common';
+import { cn } from './common/common';
 
 export interface Props {
   disabled?: boolean;

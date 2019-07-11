@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { className as cn, clamp, className } from './common/common';
+import { cn, clamp } from './common/common';
 import { KeyCode } from './common/keycode';
 import { Publisher } from 'objio/common/publisher';
 import { startDragging } from './common/start-dragging';
