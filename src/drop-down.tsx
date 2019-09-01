@@ -164,9 +164,10 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
     }
 
     const select = this.getValue() || DropDown.NOTHING_SELECT;
+    const jsx = this.renderItem(select);
     return (
       <div className={classes.input}>
-        {this.renderItem(select)}
+        {jsx}
       </div>
     );
   }

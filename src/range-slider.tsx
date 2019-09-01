@@ -3,6 +3,7 @@ import { RangeSliderModel, Range } from './model/range-slider';
 import { startDragging } from './common/start-dragging';
 import { className as cn, clamp } from './common/common';
 import { FitToParent } from './fittoparent';
+import { Tooltip } from '@blueprintjs/core';
 import './_range-slider.scss';
 
 export {
@@ -10,6 +11,7 @@ export {
 }
 
 const classes = {
+  disabled: 'disabled',
   rangeSlider: 'range-slider-ctrl',
   sliderValue: 'slider-value',
   slider: 'range-slider-ctrl-slider',
@@ -28,12 +30,12 @@ export interface Props {
   width?: number;
   height?: number;
   round?: boolean;
+  enabled?: boolean;
 
   min?: number;
   max?: number;
   range?: Array<number>;
   value?: number;
-  valueEnabled?: boolean;
   dragThumb?: boolean;
 
   onChanged?(min: number, max: number);
@@ -106,10 +108,13 @@ export class RangeSliderImpl extends React.Component<Props, State> {
 
   protected onMouseDown = (evt: React.MouseEvent, key: keyof Range) => {
     const model = this.state.model;
-    const { width } = this.props;
+    const { width, enabled } = this.props;
+    if (enabled == false)
+      return;
+
     const range = model.getRangeForRender(width);
 
-    startDragging({ x: range[key], y: 0 }, {
+    startDragging({ x: range[key], y: 0, minDist: 2 }, {
       onDragStart: () => {
         model.setLastDrag(key);
         this.setState({active: key == 'from' ? 'left' : 'right'});
@@ -134,14 +139,17 @@ export class RangeSliderImpl extends React.Component<Props, State> {
 
   protected onMouseDownThumb = (evt: React.MouseEvent) => {
     const model = this.state.model;
-    const { width } = this.props;
+    const { width, enabled } = this.props;
+    if (enabled == false)
+      return;
+
     const rrange = model.getRangeForRender(width);
     const range = model.getRange();
     const minMaxRange = model.getMinMax();
     const len = range.to - range.from;
     const minMax = [ minMaxRange.from, range.from + minMaxRange.to - range.to ];
 
-    startDragging({ x: rrange.from, y: 0}, {
+    startDragging({ x: rrange.from, y: 0, minDist: 2 }, {
       onDragStart: () => {
         model.setLastDrag('thumb');
         this.setState({ active: 'thumb' });
@@ -162,6 +170,9 @@ export class RangeSliderImpl extends React.Component<Props, State> {
   }
 
   onSeek = (e: React.MouseEvent) => {
+    if (this.props.enabled == false)
+      return;
+
     const skip = [classes.sliderLeft, classes.sliderRight, classes.thumbRange];
     if ((e.target as HTMLElement).className.split(' ').some( v => skip.indexOf(v) != -1))
       return;
@@ -185,7 +196,7 @@ export class RangeSliderImpl extends React.Component<Props, State> {
 
   render() {
     const model = this.state.model;
-    const { width, height, className, extraClass, style } = this.props;
+    const { width, height, className, extraClass, style, enabled } = this.props;
     const { active, range } = this.state;
     const ssize = height;
     const value = this.props.value != null ? this.props.value : this.state.value;
@@ -194,13 +205,19 @@ export class RangeSliderImpl extends React.Component<Props, State> {
     return (
       <div
         ref={this.ref}
-        className={cn(className || classes.rangeSlider, extraClass)}
+        className={cn(className || classes.rangeSlider, enabled == false && classes.disabled, extraClass)}
         style={{ ...style, height }} onMouseDown={this.onSeek}
       >
         <div
           className={cn(classes.thumbRange, active == 'thumb' && classes.active)}
           style={{ left: 0, width, borderRadius: ssize / 2, pointerEvents: this.props.dragThumb === false ? 'none' : null }}
           onMouseDown={this.onMouseDownThumb}
+          onDoubleClick={() => {
+            model.setRange(model.getMinMax());
+            const range = model.getRange();
+            this.props.onChanged && this.props.onChanged(range.from, range.to);
+            model.delayedNotify({ type: 'changed' });
+          }}
         />
         {(this.props.onSeeked || this.props.onSeek) &&
           <div className={cn(classes.thumb)} style={{ left: 0, width: pos, backgroundColor: 'red', borderRadius: `${ssize / 2}px 0px 0px ${ssize / 2}px` }}/>
@@ -211,11 +228,23 @@ export class RangeSliderImpl extends React.Component<Props, State> {
           className={cn(classes.slider, classes.sliderLeft, active == 'left' && classes.active)}
           style={{ left: rrange.from, height: ssize, width: ssize, top: height / 2 - ssize / 2, borderRadius: ssize / 2 }}
           onMouseDown={evt => this.onMouseDown(evt, 'from')}
+          onDoubleClick={() => {
+            model.setRange({ from: model.getMinMax().from, to: model.getRange().to });
+            const range = model.getRange();
+            this.props.onChanged && this.props.onChanged(range.from, range.to);
+            model.delayedNotify({ type: 'changed' });
+          }}
         />
         <div
           className={cn(classes.slider, classes.sliderRight, active == 'right' && classes.active)}
           style={{ right: (width - ssize * 2) - rrange.to, height: ssize, width: ssize, top: height / 2 - ssize / 2, borderRadius: ssize / 2 }}
           onMouseDown={evt => this.onMouseDown(evt, 'to')}
+          onDoubleClick={() => {
+            model.setRange({ from: model.getRange().from, to: model.getMinMax().to });
+            const range = model.getRange();
+            this.props.onChanged && this.props.onChanged(range.from, range.to);
+            model.delayedNotify({ type: 'changed' });
+          }}
         />
       </div>
     );

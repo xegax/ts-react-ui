@@ -2,6 +2,7 @@ import * as React from 'react';
 import { KeyCode } from './common/keycode';
 
 export interface Props {
+  placeholder?: string;
   resizeable?: boolean;
   value?: string;
   disabled?: boolean;
@@ -45,6 +46,9 @@ export class Textbox extends React.PureComponent<Props, Partial<State>> {
 
   componentDidUpdate() {
     const text = this.text.current;
+    if (!text)
+      return;
+
     if (this.props.resizeable && text.offsetWidth != this.state.width || text.offsetHeight != this.state.height) {
       this.setState({ width: text.offsetWidth, height: text.offsetHeight });
     }
@@ -82,13 +86,15 @@ export class Textbox extends React.PureComponent<Props, Partial<State>> {
       height = this.state.height || '1em';
     }
 
+    const { fontSize, ...style } = this.props.style || {} as React.CSSProperties;
+
     return (
-      <div style={{display: 'inline-block', position: 'relative'}}>
+      <div style={{display: 'inline-block', position: 'relative', fontSize}}>
         {this.props.resizeable &&
           <div
             ref={this.text}
             style={{
-              ...this.props.style,
+              ...style,
               display: 'inline-block',
               visibility: 'hidden',
               position: 'absolute'
@@ -98,8 +104,9 @@ export class Textbox extends React.PureComponent<Props, Partial<State>> {
           </div>
         }
         <input
+          placeholder={this.props.placeholder}
           className={this.props.className}
-          style={{...this.props.style, width, height}}
+          style={{...style, width, height}}
           autoFocus={props.autoFocus}
           disabled={props.disabled}
           value={this.state.value}

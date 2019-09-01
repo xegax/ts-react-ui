@@ -161,11 +161,9 @@ export class ActionPrompt extends React.Component<ActionProps, {}> {
 
   render() {
     return (
-      <Dialog isOpen isCloseButtonShown={false} icon={this.props.icon}>
+      <Dialog isOpen isCloseButtonShown={false} icon={this.props.icon} title={this.props.title}>
         <div className={cs.DIALOG_BODY}>
-          <Callout icon={this.props.icon} intent={this.props.intent} title={this.props.title}>
-            {this.props.body}
-          </Callout>
+          {this.props.body}
         </div>
         <div className={cs.DIALOG_FOOTER}>
           <div className={cs.DIALOG_FOOTER_ACTIONS}>
@@ -208,7 +206,7 @@ export function action<T extends Action = Action>(props: ActionProps) {
 
 export function confirm<T extends Action = Action>(props: ActionProps) {
   props = {...props};
-  props.icon = props.icon || 'warning-sign';
+  props.icon = props.icon;
   props.title = props.title || 'Confirm';
   props.intent = props.intent || Intent.WARNING;
 

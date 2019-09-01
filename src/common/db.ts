@@ -1,0 +1,1 @@
+export type DBColType = 'varchar' | 'text' | 'integer' | 'real';

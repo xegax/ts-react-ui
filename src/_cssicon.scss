@@ -1,0 +1,25 @@
+.cssicon {
+  opacity: 1;
+
+  &.clickable {
+    cursor: pointer;
+  }
+
+  &.disabled {
+    color: silver;
+    cursor: default;
+  }
+
+  &.show-on-hover {
+    opacity: 0.3;
+  }
+
+  &.show-on-hover:hover {
+    opacity: 1;
+  }
+
+  &.hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}

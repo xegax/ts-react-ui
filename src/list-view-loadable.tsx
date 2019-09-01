@@ -37,12 +37,15 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
 
   scrollTop: number = null;
   loading: Promise<any>;
+  reverse = false;
 
   constructor(props: ListProps) {
     super(props);
 
     let model = props.model || new ListViewLoadableModel();
-    this.state = { model };
+    this.state = {
+      model
+    };
 
     if (!props.values || props.values.length == 0) {
       this.loadNext();
@@ -51,17 +54,21 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
 
   loadNext() {
     const totalValues = this.props.totalValues();
-    if (this.loading || this.state.model.getCount() >= totalValues)
+    const gcount = this.state.model.getCount();
+    if (this.loading || gcount >= totalValues)
       return false;
 
-    const from = this.state.model.getCount();
+    let from = gcount;
     let count = this.props.itemsPerLoad;
     count = Math.min(from + count, totalValues) - from;
+    if (this.reverse) {
+      from = totalValues - gcount - count;
+    }
     
     this.loading = this.props.onLoadNext(from, count)
     .then(values => {
       this.loading = null;
-      this.state.model.appendValues(values);
+      this.state.model.appendValues(this.reverse ? values.reverse() : values);
     })
     .catch(() => {
       this.loading = null;
@@ -97,6 +104,11 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
   reload() {
     this.state.model.setValues([], true);
     this.loadNext();
+  }
+
+  toggleReverse() {
+    this.reverse = !this.reverse;
+    this.reload();
   }
 
   render() {

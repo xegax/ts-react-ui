@@ -12,10 +12,12 @@ const DEFAULT_CARD_HEIGHT = 300;
 
 const classes = {
   header: 'list-header',
+  highlight: 'list-view-highlight',
   headerWrap: 'list-header-wrap',
   class: 'list-view-ctrl',
   cards: 'cards',
   item: 'list-item',
+  noItemPadding: 'no-item-padding',
   listWrapper: 'list-wrapper',
   cardItem: 'list-item-card',
   select: 'select',
@@ -24,10 +26,11 @@ const classes = {
   dropInto: 'drop-into'
 };
 
+export type RenderType = string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
 export interface Item {
   value: string;
   title?: string;
-  render?: string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
+  render?: RenderType;
   className?: string;
 }
 
@@ -48,14 +51,17 @@ export interface ListProps {
   value?: Item;
   defaultValue?: Item;
   border?: boolean;
+  highlight?: boolean;
   style?: React.CSSProperties;
 
+  className?: string;
   cards?: boolean;        // render items as cards
   cardWidth?: number;
   cardHeight?: number;
 
   itemsPerPage?: number;
   itemClassName?: string;
+  itemPadding?: boolean;
 
   width?: number;
   height?: number;
@@ -359,7 +365,7 @@ export class ListView extends React.Component<ListProps, State> implements IList
     const sel: Item = this.state.model.getSelect();
     return (
       <div
-        className={classes.listWrapper}
+        className={cn(classes.listWrapper, this.props.className)}
         ref={this.ref}
         tabIndex={this.props.tabIndex == null ? this.props.onSelect && 0 : this.props.tabIndex}
         onKeyDown={this.onKeyDown}
@@ -393,7 +399,7 @@ export class ListView extends React.Component<ListProps, State> implements IList
           render={() => {
             const w = this.ref.current ? this.ref.current.offsetWidth - this.ref.current.clientWidth : 0;
             return (
-              <div className={classes.header} style={{ marginRight: w }}>
+              <div className={classes.header} /*style={{ marginRight: w }}*/>
                 <div className={classes.item}>
                   {jsx}
                 </div>
@@ -566,7 +572,10 @@ export class ListView extends React.Component<ListProps, State> implements IList
 
     const className = cn(
       classes.class,
+      this.props.className,
+      this.props.itemPadding == false && classes.noItemPadding,
       this.props.border != false && classes.border,
+      this.props.highlight != false && classes.highlight,
       this.props.cards && classes.cards
     );
 
@@ -574,6 +583,9 @@ export class ListView extends React.Component<ListProps, State> implements IList
       <div
         className={className}
         style={style}
+        onClick={e => {
+          e.stopPropagation();
+        }}
       >
         {this.renderHeader(this.props.header)}
         {this.renderValues()}

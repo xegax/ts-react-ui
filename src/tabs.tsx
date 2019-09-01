@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { className as cn } from './common/common';
+import { ElementType, render } from './react-common';
 
 const classes = {
   TabsCtrl: 'tabs-ctrl',
@@ -18,6 +19,7 @@ interface Props {
   onSelect?(id: string);
   width?: number;
   height?: number;
+  style?: React.CSSProperties;
 }
 
 interface State {
@@ -72,7 +74,7 @@ export class Tabs extends React.Component<Props, State> {
     return (
       <div
         className={cn(classes.TabsCtrl, this.props.disabled && classes.disabled)}
-        style={{width: this.props.width}}
+        style={{...this.props.style, width: this.props.width}}
       >
         <div ref={this.ref} className={classes.tabsWrap} onWheel={this.onWheel}>
           {children}
@@ -85,7 +87,7 @@ export class Tabs extends React.Component<Props, State> {
 }
 
 interface TabProps {
-  label?: string;
+  label?: ElementType;
   maxWidth?: number;
   id: string;
   select?: boolean;
@@ -105,7 +107,7 @@ export class Tab extends React.Component<TabProps> {
         onClick={this.onClick}
         style={{maxWidth: this.props.maxWidth}}
       >
-        {this.props.label}
+        {render(this.props.label)}
       </div>
     );
   }

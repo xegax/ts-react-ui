@@ -1,0 +1,38 @@
+.tags-ctrl {
+  padding-left: 2px;
+  padding-top: 2px;
+  border: 1px solid lightgray;
+  background-color: #f3f3f3;
+  border-radius: 2px;
+  white-space: normal;
+  max-height: 6em;
+  min-height: 2em;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  >.tag-wrap {
+    padding: 2px;
+    display: inline-block;
+    border: 1px solid gray;
+    padding: 1px;
+    background-color: lightyellow;
+    border-radius: 3px;
+    margin-right: 2px;
+    margin-bottom: 2px;
+    >.tag {
+      display: flex;
+      align-items: center;
+      >.label {
+        display: inline-block;
+        max-width: 4em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      >.cssicon {
+        font-size: 70%;
+        color: gray;
+      }
+    }
+  }
+}

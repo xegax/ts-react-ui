@@ -7,7 +7,7 @@ import { HorizontalResizer } from '../resizer';
 export interface Props {
   disabled?: boolean;
   label: string;
-  faIcon?: string;
+  icon?: JSX.Element;
   depth?: number;
   key?: number | string;
   itemWrap?: boolean;
@@ -102,25 +102,26 @@ export class PropsGroup extends React.Component<Props, State> {
       >
         <div
           className={classes.header}
-          onClick={() => {
+          onClick={e => {
             this.toggleGroup();
           }}
         >
           <div
-            className={classes.wrap}
+            className={cn(classes.wrap, 'horz-panel-1')}
             style={{
               paddingLeft: depth * (this.props.levelPadding || 5)
             }}
           >
-            {this.props.faIcon && <i className={this.props.faIcon} />}
-            {this.props.label}
+            {this.props.icon ? <span onClick={e => e.stopPropagation()}>{this.props.icon}</span> : null}
+            <span>{this.props.label}</span>
           </div>
-          <i className={isOpen ? 'fa fa-angle-down' : 'fa fa-angle-right'} />
+          <i className={cn(isOpen ? 'fa fa-angle-down' : 'fa fa-angle-right', 'arrow')} />
         </div>
         <div
           ref={this.ref}
           className={cn(classes.wrap, this.props.itemWrap != false && classes.itemWrap)}
           style={{
+            padding: this.props.padding == false ? 0 : undefined,
             display: !isOpen ? 'none' : null,
             maxHeight: this.props.maxHeight,
             height: this.props.height || this.state.height || this.props.defaultHeight,

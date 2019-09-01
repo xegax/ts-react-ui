@@ -9,14 +9,65 @@ import {
   SliderPropItem,
   SwitchPropItem
 } from '../src/prop-sheet';
-// import { prompt } from '../src/prompt';
 import { Item, DropDown } from '../src/drop-down';
 import { Publisher } from 'objio';
 import { clamp } from '../src/common/common';
 import { ListView } from '../src/list-view';
 import { Timer } from 'objio/common/timer';
 import { Tabs, Tab } from '../src/tabs';
-import { Popover, Classes } from '../src/popover';
+import { Classes, PopoverIcon } from '../src/popover';
+import { CheckIcon } from '../src/checkicon';
+
+function tableActions() {
+  return (
+    <div className='horz-panel-1' style={{ backgroundColor: '#f0f0f0', padding: 5 }}>
+      <PopoverIcon icon='fa fa-trash'>
+        <ListView
+          itemClassName={Classes.POPOVER_DISMISS}
+          border={false}
+          values={new Array(15).fill(null).map((v, i) => ({ value: 'sel ' + i }))}
+          height={100}
+          width={150}
+          onSelect={item => {
+            console.log(item);
+          }}
+        />
+      </PopoverIcon>
+      <PopoverIcon icon='fa fa-plus'>
+        <ListView
+          itemClassName={Classes.POPOVER_DISMISS}
+          border={false}
+          values={new Array(15).fill(null).map((v, i) => ({ value: 'sel ' + i }))}
+          height={100}
+          width={150}
+          onSelect={item => {
+            console.log(item);
+          }}
+        />
+      </PopoverIcon>
+      <CheckIcon
+        value
+        faIcon='fa fa-minus'
+      />
+      <CheckIcon
+        value
+        faIcon='fa fa-plus'
+      />
+      <CheckIcon
+        value
+        faIcon='fa fa-minus'
+      />
+      <CheckIcon
+        value
+        faIcon='fa fa-plus'
+      />
+      <CheckIcon
+        value
+        faIcon='fa fa-minus'
+      />
+    </div>
+  );
+}
 
 class Model extends Publisher {
   private id: string = '4215';
@@ -243,36 +294,7 @@ class View extends React.Component<{ model: Model, defaultWidth?: number, fitToA
           header={{ value: 'columns' }}
           values={new Array(10).fill(null).map((v, i) => ({ value: 'col ' + i }))}
         />
-        <div style={{ textAlign: 'right' }}>
-          <Popover>
-            <button>popper</button>
-            <ListView
-              itemClassName={Classes.POPOVER_DISMISS}
-              border={false}
-              values={new Array(15).fill(null).map((v, i) => ({ value: 'sel ' + i }))}
-              height={100}
-              width={150}
-              onSelect={item => {
-                console.log(item);
-              }}
-            />
-          </Popover>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <Popover>
-            <button>popper 2</button>
-            <ListView
-              itemClassName={Classes.POPOVER_DISMISS}
-              border={false}
-              values={new Array(15).fill(null).map((v, i) => ({ value: 'sel ' + i }))}
-              height={100}
-              width={150}
-              onSelect={item => {
-                console.log(item);
-              }}
-            />
-          </Popover>
-        </div>
+        {tableActions()}
       </PropsGroup>
     );
   }
