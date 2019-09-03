@@ -18,6 +18,7 @@ export interface Value {
   count?: number;
 }
 
+export type SortType = 'value' | 'count' | 'natural';
 export interface ColItem {
   name: string;
   label?: ElementType;
@@ -25,7 +26,7 @@ export interface ColItem {
 
   getNumRange?(args: GetRangeArgs): Promise<{ minMax: Array<number> }>;
   getValues?(args: GetValuesArgs): Promise<{ total: number; values: Array<Value> }>;
-  setSort?(type: 'value' | 'count'): Promise<void>;
+  setSort?(type: SortType): Promise<void>;
   setFilter?(filter: string): Promise<{ total: number }>;
 }
 
@@ -37,6 +38,8 @@ export interface FilterHolder {
 
 export type CatFilter = {
   values: Array<string>;
+  sort?: SortType;
+  sortReverse?: boolean;
 }
 
 export type TextFilter = {

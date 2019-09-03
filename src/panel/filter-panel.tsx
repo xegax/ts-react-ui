@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {
-  PropSheet,
   PropsGroup
 } from '../prop-sheet';
 import { Item } from '../drop-down';
@@ -8,9 +7,6 @@ import { Publisher } from 'objio';
 import { ListView } from '../list-view';
 import { Tabs, Tab } from '../tabs';
 import { PopoverIcon } from '../popover';
-import { CheckBox } from '../checkbox';
-import { CSSIcon } from '../cssicon';
-import { TAG_INPUT_VALUES } from '@blueprintjs/core/lib/esm/common/classes';
 import { Tags } from '../tags';
 import { selectCategoryRemote, selectCategory } from './select-category';
 import { CheckIcon } from '../checkicon';
@@ -345,10 +341,18 @@ export class FilterPanelView extends React.Component<Props> {
     c.getValues({ from: 0, count: 50, filters })
     .then(res => {
       return selectCategoryRemote({
+        sort: cat.sort,
+        sortReverse: cat.sortReverse,
         title: `Select values from "${col}"`,
         totalValues: res.total,
         select,
-        sortValues: c.setSort,
+        sortValues: sort => {
+          cat.sort = sort;
+          return c.setSort(sort);
+        },
+        onToggleReverse: reverse => {
+          cat.sortReverse = reverse;
+        },
         filterValues: (f: string) => c.setFilter(f).then(r => ({ totalValues: r.total })),
         loadValues: (from, count) => {
           return (

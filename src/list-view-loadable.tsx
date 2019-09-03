@@ -4,6 +4,29 @@ import { Item, ListViewModel, ListView, IListView, ListProps as ListPropsBase } 
 export { ListPropsBase, Item };
 
 export class ListViewLoadableModel extends ListViewModel {
+  protected loading: Promise<void>;
+  protected reverse: boolean = false;
+  protected itemsPerLoad: number;
+
+  onLoadNext: OnLoadNextCallback = () => {
+    throw 'onLoadNext not defined';
+  };
+
+  getTotalValues = (): number => {
+    throw 'getTotalValues not defined';
+  }
+
+  setItemsPerLoad(itemsPerLoad: number) {
+    this.itemsPerLoad = itemsPerLoad;
+  }
+
+  setReverse(reverse: boolean) {
+    if (reverse == null || reverse == this.reverse)
+      return;
+    this.reverse = reverse;
+    this.reload();
+  }
+
   appendValues(values: Array<Item>) {
     this.values.push(...values);
     let focus = this.focus;
@@ -14,30 +37,62 @@ export class ListViewLoadableModel extends ListViewModel {
   getCount(): number {
     return this.values.length;
   }
+
+  loadNext() {
+    const totalValues = this.getTotalValues();
+    const gcount = this.getCount();
+    if (this.loading || gcount >= totalValues)
+      return false;
+
+    let from = gcount;
+    let count = this.itemsPerLoad;
+    count = Math.min(from + count, totalValues) - from;
+    if (this.reverse) {
+      from = totalValues - gcount - count;
+    }
+    
+    this.loading = this.onLoadNext(from, count)
+    .then(values => {
+      this.loading = null;
+      this.appendValues(this.reverse ? values.reverse() : values);
+    })
+    .catch(() => {
+      this.loading = null;
+      this.notify();
+    });
+
+    return true;
+  }
+
+  reload() {
+    this.setValues([], true);
+    this.loadNext();
+  }
 }
 
+type OnLoadNextCallback = (from: number, count: number) => Promise<Array<Item>>;
 export interface LoadProps {
+  reverse?: boolean;
   model?: ListViewLoadableModel;
   itemsPerLoad?: number;
   totalValues(): number;
-  onLoadNext(from: number, count: number): Promise<Array<Item>>;
+  onLoadNext: OnLoadNextCallback;
 }
 
 export type ListProps = ListPropsBase & LoadProps;
 
 interface State {
   model?: ListViewLoadableModel;
+  loading?: Promise<void>;
 }
 
 export class ListViewLoadable extends React.Component<ListProps, State> implements IListView {
   static defaultProps: Partial<ListProps> = {
-    itemsPerLoad: 50
+    itemsPerLoad: 50,
+    reverse: false
   };
   ref = React.createRef<ListView>();
-
   scrollTop: number = null;
-  loading: Promise<any>;
-  reverse = false;
 
   constructor(props: ListProps) {
     super(props);
@@ -47,34 +102,17 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
       model
     };
 
+    ListViewLoadable.getDerivedStateFromProps(props, this.state);
     if (!props.values || props.values.length == 0) {
-      this.loadNext();
+      this.state.model.loadNext();
     }
   }
 
-  loadNext() {
-    const totalValues = this.props.totalValues();
-    const gcount = this.state.model.getCount();
-    if (this.loading || gcount >= totalValues)
-      return false;
-
-    let from = gcount;
-    let count = this.props.itemsPerLoad;
-    count = Math.min(from + count, totalValues) - from;
-    if (this.reverse) {
-      from = totalValues - gcount - count;
-    }
-    
-    this.loading = this.props.onLoadNext(from, count)
-    .then(values => {
-      this.loading = null;
-      this.state.model.appendValues(this.reverse ? values.reverse() : values);
-    })
-    .catch(() => {
-      this.loading = null;
-    });
-
-    return true;
+  static getDerivedStateFromProps(p: ListProps, s: State) {
+    s.model.onLoadNext = p.onLoadNext;
+    s.model.getTotalValues = p.totalValues;
+    s.model.setItemsPerLoad(p.itemsPerLoad);
+    s.model.setReverse(p.reverse);
   }
 
   onScroll(e: React.UIEvent) {
@@ -83,7 +121,7 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
       el.scrollTop = this.scrollTop;
       this.scrollTop = null;
     } else if (Math.round(el.scrollHeight - el.scrollTop - el.offsetHeight) <= 0) {
-      if (this.loadNext()) {
+      if (this.state.model.loadNext()) {
         this.scrollTop = e.currentTarget.scrollTop;
       }
     }
@@ -102,13 +140,7 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
   }
 
   reload() {
-    this.state.model.setValues([], true);
-    this.loadNext();
-  }
-
-  toggleReverse() {
-    this.reverse = !this.reverse;
-    this.reload();
+    this.state.model.reload();
   }
 
   render() {

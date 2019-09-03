@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ListViewLoadable, ListViewLoadableModel, Item } from '../list-view-loadable';
+import { ListViewLoadable, Item } from '../list-view-loadable';
 import { showModal } from '../show-modal';
 import { Dialog, Classes as cs, Button, Tag } from '../blueprint';
 import { FitToParent } from '../fittoparent';
@@ -9,6 +9,7 @@ import { CheckBox } from '../checkbox';
 import { IconNames } from '@blueprintjs/icons';
 import { InputGroup } from '../input-group';
 import { CSSIcon } from '../cssicon';
+import { SortType } from './filter-panel-decl';
 
 interface ItemExt extends Item {
   origRender: RenderType;
@@ -17,9 +18,14 @@ interface ItemExt extends Item {
 export interface SelectCatsRemoteArgs {
   select?: Set<string>;
   totalValues: number;
+  
+  sort?: SortType;
+  sortReverse?: boolean;
+
   filterValues?(filter: string): Promise<{ totalValues: number }>;
   loadValues(from: number, count: number): Promise< Array<Item> >;
-  sortValues?(type: 'value' | 'count'): Promise<void>;
+  sortValues?(type: SortType): Promise<void>;
+  onToggleReverse?(reverse: boolean): void;
 }
 
 export interface SelectCatsModalArgs extends SelectCatsRemoteArgs {
@@ -36,16 +42,15 @@ interface State {
   filter?: string;
   totalValues?: number;
   reverse?: boolean;
-  sort?: 'value' | 'count'; 
+  sort?: SortType; 
 }
 
 export class SelectCategory extends React.Component<Props, State> {
-  state: State = { sort: 'value' };
   header: ItemExt;
   ref = React.createRef<ListViewLoadable>();
   sort: Promise<void>;
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
 
     this.header = {
@@ -53,6 +58,11 @@ export class SelectCategory extends React.Component<Props, State> {
       origRender: this.renderHeader,
       render: this.renderItem
     };
+
+    this.state = {
+      sort: props.sort,
+      reverse: props.sortReverse
+    }
   }
 
   componentDidMount() {
@@ -60,9 +70,15 @@ export class SelectCategory extends React.Component<Props, State> {
   }
 
   renderHeader = (item: ItemExt): JSX.Element => {
-    let sortIcon = this.state.sort == 'count' ? 'fa fa-sort-amount-asc' : 'fa fa-sort-alpha-asc';
+    const { sort, reverse } = this.state;
+    let sortIcon = 'fa fa-square-o';
+    if (sort == 'count')
+      sortIcon = 'fa fa-sort-amount-asc';
+    if (sort == 'value')
+      sortIcon = 'fa fa-sort-alpha-asc';
     if (this.sort)
       sortIcon = 'fa fa-spinner fa-spin';
+
     return (
       <>
         <div className='flexgrow1'>name</div>
@@ -75,25 +91,33 @@ export class SelectCategory extends React.Component<Props, State> {
                 if (this.sort)
                   return;
 
-                let sort: 'value' | 'count' = this.state.sort == 'value' ? 'count' : 'value';
+                let nextSort: SortType = sort || 'natural';
+                if (nextSort == 'natural')
+                  nextSort = 'count';
+                else if (nextSort == 'count')
+                  nextSort = 'value';
+                else if (nextSort == 'value')
+                  nextSort = 'natural';
+                
                 this.sort && this.sort.cancel();
-                this.sort = this.props.sortValues(sort)
+                this.sort = this.props.sortValues(nextSort)
                 .then(() => {
                   this.sort = null;
                   this.ref.current.reload();
                   this.setState({});
                 });
 
-                this.setState({ sort });
+                this.setState({ sort: nextSort });
               }}
             /> : null
           }
           <CSSIcon
             showOnHover
-            icon={this.state.reverse ? 'fa fa-arrow-up' : 'fa fa-arrow-down'}
+            icon={reverse ? 'fa fa-arrow-up' : 'fa fa-arrow-down'}
             onClick={() => {
-              this.setState({ reverse: !this.state.reverse });
-              this.ref.current.toggleReverse();
+              const nextReverse = !reverse;
+              this.setState({ reverse: nextReverse });
+              this.props.onToggleReverse && this.props.onToggleReverse(nextReverse);
             }}
           />
         </div>
@@ -171,6 +195,7 @@ export class SelectCategory extends React.Component<Props, State> {
         </div>
         <FitToParent wrapToFlex>
           <ListViewLoadable
+            reverse={this.state.reverse}
             ref={this.ref}
             header={this.header}
             key={this.state.filter}
