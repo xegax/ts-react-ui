@@ -3,8 +3,8 @@ import * as React from 'react';
 export interface Props {
   src: string;
   size?: string;
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   style?: React.CSSProperties;
   title?: string;
 }
