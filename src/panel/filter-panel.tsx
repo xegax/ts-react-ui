@@ -275,7 +275,8 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
           continue;
         }
 
-        maxOrder = Math.max(h.order, maxOrder);
+        if (h.order != null)
+          maxOrder = Math.max(h.order, maxOrder);
       }
       h.order = maxOrder + 1;
     } else {  // filter reset
@@ -291,7 +292,7 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
         delete h.order;
       else if (range && range.range[0] == null && range.range[1] == null)
         delete h.order;
-      else if (text && text.filterText)
+      else if (text && !text.filterText)
         delete h.order;
     }
 

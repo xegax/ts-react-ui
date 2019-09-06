@@ -151,8 +151,22 @@ export class SelectCategory extends React.Component<Props, State> {
         <CheckBox
           value={select && select.has(item.value) || false}
           onChange={newv => {
-            if (!select || item == this.header)
+            if (!select)
               return;
+
+            if (item == this.header) {
+              const values = this.ref.current.getModel().getValues();
+              const clear = values.length == select.size;
+              if (clear) {
+                select.clear();
+              } else {
+                for (const item of values)
+                  select.add(item.value);
+              }
+
+              this.setState({});
+              return;
+            }
 
             if (newv)
               select.add(item.value);
