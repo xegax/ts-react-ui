@@ -9,6 +9,11 @@ interface GetValuesArgs {
   filters: Array<FilterHolder>;
 }
 
+interface FilterArgs {
+  filter: string;
+  filters: Array<FilterHolder>;
+}
+
 interface GetRangeArgs {
   filters: Array<FilterHolder>;
 }
@@ -27,7 +32,7 @@ export interface ColItem {
   getNumRange?(args: GetRangeArgs): Promise<{ minMax: Array<number> }>;
   getValues?(args: GetValuesArgs): Promise<{ total: number; values: Array<Value> }>;
   setSort?(type: SortType): Promise<void>;
-  setFilter?(filter: string): Promise<{ total: number }>;
+  setFilter?(args: FilterArgs): Promise<{ total: number }>;
 }
 
 export interface FilterHolder {

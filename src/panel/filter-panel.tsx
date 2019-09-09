@@ -339,6 +339,7 @@ export class FilterPanelView extends React.Component<Props> {
     const select = new Set(cat.values);
 
     const filters = m.getFiltersArr(tgt, cat);
+    let filterText: string;
     c.getValues({ from: 0, count: 50, filters })
     .then(res => {
       return selectCategoryRemote({
@@ -354,10 +355,17 @@ export class FilterPanelView extends React.Component<Props> {
         onToggleReverse: reverse => {
           cat.sortReverse = reverse;
         },
-        filterValues: (f: string) => c.setFilter(f).then(r => ({ totalValues: r.total })),
+        filterValues: (f: string) => {
+          filterText = f;
+          return c.setFilter({ filter: f, filters }).then(r => ({ totalValues: r.total }))
+        },
         loadValues: (from, count) => {
+          let farr = filters.slice();
+          if (filterText)
+            farr = [ ...filters, { column: c, filter: { filterText } } ];
+
           return (
-            c.getValues({ from, count, filters })
+            c.getValues({ from, count, filters: farr })
             .then(arr => {
               return arr.values.map(v => {
                 return {
