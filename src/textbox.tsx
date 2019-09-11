@@ -12,6 +12,7 @@ export interface Props {
   width?: number | string;
   className?: string;
   style?: React.CSSProperties;
+  fitToFlex?: boolean;
 }
 
 interface State {
@@ -78,7 +79,7 @@ export class Textbox extends React.PureComponent<Props, Partial<State>> {
   }
 
   render() {
-    const { value, ...props } = this.props;
+    const { value, fitToFlex, ...props } = this.props;
     let width = this.props.width || 0;
     let height = null;
     if (this.state.width != null || this.state.height != null) {
@@ -89,7 +90,14 @@ export class Textbox extends React.PureComponent<Props, Partial<State>> {
     const { fontSize, ...style } = this.props.style || {} as React.CSSProperties;
 
     return (
-      <div style={{display: 'inline-block', position: 'relative', fontSize}}>
+      <div
+        style={{
+          display: fitToFlex ? 'flex' : 'inline-block',
+          flexGrow: fitToFlex ? 1 : undefined,
+          position: 'relative',
+          fontSize
+        }}
+      >
         {this.props.resizeable &&
           <div
             ref={this.text}

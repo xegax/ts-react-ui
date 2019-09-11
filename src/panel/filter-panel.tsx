@@ -40,6 +40,22 @@ interface FilterItem extends Item {
   filter: FilterData;
 }
 
+function isFilterEmpty(f: FilterData) {
+  const cat = getCatFilter(f);
+  if (cat)
+    return !cat.values.length;
+
+  const text = getTextFilter(f);
+  if (text)
+    return !text.filterText;
+
+  const range = getRangeFilter(f);
+  if (range)
+    return range.range[0] == null && range.range[1] == null;
+
+  throw 'unknown filter';
+}
+
 export class FilterPanel extends Publisher<FilterEventType> implements FilterModel {
   private columns = Array<ColItem>();
   private include = Array<FilterHolder>();
@@ -184,7 +200,8 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
       added++;
     }
 
-    for (let value of c.values) {
+    for (let n = c.values.length - 1; n >= 0; n--) {
+      const value = c.values[n];
       if (args.values.has(value))
         continue;
 
@@ -228,7 +245,7 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
     this.notify();
   }
 
-  removeFilter(tgt: FilterTgt, f: FilterData) {
+  deleteFilter(tgt: FilterTgt, f: FilterData) {
     const arr = tgt == 'include' ? this.include : this.exclude;
     const i = arr.findIndex(fd => fd.filter == f);
     if (i != -1) {
@@ -237,18 +254,15 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
     }
   }
 
-  cloneFilter(tgt: FilterTgt, f: FilterData) {
+  duplicateFilter(tgt: FilterTgt, f: FilterData) {
+    let newf: FilterData;
     if (getCatFilter(f))
-      return;
-
-    let tf: TextFilter;
-    let rf: RangeFilter;
-    if (getTextFilter(f))
-      tf = { filterText: '' };
+      newf = { ...f, values: [] } as CatFilter;
+    else if (getTextFilter(f))
+      newf = { ...f, filterText: '' } as TextFilter;
     else if (getRangeFilter(f))
-      rf = { range: [] };
+      newf = { range: [] } as RangeFilter;
 
-    let newf = tf || rf;
     if (!newf)
       return;
 
@@ -267,7 +281,8 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
     if (!h)
       return console.error('filter not found');
     
-    if (h.order == null) {
+    const empty = isFilterEmpty(f);
+    if (h.order == null && !empty) {
       let maxOrder = 0;
       for (let _f of arr) {
         if (_f.order == null && _f != h) {
@@ -275,8 +290,8 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
           continue;
         }
 
-        if (h.order != null)
-          maxOrder = Math.max(h.order, maxOrder);
+        if (_f.order != null)
+          maxOrder = Math.max(_f.order, maxOrder);
       }
       h.order = maxOrder + 1;
     } else {  // filter reset
@@ -313,6 +328,16 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
     } else if (text) {
       text.filterText = '';
     }
+  }
+
+  changeFilterTo<T extends FilterData>(tgt: FilterTgt, f: FilterData, to: T) {
+    for (let k of Object.keys(f))
+      delete f[k];
+
+    for (let k of Object.keys(to))
+      f[k] = to[k];
+
+    this.onFilterModified(tgt, f);
   }
 }
 
@@ -407,12 +432,18 @@ export class FilterPanelView extends React.Component<Props> {
         <PopoverIcon icon='fa fa-square-o'>
             <Menu>
               <MenuItem
-                text='clone'
-                onClick={() => m.cloneFilter(tgt, f)}
+                text='Duplicate'
+                onClick={() => m.duplicateFilter(tgt, f)}
               />
               <MenuItem
-                text='remove'
-                onClick={() => this.props.model.removeFilter(tgt, f)}
+                text='Change to category filter'
+                onClick={() => {
+                  m.changeFilterTo(tgt, f, { values: [] } as CatFilter);
+                }}
+              />
+              <MenuItem
+                text='Delete filter'
+                onClick={() => m.deleteFilter(tgt, f)}
               />
             </Menu>
           </PopoverIcon>
@@ -456,18 +487,19 @@ export class FilterPanelView extends React.Component<Props> {
     if (range[1] == null)
       range[1] = minMax[1];
 
+    const enabled = f.minMax != null && f.minMax != minMaxHolder && minMax[0] != minMax[1];
     return (
       <div className='horz-panel-1'>
         <div className='horz-panel-1' style={{ display: 'flex' }}>
         <PopoverIcon icon='fa fa-square-o'>
             <Menu>
               <MenuItem
-                text='clone'
-                onClick={() => m.cloneFilter(tgt, f)}
+                text='Duplicate'
+                onClick={() => m.duplicateFilter(tgt, f)}
               />
               <MenuItem
-                text='remove'
-                onClick={() => this.props.model.removeFilter(tgt, f)}
+                text='Delete filter'
+                onClick={() => this.props.model.deleteFilter(tgt, f)}
               />
             </Menu>
           </PopoverIcon>
@@ -477,8 +509,9 @@ export class FilterPanelView extends React.Component<Props> {
         </div>
         <div className='flexrow horz-panel-1' style={{ height: 15 }}>
           <Textbox
-            width='5em'
-            style={{ flexGrow: 0, textAlign: 'center', fontSize: '70%' }}
+            disabled={!enabled}
+            fitToFlex
+            style={{ flexGrow: 1, textAlign: 'center', fontSize: '70%', border: '1px solid lightgray' }}
             value={'' + (f.minMax && f.rangeFull ? f.rangeFull[0] : '')}
             onEnter={v => {
               let newv = +v;
@@ -498,9 +531,35 @@ export class FilterPanelView extends React.Component<Props> {
               m.onFilterModified(tgt, f);
             }}
           />
+          <span>-</span>
+          <Textbox
+            disabled={!enabled}
+            fitToFlex
+            style={{ flexGrow: 1, textAlign: 'center', fontSize: '70%', border: '1px solid lightgray' }}
+            value={'' + (f.minMax && f.rangeFull ? f.rangeFull[1] : '')}
+            onEnter={v => {
+              let newv = +v;
+              if (Number.isNaN(newv))
+                return;
+
+              newv = clamp(newv, f.minMax);
+              f.rangeFull[1] = newv;
+
+              if (newv == f.minMax[1])
+                newv = undefined;
+
+              if (newv == f.range[1])
+                return;
+
+              f.range[1] = newv;
+              m.onFilterModified(tgt, f);
+            }}
+          />
+        </div>
+        <div className='flexrow horz-panel-1' style={{ height: 15 }}>
           <RangeSlider
             round={c.type == 'integer'}
-            enabled={f.minMax != null && f.minMax != minMaxHolder && minMax[0] != minMax[1]}
+            enabled={enabled}
             wrapToFlex
             range={range}
             min={minMax[0]}
@@ -524,48 +583,39 @@ export class FilterPanelView extends React.Component<Props> {
               m.onFilterModified(tgt, f);
             }}
           />
-          <Textbox
-            width='5em'
-            style={{ flexGrow: 0, textAlign: 'center', fontSize: '70%' }}
-            value={'' + (f.minMax && f.rangeFull ? f.rangeFull[1] : '')}
-            onEnter={v => {
-              let newv = +v;
-              if (Number.isNaN(newv))
-                return;
-
-              newv = clamp(newv, f.minMax);
-              f.rangeFull[1] = newv;
-
-              if (newv == f.minMax[1])
-                newv = undefined;
-
-              if (newv == f.range[1])
-                return;
-
-              f.range[1] = newv;
-              m.onFilterModified(tgt, f);
-            }}
-          />
         </div>
       </div>
     );
   }
 
   renderCatFilter(tgt: FilterTgt, col: string, f: CatFilter) {
-    const c = this.props.model.getColumn(col);
+    const m = this.props.model;
+    const c = m.getColumn(col);
     return (
       <div className='horz-panel-1'>
         <div className='horz-panel-1' style={{ display: 'flex' }}>
           <PopoverIcon icon='fa fa-square-o'>
             <Menu>
               <MenuItem
-                text='select'
+                text='Select'
                 disabled={!c || !c.getValues}
                 onClick={() => this.selectValues(col, tgt)}
               />
               <MenuItem
-                text='remove'
-                onClick={() => this.props.model.removeFilter(tgt, f)}
+                text='Clear selection'
+                onClick={() => {
+                  m.updateCatValues({ col, tgt, values: new Set() });
+                }}
+              />
+              <MenuItem
+                text='Change to text filter'
+                onClick={() => {
+                  m.changeFilterTo(tgt, f, { filterText: '' });
+                }}
+              />
+              <MenuItem
+                text='Delete filter'
+                onClick={() => m.deleteFilter(tgt, f)}
               />
             </Menu>
           </PopoverIcon>

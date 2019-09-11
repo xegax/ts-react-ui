@@ -175,7 +175,7 @@ export class SelectCategory extends React.Component<Props, State> {
             this.setState({});
           }}
         />
-        <div className={cn('flexrow', 'flexgrow1')}>
+        <div className={cn('flexrow', 'flexgrow1')} style={{ width: 0 }}>
           {v}
         </div>
       </div>

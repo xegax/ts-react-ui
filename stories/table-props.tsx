@@ -21,8 +21,8 @@ function makeCatColumn(name: string, total: number): ColItem {
         values: (filtered || values).slice(args.from, args.from + args.count)
       });
     },
-    setFilter: (f: string) => {
-      filtered = f ? values.filter(v => v.value.indexOf(f) != -1) : null;
+    setFilter: args => {
+      filtered = args.filter ? values.filter(v => v.value.indexOf(args.filter) != -1) : null;
       return Promise.resolve({ total: (filtered || values).length });
     },
     setSort: () => {
