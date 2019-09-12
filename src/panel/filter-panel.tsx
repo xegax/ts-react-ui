@@ -455,8 +455,7 @@ export class FilterPanelView extends React.Component<Props> {
           <InputGroup
             icon={IconNames.SEARCH}
             className='flexgrow1 inputborder'
-            defaultValue={f.filterText}
-            key={f.filterText}
+            value={f.filterText}
             onEnter={text => {
               f.filterText = text;
               m.onFilterModified(tgt, f);

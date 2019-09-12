@@ -8,19 +8,28 @@ interface Props {
   placeholder?: string;
   right?: JSX.Element;
   onEnter?(text: string): void;
-  defaultValue?: string;
+  value?: string;
   className?: string;
 }
 
 interface State {
   value?: string;
+  propsValue?: string;
 }
 
 export class InputGroup extends React.Component<Props> {
   state: State = { value: '' };
 
   componentDidMount() {
-    this.setState({ value: this.props.defaultValue });
+    this.setState({
+      value: this.props.value,
+      propsValue: this.props.value
+    });
+  }
+
+  static getDerivedStateFromProps(next: Props, state: State): State | undefined {
+    if (next.value != state.propsValue)
+      return { value: next.value, propsValue: next.value };
   }
 
   render() {
