@@ -35,6 +35,10 @@ import { Textbox } from '../textbox';
 
 const minMaxHolder = [];
 
+function FuncRenderer(p: { cb: () => JSX.Element }): JSX.Element {
+  return p.cb();
+}
+
 interface FilterItem extends Item {
   tgt: FilterTgt;
   filter: FilterData;
@@ -426,6 +430,7 @@ export class FilterPanelView extends React.Component<Props> {
 
   renderTextFilter(tgt: FilterTgt, col: string, f: TextFilter) {
     const m = this.props.model;
+    const c = m.getColumn(col);
     return (
       <div className='horz-panel-1'>
         <div className='horz-panel-1' style={{ display: 'flex' }}>
@@ -435,11 +440,8 @@ export class FilterPanelView extends React.Component<Props> {
                 text='Duplicate'
                 onClick={() => m.duplicateFilter(tgt, f)}
               />
-              <MenuItem
-                text='Change to category filter'
-                onClick={() => {
-                  m.changeFilterTo(tgt, f, { values: [] } as CatFilter);
-                }}
+              <FuncRenderer
+                cb={() => this.renderChangeMenu(tgt, c, f)}
               />
               <MenuItem
                 text='Delete filter'
@@ -496,6 +498,7 @@ export class FilterPanelView extends React.Component<Props> {
                 text='Duplicate'
                 onClick={() => m.duplicateFilter(tgt, f)}
               />
+              <FuncRenderer cb={() => this.renderChangeMenu(tgt, c, f)}/>
               <MenuItem
                 text='Delete filter'
                 onClick={() => this.props.model.deleteFilter(tgt, f)}
@@ -557,7 +560,7 @@ export class FilterPanelView extends React.Component<Props> {
         </div>
         <div className='flexrow horz-panel-1' style={{ height: 15 }}>
           <RangeSlider
-            round={c.type == 'integer'}
+            precision={c.type == 'integer' ? 0 : 2}
             enabled={enabled}
             wrapToFlex
             range={range}
@@ -569,8 +572,6 @@ export class FilterPanelView extends React.Component<Props> {
               this.setState({});
             }}
             onChanged={(min, max) => {
-              this.setState({ range: undefined });
-
               f.rangeFull = [min, max];
               if (min == f.minMax[0])
                 min = undefined;
@@ -580,10 +581,58 @@ export class FilterPanelView extends React.Component<Props> {
 
               f.range = [min, max];
               m.onFilterModified(tgt, f);
+              this.setState({ range: undefined });
             }}
           />
         </div>
       </div>
+    );
+  }
+
+  renderChangeMenu(tgt: FilterTgt, c: ColItem, f: FilterData) {
+    let cat: JSX.Element;
+    
+    if (!getCatFilter(f)) {
+      cat = (
+        <MenuItem
+          text='Category filter'
+          onClick={() => {
+            this.props.model.changeFilterTo(tgt, f, { values: [] as Array<string> });
+          }}
+        />
+      );
+    }
+
+    let text: JSX.Element;
+    if ((c.type == 'text' || c.type == 'varchar') && !getTextFilter(f)) {
+      text = (
+        <MenuItem
+          text='Text filter'
+          onClick={() => {
+            this.props.model.changeFilterTo(tgt, f, { filterText: '' });
+          }}
+        />
+      );
+    }
+
+    let range: JSX.Element;
+    if ((c.type == 'integer' || c.type == 'real') && !getRangeFilter(f)) {
+      range = (
+        <MenuItem
+          text='Range filter'
+          onClick={() => {
+            this.props.model.changeFilterTo(tgt, f, { range: [] });
+          }}
+        />
+      );
+    }
+
+    return (
+      <MenuItem text='Change to'>
+        {cat}
+        {text}
+        {range}
+      </MenuItem>
     );
   }
 
@@ -594,29 +643,24 @@ export class FilterPanelView extends React.Component<Props> {
       <div className='horz-panel-1'>
         <div className='horz-panel-1' style={{ display: 'flex' }}>
           <PopoverIcon icon='fa fa-square-o'>
-            <Menu>
-              <MenuItem
-                text='Select'
-                disabled={!c || !c.getValues}
-                onClick={() => this.selectValues(col, tgt)}
-              />
-              <MenuItem
-                text='Clear selection'
-                onClick={() => {
-                  m.updateCatValues({ col, tgt, values: new Set() });
-                }}
-              />
-              <MenuItem
-                text='Change to text filter'
-                onClick={() => {
-                  m.changeFilterTo(tgt, f, { filterText: '' });
-                }}
-              />
-              <MenuItem
-                text='Delete filter'
-                onClick={() => m.deleteFilter(tgt, f)}
-              />
-            </Menu>
+              <Menu>
+                <MenuItem
+                  text='Select'
+                  disabled={!c || !c.getValues}
+                  onClick={() => this.selectValues(col, tgt)}
+                />
+                <MenuItem
+                  text='Clear selection'
+                  onClick={() => {
+                    m.updateCatValues({ col, tgt, values: new Set() });
+                  }}
+                />
+                <FuncRenderer cb={() => this.renderChangeMenu(tgt, c, f)}/>
+                <MenuItem
+                  text='Delete filter'
+                  onClick={() => m.deleteFilter(tgt, f)}
+                />
+              </Menu>
           </PopoverIcon>
           <div style={{ flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {this.renderCol(col)}

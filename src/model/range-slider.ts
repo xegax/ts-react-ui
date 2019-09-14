@@ -48,7 +48,7 @@ export class RangeSliderModel extends Publisher<EventType> {
 
   protected value(val: number): number {
     if (this.round)
-      return Math.round(val);
+      return Math.floor(val);
 
     return val;
   }

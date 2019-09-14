@@ -3,7 +3,6 @@ import { RangeSliderModel, Range } from './model/range-slider';
 import { startDragging } from './common/start-dragging';
 import { className as cn, clamp } from './common/common';
 import { FitToParent } from './fittoparent';
-import { Tooltip } from '@blueprintjs/core';
 import './_range-slider.scss';
 
 export {
@@ -29,7 +28,7 @@ export interface Props {
   extraClass?: string,
   width?: number;
   height?: number;
-  round?: boolean;
+  precision?: number;
   enabled?: boolean;
 
   min?: number;
@@ -49,9 +48,15 @@ interface State {
   range?: Range;
   model?: RangeSliderModel;
   value?: number;
+  precision?: number;
+  precisionFactor?: number;
 }
 
 export class RangeSliderImpl extends React.Component<Props, State> {
+  static defaultProps: Props = {
+    precision: 2
+  };
+
   private ref = React.createRef<HTMLDivElement>();
 
   constructor(props: Props) {
@@ -82,28 +87,43 @@ export class RangeSliderImpl extends React.Component<Props, State> {
   }
 
   static getDerivedStateFromProps(props: Props, state: State) {
+    let news: State = {};
     if (props.range != null)
       state.model.setRange({from: props.range[0], to: props.range[1]});
 
     if (props.min != null || props.max != null)
       state.model.setMinMax({from: props.min, to: props.max});
 
-    if (props.round != null)
-      state.model.setRound(props.round);
-
     if (props.height != null) {
       state.model.setSliderSize(props.height);
     }
 
-    return null;
+    if (props.precision != state.precision) {
+      news.precision = props.precision;
+      news.precisionFactor = Math.pow(10, news.precision);
+    }
+
+    return news;
+  }
+
+  protected value(v: number) {
+    const f = this.state.precisionFactor;
+    return Math.floor(v * f) / f;
   }
 
   protected onChanged() {
-    this.props.onChanged && this.props.onChanged(this.state.range.from, this.state.range.to);
+    this.props.onChanged && this.props.onChanged(
+      this.value(this.state.range.from),
+      this.value(this.state.range.to)
+    );
   }
 
   protected onChanging = () => {
-    this.props.onChanging && this.props.onChanging(this.state.range.from, this.state.range.to, this.state.active);
+    this.props.onChanging && this.props.onChanging(
+      this.value(this.state.range.from),
+      this.value(this.state.range.to),
+      this.state.active
+    );
   }
 
   protected onMouseDown = (evt: React.MouseEvent, key: keyof Range) => {
@@ -132,7 +152,7 @@ export class RangeSliderImpl extends React.Component<Props, State> {
         this.onChanged();
         model.setRange( this.state.range );
         this.setState({ active: null, range: null });
-        model.delayedNotify({type: 'changed'});
+        model.notify('changed');
       }
     })(evt.nativeEvent);
   }
@@ -199,7 +219,7 @@ export class RangeSliderImpl extends React.Component<Props, State> {
     const { width, height, className, extraClass, style, enabled } = this.props;
     const { active, range } = this.state;
     const ssize = height;
-    const value = this.props.value != null ? this.props.value : this.state.value;
+    const value = this.state.value != null ? this.state.value : this.props.value;
     const rrange = model.getRangeForRender(width, range);
     const pos = model.getPositionForRender(width, value);
     return (
