@@ -7,3 +7,7 @@ export function render<T>(el: ElementType<T>, args?: T): React.ReactNode {
     return args ? el(args) : el();
   return el;
 }
+
+export function FuncRenderer(p: { f: () => JSX.Element }): JSX.Element {
+  return p.f();
+}

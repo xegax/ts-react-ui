@@ -72,7 +72,7 @@ class Control extends React.Component {
         <div className='horz-panel-1'>
           <DropDownLoadable
             width={200}
-            totalValues={() => data1.getTotal()}
+            totalValues={data1.getTotal()}
             onLoadNext={(from, count) => data1.loadNext(from, count)}
             onFilter={filter => data1.setFilter(filter)}
             value={this.select}

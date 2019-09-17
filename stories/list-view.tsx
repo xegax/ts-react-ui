@@ -78,7 +78,7 @@ class Dummy extends React.Component<{}, State> {
             values={null}
             // key={this.state.viewType}
             ref={this.ref}
-            totalValues={() => 500}
+            totalValues={500}
             onSelect={() => {}}
             onLoadNext={(from, count) => {
               return Promise.resolve( Array(count).fill(null).map((v, idx) => this.makeItem(from + idx)) );

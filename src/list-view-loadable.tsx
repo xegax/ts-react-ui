@@ -1,19 +1,34 @@
 import * as React from 'react';
 import { Item, ListViewModel, ListView, IListView, ListProps as ListPropsBase } from './list-view';
+import { Progress } from './progress';
 
 export { ListPropsBase, Item };
 
 export class ListViewLoadableModel extends ListViewModel {
   protected loading: Promise<void>;
   protected reverse: boolean = false;
-  protected itemsPerLoad: number;
+  protected itemsPerLoad: number = 0;
+  protected totalValues: number | Promise<number> = 0;
 
   onLoadNext: OnLoadNextCallback = () => {
     throw 'onLoadNext not defined';
   };
 
-  getTotalValues = (): number => {
-    throw 'getTotalValues not defined';
+  setTotalValues(totalValues: number | Promise<number>) {
+    if (totalValues == this.totalValues)
+      return;
+
+    if (totalValues instanceof Promise) {
+      totalValues.then(num => {
+        this.totalValues = num;
+        this.loadNext();
+      }).finally(() => {
+        this.delayedNotify();
+      });
+    }
+
+    this.totalValues = totalValues;
+    this.delayedNotify();
   }
 
   setItemsPerLoad(itemsPerLoad: number) {
@@ -29,7 +44,7 @@ export class ListViewLoadableModel extends ListViewModel {
 
   appendValues(values: Array<Item>) {
     this.values.push(...values);
-    let focus = this.focus;
+    const focus = this.focus;
     this.setValues(this.values, true);
     this.focus = focus;
   }
@@ -39,7 +54,10 @@ export class ListViewLoadableModel extends ListViewModel {
   }
 
   loadNext() {
-    const totalValues = this.getTotalValues();
+    if (this.totalValues == 0 || this.totalValues instanceof Promise)
+      return false;
+
+    const totalValues = this.totalValues;
     const gcount = this.getCount();
     if (this.loading || gcount >= totalValues)
       return false;
@@ -55,13 +73,19 @@ export class ListViewLoadableModel extends ListViewModel {
     .then(values => {
       this.loading = null;
       this.appendValues(this.reverse ? values.reverse() : values);
+      this.delayedNotify();
     })
     .catch(() => {
       this.loading = null;
-      this.notify();
+      this.delayedNotify();
     });
+    this.delayedNotify();
 
     return true;
+  }
+
+  isLoading(): boolean {
+    return this.loading != null || this.totalValues instanceof Promise;
   }
 
   reload() {
@@ -75,7 +99,7 @@ export interface LoadProps {
   reverse?: boolean;
   model?: ListViewLoadableModel;
   itemsPerLoad?: number;
-  totalValues(): number;
+  totalValues?: number | Promise<number>;
   onLoadNext: OnLoadNextCallback;
 }
 
@@ -83,7 +107,6 @@ export type ListProps = ListPropsBase & LoadProps;
 
 interface State {
   model?: ListViewLoadableModel;
-  loading?: Promise<void>;
 }
 
 export class ListViewLoadable extends React.Component<ListProps, State> implements IListView {
@@ -108,11 +131,25 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
     }
   }
 
+  componentDidMount() {
+    this.state.model.subscribe(this.subscriber);
+  }
+
+  componentWillUnmount() {
+    this.state.model.unsubscribe(this.subscriber);
+  }
+
+  private subscriber = () => {
+    this.setState({});
+  };
+
   static getDerivedStateFromProps(p: ListProps, s: State) {
     s.model.onLoadNext = p.onLoadNext;
-    s.model.getTotalValues = p.totalValues;
+    s.model.setTotalValues(p.totalValues);
     s.model.setItemsPerLoad(p.itemsPerLoad);
     s.model.setReverse(p.reverse);
+
+    return null;
   }
 
   onScroll(e: React.UIEvent) {
@@ -135,22 +172,25 @@ export class ListViewLoadable extends React.Component<ListProps, State> implemen
     this.ref.current.scrollToSelect();
   }
 
-  getModel(): ListViewLoadableModel {
-    return this.state.model;
-  }
-
   reload() {
     this.state.model.reload();
+  }
+
+  getModel() {
+    return this.state.model;
   }
 
   render() {
     const props = { ...this.props, model: this.state.model };
     return (
-      <ListView
-        ref={this.ref}
-        {...props}
-        onScroll={e => this.onScroll(e)}
-      />
+      <div style={{ position: 'relative' }}>
+        {this.state.model.isLoading() ? <Progress className='abs'/> : null}
+        <ListView
+          ref={this.ref}
+          {...props}
+          onScroll={e => this.onScroll(e)}
+        />
+      </div>
     );
   }
 }

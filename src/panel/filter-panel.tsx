@@ -28,16 +28,12 @@ import {
 import { InputGroup } from '../input-group';
 import { IconNames } from '@blueprintjs/icons';
 import { RangeSlider } from '../range-slider';
-import { render } from '../react-common';
+import { FuncRenderer, render } from '../react-common';
 import { Menu, MenuItem } from '@blueprintjs/core';
 import { clone, clamp } from '../common/common';
 import { Textbox } from '../textbox';
 
 const minMaxHolder = [];
-
-function FuncRenderer(p: { cb: () => JSX.Element }): JSX.Element {
-  return p.cb();
-}
 
 interface FilterItem extends Item {
   tgt: FilterTgt;
@@ -351,50 +347,49 @@ export interface Props {
 }
 
 export class FilterPanelView extends React.Component<Props> {
-  constructor(props) {
-    super(props);
-
-    this.props.model.subscribe(this.notify);
+  componentDidMount() {
+    this.props.model.subscribe(this.subscriber);
   }
 
-  notify = () => {
+  componentWillUnmount() {
+    this.props.model.unsubscribe(this.subscriber);
+  }
+
+  subscriber = () => {
     this.setState({});
   };
 
-  selectValues(col: string, tgt: FilterTgt) {
+  selectValues(tgt: FilterTgt, col: string, f: CatFilter) {
     const m = this.props.model;
     const c = m.getColumn(col);
-    const cat = m.getCatValues(tgt, col);
-    const select = new Set(cat.values);
+    const select = new Set(f.values);
 
-    const filters = m.getFiltersArr(tgt, cat);
+    const filters = m.getFiltersArr(tgt, f);
     let filterText: string;
-    c.getValues({ from: 0, count: 50, filters })
-    .then(res => {
-      return selectCategoryRemote({
-        sort: cat.sort,
-        sortReverse: cat.sortReverse,
-        title: `Select values from "${col}"`,
-        totalValues: res.total,
-        select,
-        sortValues: sort => {
-          cat.sort = sort;
-          return c.setSort(sort);
-        },
-        onToggleReverse: reverse => {
-          cat.sortReverse = reverse;
-        },
-        filterValues: (f: string) => {
-          filterText = f;
-          return c.setFilter({ filter: f, filters }).then(r => ({ totalValues: r.total }))
-        },
-        loadValues: (from, count) => {
-          let farr = filters.slice();
-          if (filterText)
-            farr = [ ...filters, { column: c, filter: { filterText } } ];
+    selectCategoryRemote({
+      sort: f.sort,
+      sortReverse: f.sortReverse,
+      title: `Select values from "${col}"`,
+      totalValues: c.getValues({ from: 0, count: 50, filters }).then(r => r.total),
+      select,
+      sortValues: sort => {
+        f.sort = sort;
+        return c.setSort(sort);
+      },
+      onToggleReverse: reverse => {
+        f.sortReverse = reverse;
+      },
+      filterValues: (f: string) => {
+        filterText = f;
+        return c.setFilter({ filter: f, filters }).then(r => ({ totalValues: r.total }))
+      },
+      loadValues: (from, count) => {
+        let farr = filters.slice();
+        if (filterText)
+          farr = [...filters, { column: c, filter: { filterText } }];
 
-          return (
-            c.getValues({ from, count, filters: farr })
+        return (
+          c.getValues({ from, count, filters: farr })
             .then(arr => {
               return arr.values.map(v => {
                 return {
@@ -412,9 +407,8 @@ export class FilterPanelView extends React.Component<Props> {
                 };
               });
             })
-          );
-        }
-      })
+        );
+      }
     }).then(values => {
       m.updateCatValues({ col, tgt, values });
     });
@@ -441,7 +435,7 @@ export class FilterPanelView extends React.Component<Props> {
                 onClick={() => m.duplicateFilter(tgt, f)}
               />
               <FuncRenderer
-                cb={() => this.renderChangeMenu(tgt, c, f)}
+                f={() => this.renderChangeMenu(tgt, c, f)}
               />
               <MenuItem
                 text='Delete filter'
@@ -498,7 +492,7 @@ export class FilterPanelView extends React.Component<Props> {
                 text='Duplicate'
                 onClick={() => m.duplicateFilter(tgt, f)}
               />
-              <FuncRenderer cb={() => this.renderChangeMenu(tgt, c, f)}/>
+              <FuncRenderer f={() => this.renderChangeMenu(tgt, c, f)}/>
               <MenuItem
                 text='Delete filter'
                 onClick={() => this.props.model.deleteFilter(tgt, f)}
@@ -647,7 +641,7 @@ export class FilterPanelView extends React.Component<Props> {
                 <MenuItem
                   text='Select'
                   disabled={!c || !c.getValues}
-                  onClick={() => this.selectValues(col, tgt)}
+                  onClick={() => this.selectValues(tgt, col, f)}
                 />
                 <MenuItem
                   text='Clear selection'
@@ -655,7 +649,7 @@ export class FilterPanelView extends React.Component<Props> {
                     m.updateCatValues({ col, tgt, values: new Set() });
                   }}
                 />
-                <FuncRenderer cb={() => this.renderChangeMenu(tgt, c, f)}/>
+                <FuncRenderer f={() => this.renderChangeMenu(tgt, c, f)}/>
                 <MenuItem
                   text='Delete filter'
                   onClick={() => m.deleteFilter(tgt, f)}
@@ -667,7 +661,7 @@ export class FilterPanelView extends React.Component<Props> {
           </div>
         </div>
         <Tags
-          onClick={!c || !c.getValues ? undefined : () => this.selectValues(col, tgt)}
+          onClick={!c || !c.getValues ? undefined : () => this.selectValues(tgt, col, f)}
           values={Array.from(f.values).map(c => ({ value: c }))}
           onRemove={tag => {
             this.props.model.removeCatValue({

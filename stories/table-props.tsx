@@ -16,10 +16,12 @@ function makeCatColumn(name: string, total: number): ColItem {
     type: 'varchar',
     getValues: args => {
       console.log('getValues', args.filters);
-      return Promise.resolve({
+      return (
+        Promise.delay(2000) as any as Promise<void>
+      ).then(() => Promise.resolve({
         total: values.length,
         values: (filtered || values).slice(args.from, args.from + args.count)
-      });
+      }));
     },
     setFilter: args => {
       filtered = args.filter ? values.filter(v => v.value.indexOf(args.filter) != -1) : null;

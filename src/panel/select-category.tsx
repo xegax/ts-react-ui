@@ -17,7 +17,7 @@ interface ItemExt extends Item {
 
 export interface SelectCatsRemoteArgs {
   select?: Set<string>;
-  totalValues: number;
+  totalValues: number | Promise<number>;
   
   sort?: SortType;
   sortReverse?: boolean;
@@ -40,7 +40,7 @@ interface Props extends SelectCatsRemoteArgs {
 
 interface State {
   filter?: string;
-  totalValues?: number;
+  totalValues?: number | Promise<number>;
   reverse?: boolean;
   sort?: SortType; 
 }
@@ -59,14 +59,19 @@ export class SelectCategory extends React.Component<Props, State> {
       render: this.renderItem
     };
 
-    this.state = {
+    const state = {
       sort: props.sort,
-      reverse: props.sortReverse
+      reverse: props.sortReverse,
+      totalValues: props.totalValues
     }
-  }
 
-  componentDidMount() {
-    this.setState({ totalValues: this.props.totalValues });
+    if (props.totalValues instanceof Promise) {
+      props.totalValues.then(totalValues => {
+        this.setState({ totalValues });
+      });
+    }
+
+    this.state = state;
   }
 
   renderHeader = (item: ItemExt): JSX.Element => {
@@ -125,21 +130,30 @@ export class SelectCategory extends React.Component<Props, State> {
     );
   }
 
+  getTotalValues() {
+    if (this.state.totalValues instanceof Promise)
+      return <i className='fa fa-spinner fa-spin'/>;
+
+    return this.state.totalValues;
+  }
+
   renderFilter() {
     if (!this.props.filterValues)
       return null;
 
     return (
-      <InputGroup
-        icon={IconNames.SEARCH}
-        right={<Tag minimal>{this.state.totalValues}</Tag>}
-        onEnter={filter => {
-          this.props.filterValues(filter)
-          .then(r => {
-            this.setState({ filter, totalValues: r.totalValues })
-          });
-        }}
-      />
+      <div>
+        <InputGroup
+          icon={IconNames.SEARCH}
+          right={<Tag minimal>{this.getTotalValues()}</Tag>}
+          onEnter={filter => {
+            this.props.filterValues(filter)
+            .then(r => {
+              this.setState({ filter, totalValues: r.totalValues })
+            });
+          }}
+        />
+      </div>
     );
   }
 
@@ -200,13 +214,9 @@ export class SelectCategory extends React.Component<Props, State> {
   }
 
   render() {
-    const args = this.props;
-
     return (
       <div className='vert-panel-1 padding' style={{height: 400, display: 'flex', flexDirection: 'column' }}>
-        <div>
-          {this.renderFilter()}
-        </div>
+        {this.renderFilter()}
         <FitToParent wrapToFlex>
           <ListViewLoadable
             reverse={this.state.reverse}
@@ -214,7 +224,7 @@ export class SelectCategory extends React.Component<Props, State> {
             header={this.header}
             key={this.state.filter}
             values={null}
-            totalValues={() => this.state.totalValues || args.totalValues}
+            totalValues={this.state.totalValues}
             onLoadNext={this.onLoadNext}
           />
         </FitToParent>

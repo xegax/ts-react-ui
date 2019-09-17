@@ -1,0 +1,32 @@
+.progress-ctrl {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  &.abs {
+    position: absolute;
+  }
+  > .bar {
+    position: absolute;
+    height: inherit;
+    background-color: green;
+    opacity: 0.3;
+
+    &.anim {
+      @keyframes anim1 {
+        from {
+          right: 100%;
+          width: 80%;
+          opacity: 0.5;
+        }
+
+        to {
+          right: 0%;
+          width: 0%;
+          opacity: 0;
+        }
+      }
+
+      animation: anim1 1.5s linear infinite;
+    }
+  }
+}
