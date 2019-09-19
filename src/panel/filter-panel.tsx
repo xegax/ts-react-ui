@@ -703,7 +703,10 @@ export class FilterPanelView extends React.Component<Props> {
     const name = tgt == 'include' ? 'Include' : 'Exclude';
     const m = this.props.model;
     const values = m.getColumns().map(col => {
-      return { value: col.name };
+      return {
+        value: col.name,
+        render: col.label
+      };
     });
 
     return (

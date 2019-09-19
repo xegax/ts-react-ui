@@ -10,6 +10,7 @@ import { IconNames } from '@blueprintjs/icons';
 import { InputGroup } from '../input-group';
 import { CSSIcon } from '../cssicon';
 import { SortType } from './filter-panel-decl';
+import { render } from '../react-common';
 
 interface ItemExt extends Item {
   origRender: RenderType;
@@ -159,7 +160,7 @@ export class SelectCategory extends React.Component<Props, State> {
 
   renderItem = (item: ItemExt): JSX.Element => {
     const select = this.props.select;
-    const v = typeof item.origRender == 'function' ? item.origRender(item, null) : item.origRender || item.value;
+    const v = render(item.origRender, item) || item.value;
     return (
       <div className={cn(item.className, 'horz-panel-1', 'flexrow')}>
         <CheckBox

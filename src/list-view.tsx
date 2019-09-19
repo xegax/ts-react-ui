@@ -6,6 +6,7 @@ import { startDragging } from './common/start-dragging';
 import { findParentByFunc } from './common/dom';
 import { Timer } from 'objio/common/timer';
 import { FitToParent } from './fittoparent';
+import { ElementType } from './react-common';
 
 const DEFAULT_CARD_WIDTH = 200;
 const DEFAULT_CARD_HEIGHT = 300;
@@ -26,7 +27,7 @@ const classes = {
   dropInto: 'drop-into'
 };
 
-export type RenderType = string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
+export type RenderType = string | ElementType<Item>;
 export interface Item {
   value: string;
   title?: string;
@@ -381,13 +382,13 @@ export class ListView extends React.Component<ListProps, State> implements IList
     if (!item || this.props.cards)
       return null;
 
-    let jsx: JSX.Element | string;
+    let jsx: React.ReactChild | string;
     if (typeof item.render != 'function')
       jsx = item.render || item.value || '';
     else
-      jsx = item.render(item, <>{item.value}</>);
+      jsx = item.render(item);
 
-    if (typeof jsx != 'string' && this.props.cards) {
+    if (typeof jsx == 'object' && this.props.cards) {
       jsx = React.cloneElement(jsx, { style: {...jsx.props.style, position: 'absolute', left: 0, top: 0, right: 0, bottom: 0} });
     } else if (typeof jsx == 'string' && jsx.trim() == '') {
       jsx = <span style={{visibility: 'hidden'}}>?</span>;
@@ -412,13 +413,13 @@ export class ListView extends React.Component<ListProps, State> implements IList
   }
 
   renderItem(item: Item, idx: number, select: boolean) {
-    let jsx: JSX.Element | string;
+    let jsx: React.ReactChild | string;
     if (typeof item.render != 'function')
       jsx = item.render || item.value || '';
     else
-      jsx = item.render(item, <>{item.value}</>);
+      jsx = item.render(item);
 
-    if (typeof jsx != 'string' && this.props.cards) {
+    if (typeof jsx == 'object' && this.props.cards) {
       jsx = React.cloneElement(jsx, { style: {...jsx.props.style, position: 'absolute', left: 0, top: 0, right: 0, bottom: 0} });
     } else if (typeof jsx == 'string' && jsx.trim() == '') {
       jsx = <span style={{visibility: 'hidden'}}>?</span>;

@@ -1,8 +1,8 @@
 import * as React from 'react';
 
-export type ElementType<T = any> = React.ReactNode | ((args?: T) => React.ReactNode);
+export type ElementType<T = any> = React.ReactChild | ((args?: T) => React.ReactChild);
 
-export function render<T>(el: ElementType<T>, args?: T): React.ReactNode {
+export function render<T>(el: ElementType<T>, args?: T): React.ReactChild {
   if (typeof el == 'function')
     return args ? el(args) : el();
   return el;

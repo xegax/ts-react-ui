@@ -4,9 +4,10 @@ import { ListView, ListViewModel, ListProps } from './list-view';
 import { className as cn } from './common/common';
 import { KeyCode } from './common/keycode';
 import { Popover, Classes } from './popover';
+import { ElementType } from './react-common';
 
 export interface Item {
-  render?: string | JSX.Element | ((item: Item, jsx: JSX.Element) => JSX.Element);
+  render?: string | ElementType<Item>;
   value: string;
 }
 
@@ -103,14 +104,14 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
     return this.state.showList;
   }
 
-  renderItem(item: Item): JSX.Element | string {
+  renderItem(item: Item): React.ReactChild {
     if (!item.render)
       return item.value;
 
     if (typeof item.render != 'function')
       return item.render;
 
-    return item.render(item, <>{item.value}</>);
+    return item.render(item);
   }
 
   private filterTask: Promise<any>;
