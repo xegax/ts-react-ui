@@ -44,6 +44,7 @@ interface MoveToArgs {
   drag: Array<Item>;
   before?: Item;
   after?: Item;
+  newArr: Array<Item>;
 }
 
 export interface ListProps {
@@ -373,7 +374,7 @@ export class ListView extends React.Component<ListProps, State> implements IList
         onScroll={e => this.onScroll(e)}
       >
         {values.length == 0 && this.props.noDataToDisplay}
-        {values.map((item, idx) => this.renderItem(item, idx, sel && item.value == sel.value))}
+        {values.map((item, idx) => this.renderItem(item, idx, sel && item.value == sel.value || item == this.state.drag))}
       </div>
     );
   }
@@ -540,17 +541,35 @@ export class ListView extends React.Component<ListProps, State> implements IList
       },
       onDragEnd: () => {
         timer.stop();
-        if (!this.state.drop)
+        const { drop } = this.state;
+        const drag = item;
+
+        this.setState({ drop: null, drag: null });
+        if (!drop)
           return;
 
         if (this.props.onDragAndDropTo)
-          this.props.onDragAndDropTo({ drag: [ item ], drop: this.state.drop });
+          this.props.onDragAndDropTo({ drag: [ drag ], drop });
 
-        if (this.props.onMoveTo)
-          this.props.onMoveTo({ drag: [ item ], before: this.state.drop });
+        if (this.props.onMoveTo) {
+          const newArr = this.state.model.getValues().slice();
+          const dragIdx = newArr.indexOf(drag);
+          let beforeIdx = newArr.indexOf(drop);
+          if (dragIdx != -1 && beforeIdx != -1 && dragIdx + 1 != beforeIdx) {
+            newArr.splice(dragIdx, 1);
 
-        this.state.model.setFocus( this.state.model.getValues().findIndex(v => v == item) );
-        this.setState({ drop: null });
+            beforeIdx = newArr.indexOf(drop);
+            newArr.splice(beforeIdx, 1, drag, drop);
+            const args: MoveToArgs = {
+              drag: [ item ],
+              before: drop,
+              newArr
+            };
+            this.props.onMoveTo(args);
+          }
+        }
+
+        this.state.model.setFocus( this.state.model.getValues().indexOf(item) );
       }
     })(e.nativeEvent);
   };
