@@ -8,15 +8,17 @@
     "react": "^16.4.1",
     "react-color": "^2.17.3",
     "react-dom": "^16.4.1",
+    "svg-inline-loader": "^0.8.0",
+    "svg-url-loader": "^3.0.2",
     "urijs": "^1.19.1"
   },
   "scripts": {
     "prepare": "npm run clean && tsc -p tsconfig.json -outDir . && npm run copy",
-    "copy": "copyfiles -u 1 src/**/*.scss .",
+    "copy": "copyfiles -u 1 src/**/*.scss . && shx cp -R src/icons .",
     "dev": "npm run prepare",
     "storybook": "start-storybook -p 6006 -s ./public",
     "build-storybook": "build-storybook",
-    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map *.js *.js.map *.d.ts *.scss common model prop-sheet app-comp-layout grid panel"
+    "clean": "shx rm -rf src/**/*.d.ts src/**/*.js src/**/*.js.map *.js *.js.map *.d.ts *.scss common model prop-sheet app-comp-layout grid panel tree icons"
   },
   "devDependencies": {
     "@blueprintjs/core": "^2.3.1",

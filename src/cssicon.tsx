@@ -16,6 +16,7 @@ export interface Props {
   hidden?: boolean;
   disabled?: boolean;
   showOnHover?: boolean;
+  width?: string;
   
   style?: React.CSSProperties;
   onClick?(e: React.MouseEvent): void;
@@ -31,15 +32,18 @@ export function CSSIcon(props: Props) {
   );
 
   return (
-    <span className={className} title={props.title}>
-      <i style={props.style} className={props.icon}
-        onClick={e => {
-          if (props.disabled)
-            return;
+    <span
+      className={className}
+      title={props.title}
+      style={{ width: props.width }}
+      onClick={e => {
+        if (props.disabled)
+          return;
 
-          props.onClick && props.onClick(e);
-        }}
-      />
+        props.onClick && props.onClick(e);
+      }}
+    >
+      <i style={props.style} className={props.icon}/>
     </span>
   );
 }

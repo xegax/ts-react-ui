@@ -1,3 +1,5 @@
+$select-bg-color: rgb(163, 218, 255);
+
 .list-view-ctrl {
   background-color: white;
   display: flex;
@@ -49,6 +51,12 @@
 
   &.list-view-highlight {
     > .list-wrapper {
+      > .list-item.select {
+        &:hover {
+          background-color: $select-bg-color;
+          color: black;
+        }
+      }
       > .list-item {
         &:hover {
           background-color: rgb(234, 252, 255);
@@ -78,7 +86,7 @@
       }
 
       &.select {
-        background-color: rgb(163, 218, 255);
+        background-color: $select-bg-color;
 
         &:hover {
           color: gray;

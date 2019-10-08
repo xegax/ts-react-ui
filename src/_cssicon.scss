@@ -1,5 +1,7 @@
 .cssicon {
   opacity: 1;
+  display: inline-flex;
+  justify-content: center;
 
   &.clickable {
     cursor: pointer;
