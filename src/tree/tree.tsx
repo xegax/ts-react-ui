@@ -91,6 +91,7 @@ export class Tree extends React.Component<Props, State> {
             <ListView
               border={false}
               defaultValue={sel ? { value: sel.join('/') } : undefined}
+              value={sel ? { value: sel.join('/') } : undefined }
               values={this.state.model.getHolders()}
               onSelect={(holder: TreeItemHolder) => {
                 let path = Array<TreeItem>();

@@ -114,6 +114,7 @@ export class TreeModel extends Publisher {
         value: path ? path + '/' + v.value : v.value,
         render: this.args.renderTreeItem,
         item: v,
+        title: v.title,
 
         level,
         parent
