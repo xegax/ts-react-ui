@@ -55,6 +55,7 @@ export interface ListProps {
   border?: boolean;
   highlight?: boolean;
   style?: React.CSSProperties;
+  multiselect?: boolean;  // default false
 
   className?: string;
   cards?: boolean;        // render items as cards
@@ -438,7 +439,7 @@ export class ListView extends React.Component<ListProps, State> implements IList
           const m = this.state.model;
           let sel = m.getSelect();
 
-          if (e.ctrlKey) {
+          if (e.ctrlKey && this.props.multiselect) {
             sel.push(item);
           } else if (sel.length == 1 && sel[0] == item) {
             return;

@@ -47,8 +47,6 @@ export class TreeModel extends Publisher {
   private args: ModelArgs;
 
   private selectPath = Array< ValuePath >();
-  private holderPath = Array< HolderPath >();
-
   private selectHolders = Array<TreeItemHolder>();
 
   constructor(args: ModelArgs) {
@@ -122,7 +120,8 @@ export class TreeModel extends Publisher {
     });
   }
 
-  private selectNext(select: ValuePath, holderPath: Array<TreeItemHolder>, start: number = 0): Promise<void> | void {
+  private selectNext(select: ValuePath, holderPath?: Array<TreeItemHolder>, start: number = 0): Promise<void> | void {
+    holderPath = holderPath || [];
     let holder: TreeItemHolder;
     const level = holderPath.length;
 
@@ -154,26 +153,14 @@ export class TreeModel extends Publisher {
     if (sel == this.selectPath)
       return;
 
-    this.holderPath = [];
     this.selectPath = sel;
     this.selectHolders = [];
 
     this.selectPath.forEach(path => {
-      const holderPath = Array<TreeItemHolder>();
-      this.holderPath.push(holderPath);
-
-      const next = () => {
-        if (holderPath.length)
-          this.selectHolders.push(holderPath[holderPath.length - 1]);
-        this.delayedNotify();
-      };
-
-      let p = this.selectNext(path, holderPath);
-      if (p)
-        p.then(next);
-      else
-        next();
+      this.selectNext(path);
     });
+    this.updateSelection();
+    this.delayedNotify();
   }
 
   getPathByHolder(holder: TreeItemHolder): ItemPath {

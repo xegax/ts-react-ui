@@ -115,22 +115,28 @@ class Dummy extends React.Component<{}, State> {
 
   render() {
     return (
-      <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, display: 'flex' }}>
-        <Tree
-          style={{ flexGrow: 0, width: 150 }}
-          select={this.state.select}
-          values={values2}
-          onDragAndDrop={this.onDragAndDrop}
-          onSelect={pathArr => {
-            this.setState({ select: pathArr.map(path => path.map(v => v.value)) });
-            // console.log(select.join('->'));
-          }}
-        />
-        <div style={{ flexGrow: 1, backgroundColor: 'silver', position: 'relative' }}>
-          <Droppable>
-            <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0}}>
-            </div>
-          </Droppable>
+      <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flexGrow: 1, display: 'flex' }}>
+          <Tree
+            multiselect
+            style={{ flexGrow: 0, width: 150 }}
+            select={this.state.select}
+            values={values2}
+            onDragAndDrop={this.onDragAndDrop}
+            onSelect={pathArr => {
+              this.setState({ select: pathArr.map(path => path.map(v => v.value)) });
+              // console.log(select.join('->'));
+            }}
+          />
+          <div style={{ flexGrow: 1, backgroundColor: 'silver', position: 'relative' }}>
+            <Droppable>
+              <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0}}>
+              </div>
+            </Droppable>
+          </div>
+        </div>
+        <div style={{ flexGrow: 0 }}>
+          {this.state.select.map((p, i) => <div key={i}>{p.join('/')}</div>)}
         </div>
       </div>
     );

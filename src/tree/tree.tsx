@@ -23,6 +23,7 @@ interface Props {
 
   defaultSelect?: Array<ValuePath>;
   select?: Array<ValuePath>;
+  multiselect?: boolean;
 
   onSelect?(path: Array<ItemPath>): void;
   onDragAndDrop?(args: DragAndDrop): void;
@@ -127,7 +128,10 @@ export class Tree extends React.Component<Props, State> {
               return;
 
             onDragStop();
-            const selectHolders = this.state.model.getSelectHolders();
+            let selectHolders = this.state.model.getSelectHolders();
+            if (selectHolders.indexOf(_.dragData) == -1)
+              selectHolders = [ _.dragData ]; // draging non selected holder
+
             const selectItems = selectHolders.map(h => h.item);
             this.props.onDragAndDrop({
               drag: selectItems,
@@ -204,6 +208,7 @@ export class Tree extends React.Component<Props, State> {
         <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
           <FitToParent>
             <ListView
+              multiselect={this.props.multiselect}
               border={false}
               value={this.state.model.getSelectHolders()}
               values={values}
