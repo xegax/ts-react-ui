@@ -8,6 +8,9 @@ export type HolderPath = Array<TreeItemHolder>;
 export interface TreeItem extends Item {
   icon?: JSX.Element;
   children?: Array<TreeItem> | ((parent: TreeItem) => Promise<Array<TreeItem>>) | ((p: TreeItem) => Array<TreeItem>);
+  // first call to async data must return Promise of these result and cache them in item
+  // next calls must return cache
+
   open?: boolean;
   droppable?: boolean;  // default true
   draggable?: boolean;  // default true

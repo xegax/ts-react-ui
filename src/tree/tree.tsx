@@ -102,15 +102,8 @@ export class Tree extends React.Component<Props, State> {
 
     jsx = (
       <Draggable
-        data={holder}
+        data={holder.item}
         enabled={holder.item.draggable}
-        onDragStart={() => {
-          const items = this.state.model.getSelectHolders().map(v => v.item);
-          // this.state.model.b;
-          // console.log(this.state.model.getPathByHolder(holder).map(v => v.value));
-          /*if (!this.state.model.getSelectHolders().some(h => h.item == holder.item))
-            this.state.model.setSelect([ this.state.model.getPathByHolder(holder).map(v => v.value) ]);*/
-        }}
       >
         {jsx}
       </Draggable>
@@ -122,15 +115,16 @@ export class Tree extends React.Component<Props, State> {
           onDragEnter={onDragHover}
           onDragOver={onDragHover}
           onDragLeave={onDragStop}
-          onDrop={(_: DropArgs<TreeItemHolder, TreeItemHolder>) => {
+          onDrop={(_: DropArgs<TreeItem, TreeItem>) => {
             const hover = this.state.hover;
             if (!hover)
               return;
 
             onDragStop();
             let selectHolders = this.state.model.getSelectHolders();
-            if (selectHolders.indexOf(_.dragData) == -1)
-              selectHolders = [ _.dragData ]; // draging non selected holder
+            if (!selectHolders.some(h => h.item == _.dragData)) {
+              selectHolders = [ this.state.model.getHolders().find(h => h.item == _.dragData) ]; // draging non selected holder
+            }
 
             const selectItems = selectHolders.map(h => h.item);
             this.props.onDragAndDrop({

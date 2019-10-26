@@ -2,7 +2,7 @@ import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import '../src/_base.scss';
 import { Tree, TreeItem, DragAndDrop } from '../src/tree/tree';
-import { Droppable } from '../src/drag-and-drop';
+import { Droppable, DropArgs } from '../src/drag-and-drop';
 import { ValuePath } from '../src/tree/tree-model';
 
 function getSubitems(pref: string, count: number): Array<TreeItem> {
@@ -113,6 +113,10 @@ class Dummy extends React.Component<{}, State> {
     });
   };
 
+  onDrop = (args: DropArgs<TreeItem, TreeItem>) => {
+    console.log(args.dragData);
+  };
+
   render() {
     return (
       <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column' }}>
@@ -129,7 +133,7 @@ class Dummy extends React.Component<{}, State> {
             }}
           />
           <div style={{ flexGrow: 1, backgroundColor: 'silver', position: 'relative' }}>
-            <Droppable>
+            <Droppable onDrop={this.onDrop}>
               <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0}}>
               </div>
             </Droppable>
