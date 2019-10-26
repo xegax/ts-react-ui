@@ -13,6 +13,12 @@ function getSubitems(pref: string, count: number): Array<TreeItem> {
   return arr;
 }
 
+function delay(ms: number) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
 let values2: Array<TreeItem> = [
   {
     value: 'root',

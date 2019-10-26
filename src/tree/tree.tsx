@@ -121,7 +121,7 @@ export class Tree extends React.Component<Props, State> {
           onDragEnter={onDragHover}
           onDragOver={onDragHover}
           onDragLeave={onDragStop}
-          onDrop={(args: DropArgs<TreeItemHolder, TreeItemHolder>) => {
+          onDrop={(_: DropArgs<TreeItemHolder, TreeItemHolder>) => {
             const hover = this.state.hover;
             if (!hover)
               return;
@@ -167,13 +167,20 @@ export class Tree extends React.Component<Props, State> {
       />
     );
 
+    let icon = 'fa fa-angle-right';
+    if (m.isOpened(holder))
+      icon = 'fa fa-angle-down';
+
+    if (holder.loading)
+      icon = 'fa fa-spinner fa-spin';
+
     const jsx = (
       <div style={{ fontWeight: this.state.hover == holder ? 'bold' : undefined }}>
         <div className='horz-panel-1' style={{ marginLeft: holder.level * 5, display: 'inline-flex', alignItems: 'center' }}>
           <CSSIcon
             width='1em'
             hidden={!folder}
-            icon={m.isOpened(holder) ? 'fa fa-angle-down' : 'fa fa-angle-right'}
+            icon={icon}
             onClick={e => {
               e.stopPropagation();
               m.isOpened(holder) ? m.close(holder) : m.open(holder);

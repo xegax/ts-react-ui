@@ -7,7 +7,7 @@ export type HolderPath = Array<TreeItemHolder>;
 
 export interface TreeItem extends Item {
   icon?: JSX.Element;
-  children?: Array<TreeItem> | ((parent: TreeItem) => Promise<Array<TreeItem>>);
+  children?: Array<TreeItem> | ((parent: TreeItem) => Promise<Array<TreeItem>>) | ((p: TreeItem) => Array<TreeItem>);
   open?: boolean;
   droppable?: boolean;  // default true
   draggable?: boolean;  // default true
@@ -24,6 +24,7 @@ export interface TreeItemHolder extends Item {
   item: TreeItem;
   parent?: TreeItemHolder;
   level: number;
+  loading?: boolean;
 }
 
 interface ModelArgs {
@@ -49,7 +50,6 @@ export class TreeModel extends Publisher {
   private holderPath = Array< HolderPath >();
 
   private selectHolders = Array<TreeItemHolder>();
-  private holdersMap: {[level: number]: { [value: string]: TreeItemHolder }} = {};
 
   constructor(args: ModelArgs) {
     super();
@@ -67,7 +67,6 @@ export class TreeModel extends Publisher {
   }
 
   updateHolders(select?: Set<TreeItem>) {
-    this.holdersMap = {};
     this.holders = this.makeHolders({
       values: this.values,
       level: 0,
@@ -86,21 +85,64 @@ export class TreeModel extends Publisher {
     this.delayedNotify();
   }
 
-  private selectNext(select: ValuePath, holderPath: Array<TreeItemHolder>, level: number): Promise<void> | void {
-    const levelMap = this.holdersMap[level];
-    if (!levelMap)
-      return;
+  private getHoldersPath(select: Array<ValuePath>): Array<HolderPath> {
+    let holdersPath: Array<HolderPath> = select.map(() => []);
+    let full = select.length;
+    for (let n = 0; n < this.holders.length; n++) {
+      const h = this.holders[n];
 
-    const value = select[level];
-    const holder = levelMap[value];
+      for (let i = 0; i < select.length; i++) {
+        if (holdersPath[i].length == select[i].length)
+          continue;
+
+        const level = holdersPath[i].length;
+        if (h.level == level && select[i][level] == h.item.value) {
+          holdersPath[i].push(h);
+          if (holdersPath[i].length == select[i].length)
+            full--;
+        }
+      }
+
+      if (full <= 0)
+        break;
+    }
+
+    return holdersPath;
+  }
+
+  private updateSelection() {
+    this.selectHolders = [];
+    this.getHoldersPath(this.selectPath)
+    .forEach(path => {
+      if (!path.length)
+        return;
+
+      const h = path[path.length - 1];
+      this.selectHolders.push(h);
+    });
+  }
+
+  private selectNext(select: ValuePath, holderPath: Array<TreeItemHolder>, start: number = 0): Promise<void> | void {
+    let holder: TreeItemHolder;
+    const level = holderPath.length;
+
+    for (let n = start; n < this.holders.length; n++) {
+      const h = this.holders[n];
+      if (h.level == level && select[level] == h.item.value) {
+        start = n;
+        holder = h;
+        break;
+      }
+    }
+
     if (!holder)
       return;
 
     holderPath.push(holder);
-    if (level + 1 >= select.length)
+    if (holderPath.length >= select.length)
       return;
 
-    const next = () => this.selectNext(select, holderPath, level + 1);
+    const next = () => this.selectNext(select, holderPath, start + 1);
     const p = this.open(holder);
     if (p)
       return p.then(next);
@@ -126,7 +168,7 @@ export class TreeModel extends Publisher {
         this.delayedNotify();
       };
 
-      let p = this.selectNext(path, holderPath, 0);
+      let p = this.selectNext(path, holderPath);
       if (p)
         p.then(next);
       else
@@ -150,12 +192,14 @@ export class TreeModel extends Publisher {
   private openImpl(holderIdx: number, children: Array<TreeItem>) {
     const holder = this.holders[holderIdx];
     holder.item.open = true;
+    holder.loading = false;
     const childrenHolders = this.makeHolders({
       values: children,
       level: holder.level + 1,
       parent: holder
     });
     this.holders.splice(holderIdx, 1, holder, ...childrenHolders);
+    this.updateSelection();
     this.delayedNotify();
   }
 
@@ -171,14 +215,20 @@ export class TreeModel extends Publisher {
     if (!lst)
       return;
 
-    if (typeof lst == 'function') {
-      return (
-        lst(holder.item)
-        .then(children => this.openImpl(i, children))
-      );
+    let children: Array<TreeItem>;
+    if (Array.isArray(lst)) {
+      children = lst;
+    } else if (typeof lst == 'function') {
+      let res = lst(holder.item);
+      if (res instanceof Promise) {
+        holder.loading = true;
+        return res.then(children => this.openImpl(i, children));
+      }
+
+      children = res;
     }
     
-    this.openImpl(i, lst);
+    this.openImpl(i, children);
   }
 
   isOpened(holder: TreeItemHolder) {
@@ -210,6 +260,7 @@ export class TreeModel extends Publisher {
       }
     }
     holder.item.open = false;
+    this.updateSelection();
     this.delayedNotify();
   }
 
@@ -232,9 +283,6 @@ export class TreeModel extends Publisher {
 
       if (args.select && Array.isArray(v.children) && v.children.some(c => args.select.has(c)))
         v.open = true;
-
-      const map = this.holdersMap[args.level] || (this.holdersMap[args.level] = {});
-      map[v.value] = holder;
 
       holders.push(holder);
       if (!v.open || !v.children || !Array.isArray(v.children))
