@@ -10,6 +10,7 @@ import { Draggable, Droppable, DropArgs } from '../drag-and-drop';
 import { KeyCode } from '../common/keycode';
 
 export { TreeItem };
+
 export interface DragAndDrop {
   drag: Array<TreeItem>;
   dragParent: Array<TreeItem>;
@@ -50,6 +51,8 @@ function findParent(start: TreeItemHolder, parent: TreeItemHolder) {
 
 export class Tree extends React.Component<Props, State> {
   static defaultProps: Partial<Props> = {};
+  private dragging = Array<TreeItemHolder>();
+  private drop: TreeItemHolder;
 
   constructor(props: Props) {
     super(props);
@@ -63,6 +66,28 @@ export class Tree extends React.Component<Props, State> {
       model.setValues(props.values);
       model.setSelect(props.defaultSelect);
     }
+  }
+
+  static onDragAndDrop(args: DragAndDrop) {
+    if (!Array.isArray(args.drop.children) && args.dropParent && !Array.isArray(args.dropParent.children))
+      return;
+
+    const dst = (args.drop.childrenCache || args.drop.children || args.dropParent.children) as Array<TreeItem>;
+    if (!Array.isArray(dst))
+      return;
+
+    args.dragParent.forEach((parent, i) => {
+      const children = parent.childrenCache || parent.children;
+      if (!Array.isArray(children))
+        return;
+
+      const n = children.indexOf(args.drag[i]);
+      if (n == -1)
+        return;
+
+      children.splice(n, 1);
+      dst.push(args.drag[i]);
+    });
   }
 
   subscriber = () => {
@@ -82,28 +107,70 @@ export class Tree extends React.Component<Props, State> {
     s.model.setSelect(p.select);
   }
 
+  private onDragHover = (args: DropArgs<TreeItem, TreeItem>) => {
+    if (this.drop && this.drop.item == args.dropData)
+      return;
+
+    this.drop = this.state.model.getHolders().find(h => h.item == args.dropData);
+    if (!this.drop)
+      return;
+
+    if (!this.dragging.length) {
+      this.dragging = this.state.model.getSelectHolders();
+      if (!this.dragging.some(h => h.item == args.dragData)) {
+        this.dragging = [ this.state.model.getHolders().find(h => h.item == args.dragData) ]; // draging non selected holder
+      }
+    }
+
+    const sameParent = !this.dragging.some(h => h.parent != this.dragging[0].parent);
+    const dragToSelf = this.dragging.some(h => args.dropData == h);
+    const dragToSelfParent = (this.dragging.length == 1 || sameParent) && this.dragging.some(h => h.parent && h.parent.item == args.dropData);
+    const noChildren = !args.dropData.children;
+    if (dragToSelf || dragToSelfParent || noChildren || this.dragging.some(drag => findParent(this.drop, drag)))
+      this.setState({ hover: null });
+    else
+      this.setState({ hover: this.drop });
+  };
+
+  private onDrop = () => {
+    const hover = this.state.hover;
+    if (!hover)
+      return;
+
+    this.onDragStop();
+
+    const selectItems = this.dragging.map(h => h.item);
+    this.props.onDragAndDrop({
+      drag: selectItems,
+      dragParent: this.dragging.map(h => h.parent.item),
+      dropParent: hover.parent ? hover.parent.item : undefined,
+      drop: hover.item
+    });
+    this.state.model.updateHolders(new Set(selectItems));
+    this.props.onSelect && this.props.onSelect(
+      this.state.model.getSelectHolders().map(h => this.state.model.getPathByHolder(h))
+    );
+  };
+
+  private onDragStart = () => {
+    this.dragging = [];
+    this.drop = null;
+  };
+
+  private onDragStop = () => {
+    this.setState({ hover: null });
+    this.drop = null;
+  };
+
   wrapRow = (jsx: JSX.Element, holder: TreeItemHolder): JSX.Element => {
     if (!this.props.onDragAndDrop)
       return jsx;
-
-    const onDragHover = (args: DropArgs<TreeItemHolder, TreeItemHolder>) => {
-      const dragToSelf = args.dragData.item == holder.item;
-      const dragToSelfParent = args.dragData.parent && args.dragData.parent.item == holder.item;
-      const noChildren = !holder.item.children;
-      if (dragToSelf || dragToSelfParent || noChildren || findParent(holder, args.dragData))
-        this.setState({ hover: null });
-      else
-        this.setState({ hover: holder });
-    };
-  
-    const onDragStop = () => {
-      this.setState({ hover: null });
-    };
 
     jsx = (
       <Draggable
         data={holder.item}
         enabled={holder.item.draggable}
+        onDragStart={this.onDragStart}
       >
         {jsx}
       </Draggable>
@@ -112,32 +179,11 @@ export class Tree extends React.Component<Props, State> {
     if (holder.item.droppable !== false) {
       jsx = (
         <Droppable
-          onDragEnter={onDragHover}
-          onDragOver={onDragHover}
-          onDragLeave={onDragStop}
-          onDrop={(_: DropArgs<TreeItem, TreeItem>) => {
-            const hover = this.state.hover;
-            if (!hover)
-              return;
-
-            onDragStop();
-            let selectHolders = this.state.model.getSelectHolders();
-            if (!selectHolders.some(h => h.item == _.dragData)) {
-              selectHolders = [ this.state.model.getHolders().find(h => h.item == _.dragData) ]; // draging non selected holder
-            }
-
-            const selectItems = selectHolders.map(h => h.item);
-            this.props.onDragAndDrop({
-              drag: selectItems,
-              dragParent: selectHolders.map(h => h.parent.item),
-              dropParent: hover.parent ? hover.parent.item : undefined,
-              drop: hover.item 
-            });
-            this.state.model.updateHolders(new Set(selectItems));
-            this.props.onSelect && this.props.onSelect(
-              this.state.model.getSelectHolders().map(h => this.state.model.getPathByHolder(h))
-            );
-          }}
+          dropData={holder.item}
+          onDragEnter={this.onDragHover}
+          onDragOver={this.onDragHover}
+          onDragLeave={this.onDragStop}
+          onDrop={this.onDrop}
         >
           {jsx}
         </Droppable>

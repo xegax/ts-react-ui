@@ -51,7 +51,7 @@ let values2: Array<TreeItem> = [
             children: []
           }, {
             value: 'async',
-            children: getSubitems('async', 50)
+            children: (item) => delay(500).then(() => item.childrenCache = getSubitems('async', 50))
           }, {
             value: 'animal',
             children: [
@@ -92,27 +92,6 @@ class Dummy extends React.Component<{}, State> {
     select: [ ['root', 'entity', 'animal', 'pets', 'dog' ] ]
   };
 
-  onDragAndDrop = (args: DragAndDrop) => {
-    if (!Array.isArray(args.drop.children) && args.dropParent && !Array.isArray(args.dropParent.children))
-      return;
-
-    const dst = (args.drop.children ? args.drop.children : args.dropParent.children) as Array<TreeItem>;
-    if (!Array.isArray(dst))
-      return;
-
-    args.dragParent.forEach((parent, i) => {
-      if (!Array.isArray(parent.children))
-        return;
-
-      const n = parent.children.indexOf(args.drag[i]);
-      if (n == -1)
-        return;
-
-      parent.children.splice(n, 1);
-      dst.push(args.drag[i]);
-    });
-  };
-
   onDrop = (args: DropArgs<TreeItem, TreeItem>) => {
     console.log(args.dragData);
   };
@@ -126,7 +105,7 @@ class Dummy extends React.Component<{}, State> {
             style={{ flexGrow: 0, width: 150 }}
             select={this.state.select}
             values={values2}
-            onDragAndDrop={this.onDragAndDrop}
+            onDragAndDrop={Tree.onDragAndDrop}
             onSelect={pathArr => {
               this.setState({ select: pathArr.map(path => path.map(v => v.value)) });
               // console.log(select.join('->'));

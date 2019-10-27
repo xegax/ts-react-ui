@@ -8,8 +8,7 @@ export type HolderPath = Array<TreeItemHolder>;
 export interface TreeItem extends Item {
   icon?: JSX.Element;
   children?: Array<TreeItem> | ((parent: TreeItem) => Promise<Array<TreeItem>>) | ((p: TreeItem) => Array<TreeItem>);
-  // first call to async data must return Promise of these result and cache them in item
-  // next calls must return cache
+  childrenCache?: Array<TreeItem>;
 
   open?: boolean;
   droppable?: boolean;  // default true
@@ -201,7 +200,7 @@ export class TreeModel extends Publisher {
     if (i == -1)
       return;
 
-    const lst = holder.item.children;
+    const lst = holder.item.childrenCache || holder.item.children;
     if (!lst)
       return;
 
@@ -226,7 +225,8 @@ export class TreeModel extends Publisher {
   }
 
   isFolder(holder: TreeItemHolder) {
-    if (Array.isArray(holder.item.children) && holder.item.children.length == 0)
+    const childern = holder.item.childrenCache || holder.item.children;
+    if (Array.isArray(childern) && childern.length == 0)
       return false;
 
     return !!holder.item.children;
@@ -271,15 +271,19 @@ export class TreeModel extends Publisher {
         parent: args.parent
       };
 
-      if (args.select && Array.isArray(v.children) && v.children.some(c => args.select.has(c)))
+      let children = (v.childrenCache || v.children) as Array<TreeItem>;
+      if (args.select && Array.isArray(children) && children.some(c => args.select.has(c)))
         v.open = true;
 
       holders.push(holder);
-      if (!v.open || !v.children || !Array.isArray(v.children))
+      if (!v.open)
+        continue;
+
+      if (!Array.isArray(children) || children.length == 0)
         continue;
 
       holders.push(...this.makeHolders({
-        values: v.children,
+        values: children,
         level: args.level + 1,
         parent: holder,
         select: args.select

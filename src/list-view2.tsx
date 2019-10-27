@@ -128,10 +128,10 @@ export class ListViewModel extends Publisher {
   }
 
   setSelect(value: Array<Item>, notify?: boolean) {
-    value = value || [];
     if (this.select == value)
       return;
 
+    value = value || [];
     this.select = value;
     this.focus = this.values.indexOf(value[value.length - 1]);
 
@@ -437,17 +437,20 @@ export class ListView extends React.Component<ListProps, State> implements IList
             return;
 
           const m = this.state.model;
-          let sel = m.getSelect();
+          let sel = new Set(m.getSelect());
 
           if (e.ctrlKey && this.props.multiselect) {
-            sel.push(item);
-          } else if (sel.length == 1 && sel[0] == item) {
+            if (sel.has(item))
+              sel.delete(item);
+            else
+              sel.add(item);
+          } else if (sel.size == 1 && sel.has(item)) {
             return;
           } else {
-            sel = [ item ];
+            sel = new Set([ item ]);
           }
 
-          m.setSelect(sel);
+          m.setSelect(Array.from(sel));
           this.props.onSelect(m.getSelect());
         }}
         onMouseDown={e => this.onMouseDown(item, idx, e)}

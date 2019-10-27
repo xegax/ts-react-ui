@@ -24,7 +24,7 @@ export class Draggable extends React.Component<DragProps, {}> {
     let drag: ContItem;
     let children = this.props.children;
     let type = this.props.type;
-    let dragData = { ...this.props.data };
+    let dragData = this.props.data;
     const { onDragStart } = this.props;
 
     startDragging({ x: 0, y: 0, minDist: 5 }, {
@@ -58,7 +58,7 @@ export class Draggable extends React.Component<DragProps, {}> {
 
         el.style.left = mouse.pageX + 'px';
         el.style.top = mouse.pageY + 'px';
-        dropModel.checkDragEvent(mouse, { ...dragData });
+        dropModel.checkDragEvent(mouse, dragData);
       },
       onDragEnd: evt => {
         if (!drag)
