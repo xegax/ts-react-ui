@@ -204,22 +204,22 @@ export function action<T extends Action = Action>(props: ActionProps) {
   });
 }
 
+export const OK: Action = {
+  text: 'OK',
+  intent: Intent.WARNING,
+  onAction: () => {}
+};
+
+export const Cancel: Action = {
+  text: 'Cancel',
+  onAction: () => {}
+};
+
 export function confirm<T extends Action = Action>(props: ActionProps) {
   props = {...props};
   props.icon = props.icon;
   props.title = props.title || 'Confirm';
   props.intent = props.intent || Intent.WARNING;
-
-  const OK: Action = {
-    text: 'OK',
-    intent: Intent.WARNING,
-    onAction: () => {}
-  };
-
-  const Cancel: Action = {
-    text: 'Cancel',
-    onAction: () => {}
-  };
 
   props.actions = props.actions || [ OK, Cancel ];
   return (

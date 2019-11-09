@@ -8,6 +8,7 @@ import * as folderSVG from '../icons/svg/folder.svg';
 import { IconSVG, IconSize } from '../icon-svg';
 import { Draggable, Droppable, DropArgs } from '../drag-and-drop';
 import { KeyCode } from '../common/keycode';
+import { cn } from '../common/common';
 
 export { TreeItem };
 
@@ -26,6 +27,8 @@ interface Props {
   select?: Array<ValuePath>;
   multiselect?: boolean;
 
+  onOpen?(item: TreeItem): void;
+  onClose?(item: TreeItem): void;
   onSelect?(path: Array<ItemPath>): void;
   onDragAndDrop?(args: DragAndDrop): void;
   hideIcons?: boolean;
@@ -219,21 +222,30 @@ export class Tree extends React.Component<Props, State> {
       icon = 'fa fa-spinner fa-spin';
 
     const jsx = (
-      <div style={{ fontWeight: this.state.hover == holder ? 'bold' : undefined }}>
-        <div className='horz-panel-1' style={{ marginLeft: holder.level * 5, display: 'inline-flex', alignItems: 'center' }}>
+      <div className={cn('tree-ctrl-item-wrapper', this.state.hover == holder && 'drop-hover')}>
+        <div className={cn('horz-panel-1', 'tree-ctrl-item')} style={{ marginLeft: holder.level * 5 }}>
           <CSSIcon
             width='1em'
             hidden={!folder}
             icon={icon}
             onClick={e => {
               e.stopPropagation();
-              m.isOpened(holder) ? m.close(holder) : m.open(holder);
+              if (m.isOpened(holder)) {
+                m.close(holder);
+                this.props.onClose && this.props.onClose(holder.item);
+              } else {
+                m.open(holder);
+                this.props.onOpen && this.props.onOpen(holder.item);
+              }
             }}
           />
           {!this.props.hideIcons && ( holder.item.icon || defultIcon)}
-          <span>
+          <div className='tree-ctrl-item-label'>
             {render(holder.item.render, holder.item) || holder.item.value}
-          </span>
+          </div>
+        </div>
+        <div className={cn('horz-panel-1', 'tree-ctrl-item-right-icons')}>
+          {holder.item.rightIcons}
         </div>
       </div>
     );
@@ -248,6 +260,7 @@ export class Tree extends React.Component<Props, State> {
         <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
           <FitToParent>
             <ListView
+              className='tree-ctrl'
               multiselect={this.props.multiselect}
               border={false}
               value={this.state.model.getSelectHolders()}

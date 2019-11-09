@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { storiesOf } from '@storybook/react';
 import '../src/_base.scss';
-import { Tree, TreeItem, DragAndDrop } from '../src/tree/tree';
+import { Tree, TreeItem } from '../src/tree/tree';
 import { Droppable, DropArgs } from '../src/drag-and-drop';
-import { ValuePath } from '../src/tree/tree-model';
+import { ValuePath, updateValues } from '../src/tree/tree-model';
 
 function getSubitems(pref: string, count: number): Array<TreeItem> {
   let arr = Array<TreeItem>();
@@ -45,6 +45,7 @@ let values2: Array<TreeItem> = [
       },
       {
         value: 'entity',
+        rightIcons: <><i className='fa fa-trash'/></>,
         children: [
           {
             value: 'people',
@@ -83,6 +84,19 @@ let values2: Array<TreeItem> = [
   }
 ];
 
+function clone(arr: Array<TreeItem>) {
+  return arr.map(item => {
+    item = {...item};
+    item.children = Array.isArray(item.children) ? clone(item.children) : item.children;
+    if (item.childrenCache)
+      item.childrenCache = clone(item.childrenCache);
+
+    return item;
+  });
+}
+
+let valuesCopy: Array<TreeItem> = clone(values2);
+
 interface State {
   select?: Array<ValuePath>;
 }
@@ -96,6 +110,12 @@ class Dummy extends React.Component<{}, State> {
     console.log(args.dragData);
   };
 
+  updateValues = () => {
+    updateValues(clone(values2), valuesCopy);
+    valuesCopy = valuesCopy.slice();
+    this.setState({});
+  }
+
   render() {
     return (
       <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column' }}>
@@ -105,11 +125,22 @@ class Dummy extends React.Component<{}, State> {
             style={{ flexGrow: 0, width: 150 }}
             select={this.state.select}
             values={values2}
-            onDragAndDrop={Tree.onDragAndDrop}
+            onOpen={this.updateValues}
+            onClose={this.updateValues}
+            onDragAndDrop={args => {
+              Tree.onDragAndDrop(args);
+              this.updateValues();
+            }}
             onSelect={pathArr => {
               this.setState({ select: pathArr.map(path => path.map(v => v.value)) });
               // console.log(select.join('->'));
             }}
+          />
+          <Tree
+            multiselect
+            style={{ flexGrow: 0, width: 150 }}
+            select={this.state.select}
+            values={valuesCopy}
           />
           <div style={{ flexGrow: 1, backgroundColor: 'silver', position: 'relative' }}>
             <Droppable onDrop={this.onDrop}>

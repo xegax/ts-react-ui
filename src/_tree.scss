@@ -1,5 +1,36 @@
 .tree-ctrl {
-  .select {
-    background-color: silver;
+  &-item {
+    display: inline-flex;
+    align-items: center;
+    flex-grow: 1;
+
+    &-label {
+      width: 0px;
+      flex-grow: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &-item-wrapper {
+    display: flex;
+
+    &.drop-hover {
+      font-weight: bold;
+    }
+
+    &:hover {
+      .tree-ctrl-item-right-icons {
+        display: block;
+      }
+    }
+  }
+
+  .select &-item-right-icons {
+    display: block;
+  }
+
+  &-item-right-icons {
+    display: none;
   }
 }
