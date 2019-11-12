@@ -342,8 +342,8 @@ export class Video extends React.Component<Props, State> {
           }}
         />
       </Tag>,
-      ...this.props.tags
-    ].filter(v => v);
+      ...(this.props.tags || [])
+    ].filter(v => v) as any;
   }
 
   renderControl() {

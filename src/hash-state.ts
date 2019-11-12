@@ -29,7 +29,10 @@ export class HashState<T> extends Publisher {
   }
 
   private composeHashState(state: Partial<T>) {
-    return '#' + Object.keys(state).map(key => `${URI.encode(key)}=${URI.encode(state[key])}`).join('&');
+    const keyValue = Object.keys(state)
+    .filter(key => (state[key] != null ? ''  + state[key] : '').trim())
+    .map(key => `${URI.encode(key)}=${URI.encode(state[key])}`);
+    return '#' + keyValue.join('&');
   }
 
   pushState(state: Partial<T>) {
