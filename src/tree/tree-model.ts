@@ -205,6 +205,7 @@ export class TreeModel extends Publisher {
     });
     this.updateSelection();
     this.delayedNotify();
+    this.delayedNotify({ type: 'scroll' });
   }
 
   getPathByHolder(holder: TreeItemHolder): ItemPath {

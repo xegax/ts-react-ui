@@ -56,6 +56,7 @@ export class Tree extends React.Component<Props, State> {
   static defaultProps: Partial<Props> = {};
   private dragging = Array<TreeItemHolder>();
   private drop: TreeItemHolder;
+  private ref = React.createRef<ListView>();
 
   constructor(props: Props) {
     super(props);
@@ -97,12 +98,18 @@ export class Tree extends React.Component<Props, State> {
     this.setState({});
   };
 
+  onScroll = () => {
+    this.ref.current && this.ref.current.scrollToFocus();
+  };
+
   componentDidMount() {
     this.state.model.subscribe(this.subscriber);
+    this.state.model.subscribe(this.onScroll, 'scroll');
   }
 
   componentWillUnmount() {
     this.state.model.unsubscribe(this.subscriber);
+    this.state.model.unsubscribe(this.onScroll, 'scroll');
   }
 
   static getDerivedStateFromProps(p: Props, s: State) {
@@ -260,6 +267,7 @@ export class Tree extends React.Component<Props, State> {
         <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
           <FitToParent>
             <ListView
+              ref={this.ref}
               className='tree-ctrl'
               multiselect={this.props.multiselect}
               border={false}
