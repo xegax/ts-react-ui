@@ -2,8 +2,11 @@ import * as React from 'react';
 import { CSSIcon } from './cssicon';
 import { cn } from './common/common';
 
-export const classes = {
+export const css = {
   tags: 'tags-ctrl',
+  background: 'tags-ctrl-bg',
+  border: 'tags-ctrl-border',
+  noWrap: 'tags-ctrl-nowrap',
   tagWrap: 'tag-wrap',
   tag: 'tag',
   label: 'label'
@@ -12,17 +15,31 @@ export const classes = {
 export interface Tag {
   value: string;
   tooltip?: string;
-  render?: string | JSX.Element | ((tag: Tag) => JSX.Element);
+  icon?: JSX.Element;
+  render?: string | JSX.Element | ((tag: Tag) => React.ReactChild);
+  removeable?: boolean;
 }
 
 export interface Props {
+  noBG?: boolean;
+  noBorder?: boolean;
+  noWrap?: boolean;
   values: Array<Tag>;
   onClick?(e: React.MouseEvent<HTMLElement>): void;
   onChange?(tags: Array<Tag>): void;
   onRemove?(tag: Tag): void;
+  wrapTag?(tag: Tag, tagEl: JSX.Element): React.ReactChild;
+  first?: React.ReactChild;
 }
 
 export class Tags extends React.Component<Props> {
+  wrapTag(tag: Tag, tagEl: JSX.Element) {
+    if (this.props.wrapTag)
+      return this.props.wrapTag(tag, tagEl);
+
+    return tagEl;
+  }
+
   onRemove(tag: Tag) {
     const i = this.props.values.indexOf(tag);
     if (i == -1)
@@ -33,31 +50,35 @@ export class Tags extends React.Component<Props> {
     onChange && onChange(this.props.values.filter(t => t != tag));  
   }
 
-  renderTag = (tag: Tag) => {
+  renderTagImpl = (tag: Tag) => {
     const { onChange, onRemove } = this.props;
-    let jsx: JSX.Element | string = tag.value;
+    let jsx: React.ReactChild = tag.value;
 
     if (tag.render)
       jsx = typeof tag.render == 'function' ? tag.render(tag) : tag.render;
 
-    return (
+    return this.wrapTag(tag,
       <div
-        className={classes.tagWrap}
+        className={css.tagWrap}
         title={tag.tooltip || tag.value}
         key={tag.value}
         onClick={e => {
-          e.stopPropagation();
+          //e.stopPropagation();
         }}
       >
-        <div className={cn(classes.tag, 'horz-panel-1')}>
-          <div className={classes.label}>
+        <div className={cn(css.tag, 'horz-panel-1')}>
+          {tag.icon}
+          <div className={css.label}>
             {jsx}
           </div>
-          {(onChange || onRemove) && (
+          {(onChange || onRemove) && tag.removeable !== false && (
             <CSSIcon
               title='remove'
               icon='fa fa-close'
-              onClick={() => this.onRemove(tag)}
+              onClick={e => {
+                e.stopPropagation();
+                this.onRemove(tag);
+              }}
             />
           )}
         </div>
@@ -66,9 +87,17 @@ export class Tags extends React.Component<Props> {
   };
 
   render() {
+    const classes = cn(
+      css.tags,
+      !this.props.noBG && css.background,
+      !this.props.noBorder && css.border,
+      this.props.noWrap && css.noWrap
+    );
+
     return (
-      <div className={classes.tags} onClick={this.props.onClick}>
-        {this.props.values.map(this.renderTag)}
+      <div className={classes} onClick={this.props.onClick}>
+        {this.props.first}
+        {this.props.values.map(this.renderTagImpl)}
       </div>
     );
   }

@@ -603,9 +603,6 @@ export class ListView extends React.Component<ListProps, State> implements IList
       <div
         className={className}
         style={style}
-        onClick={e => {
-          e.stopPropagation();
-        }}
       >
         {this.renderHeader(this.props.header)}
         {this.renderValues()}

@@ -37,6 +37,7 @@ export function Popover(props: Props): JSX.Element {
 
 export interface IconProps extends FontIconProps {
   children: React.ReactChild;
+  position?: bp.Position;
 }
 
 let open: PopoverIcon = null;
@@ -44,6 +45,7 @@ export class PopoverIcon extends React.Component<IconProps> {
   render() {
     return (
       <Popover
+        position={this.props.position}
         popoverWillOpen={() => {
           open = this;
           this.setState({});
@@ -56,6 +58,7 @@ export class PopoverIcon extends React.Component<IconProps> {
         }}
       >
         <CSSIcon
+          onClick={() => {}}
           {...this.props}
           style={{
             borderRadius: 2,

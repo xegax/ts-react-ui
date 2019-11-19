@@ -42,6 +42,7 @@ export class Prompt extends React.Component<Props, {}> {
         <div className={cs.DIALOG_BODY}>
           <FormGroup label={this.props.prompt} labelFor='prompt'>
             <input
+              autoFocus
               ref={this.input}
               id='prompt'
               placeholder={this.props.placeholder}
