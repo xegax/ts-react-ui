@@ -4,6 +4,7 @@ node_modules
 /images
 /icons
 *.js
+!/build/*.js
 *.js.map
 *.d.ts
 !/typings/*.d.ts
