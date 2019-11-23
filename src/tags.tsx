@@ -73,7 +73,8 @@ export class Tags extends React.Component<Props> {
           </div>
           {(onChange || onRemove) && tag.removeable !== false && (
             <CSSIcon
-              title='remove'
+              showOnHover
+              title='Remove'
               icon='fa fa-close'
               onClick={e => {
                 e.stopPropagation();

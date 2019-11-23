@@ -91,6 +91,7 @@ export class SelectCategory extends React.Component<Props, State> {
         <div className='flexgrow0 horz-panel-1'>
           {this.props.sortValues ?
             <CSSIcon
+              displayFlex={false}
               showOnHover
               icon={sortIcon}
               onClick={() => {
@@ -118,6 +119,7 @@ export class SelectCategory extends React.Component<Props, State> {
             /> : null
           }
           <CSSIcon
+            displayFlex={false}
             showOnHover
             icon={reverse ? 'fa fa-arrow-up' : 'fa fa-arrow-down'}
             onClick={() => {

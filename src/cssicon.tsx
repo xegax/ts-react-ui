@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { cn } from './common/common';
 
-const classes = {
+const css = {
   cssicon: 'cssicon',
   showOnHover: 'show-on-hover',
   hidden: 'hidden',
   disabled: 'disabled',
-  clickable: 'clickable'
+  clickable: 'clickable',
+  displayFlex: 'display-flex'
 };
 
 export interface Props {
@@ -17,18 +18,20 @@ export interface Props {
   disabled?: boolean;
   showOnHover?: boolean;
   width?: string;
-  
+  displayFlex?: boolean;    // default: true
+
   style?: React.CSSProperties;
   onClick?(e: React.MouseEvent): void;
 }
 
 export function CSSIcon(props: Props) {
   const className = cn(
-    classes.cssicon,
-    props.disabled && classes.disabled,
-    props.showOnHover && classes.showOnHover,
-    props.hidden && classes.hidden,
-    props.onClick && classes.clickable
+    css.cssicon,
+    props.disabled && css.disabled,
+    props.showOnHover && css.showOnHover,
+    props.hidden && css.hidden,
+    props.onClick && css.clickable,
+    props.displayFlex !== false && css.displayFlex
   );
 
   return (

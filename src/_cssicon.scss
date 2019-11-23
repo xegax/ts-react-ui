@@ -1,6 +1,6 @@
 .cssicon {
   opacity: 1;
-  display: inline-flex;
+  display: inline-block;
   justify-content: center;
 
   &.clickable {
@@ -23,5 +23,9 @@
   &.hidden {
     visibility: hidden;
     pointer-events: none;
+  }
+
+  &.inline-flex {
+    display: inline-flex;
   }
 }

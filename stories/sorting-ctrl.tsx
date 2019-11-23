@@ -4,9 +4,9 @@ import '../src/_base.scss';
 import { SortingCtrl, TagExt } from '../src/sorting-ctrl';
 
 let available = [
-  'Column1',
-  'Column2',
-  'Column3',
+  { value: 'Column1', render: 'Колонка1' },
+  { value: 'Column2', render: 'Колонка2' },
+  { value: 'Column3', render: 'Колонка3' },
 ];
 
 let sorting = new Array<TagExt>();
@@ -29,6 +29,7 @@ class Dummy extends React.Component {
             sorting = newSorting;
             console.log(sorting);
             this.setState({});
+            return Promise.delay(2000) as any;
           }}
         />
       </div>
@@ -37,8 +38,8 @@ class Dummy extends React.Component {
 }
 
 
-storiesOf('Tags', module)
-  .add('Tag1', () => {
+storiesOf('SortingCtrl', module)
+  .add('SortingCtrl', () => {
     return (
       <Dummy/>
     );

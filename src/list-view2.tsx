@@ -12,19 +12,19 @@ const DEFAULT_CARD_WIDTH = 200;
 const DEFAULT_CARD_HEIGHT = 300;
 
 const classes = {
-  header: 'list-header',
-  highlight: 'list-view-highlight',
-  headerWrap: 'list-header-wrap',
-  class: 'list-view-ctrl',
-  cards: 'cards',
-  item: 'list-item',
-  noItemPadding: 'no-item-padding',
-  listWrapper: 'list-wrapper',
-  cardItem: 'list-item-card',
-  select: 'select',
   border: 'border',
+  cardItem: 'list-item-card',
+  cards: 'cards',
+  class: 'list-view-ctrl',
+  dropInto: 'drop-into',
   focus: 'focus',
-  dropInto: 'drop-into'
+  header: 'list-header',
+  headerWrap: 'list-header-wrap',
+  highlight: 'list-view-highlight',
+  item: 'list-item',
+  listWrapper: 'list-wrapper',
+  noItemPadding: 'no-item-padding',
+  select: 'select'
 };
 
 export type RenderType = string | ElementType<Item>;

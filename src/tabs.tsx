@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { className as cn } from './common/common';
+import { cn } from './common/common';
 import { ElementType, render } from './react-common';
+import { CSSIcon } from './cssicon';
 
-const classes = {
+const css = {
   TabsCtrl: 'tabs-ctrl',
   TabCtrl: 'tab-ctrl',
   Select: 'select',
@@ -16,7 +17,7 @@ interface Props {
   disabled?: boolean;
   select?: string;
   defaultSelect?: string;
-  onSelect?(id: string);
+  onSelect?(id: string): void;
   width?: number;
   height?: number;
   style?: React.CSSProperties;
@@ -65,7 +66,7 @@ export class Tabs extends React.Component<Props, State> {
     let tabContent: JSX.Element;
     if (selectTab) {
       tabContent = (
-        <div className={classes.Content} style={{maxHeight: this.props.height}}>
+        <div className={css.Content} style={{maxHeight: this.props.height}}>
           {selectTab.props.children}
         </div>
       );
@@ -73,12 +74,12 @@ export class Tabs extends React.Component<Props, State> {
 
     return (
       <div
-        className={cn(classes.TabsCtrl, this.props.disabled && classes.disabled)}
+        className={cn(css.TabsCtrl, this.props.disabled && css.disabled)}
         style={{...this.props.style, width: this.props.width}}
       >
-        <div ref={this.ref} className={classes.tabsWrap} onWheel={this.onWheel}>
+        <div ref={this.ref} className={css.tabsWrap} onWheel={this.onWheel}>
           {children}
-          <div className={classes.spacer}></div>
+          <div className={css.spacer}></div>
         </div>
         {tabContent}
       </div>
@@ -87,11 +88,12 @@ export class Tabs extends React.Component<Props, State> {
 }
 
 interface TabProps {
+  icon?: ElementType;
   label?: ElementType;
   maxWidth?: number;
   id: string;
   select?: boolean;
-  onSelect?(id: string);
+  onSelect?(id: string): void;
   children?: React.ReactNode;
 }
 
@@ -100,14 +102,27 @@ export class Tab extends React.Component<TabProps> {
     this.props.onSelect && this.props.onSelect(this.props.id);
   }
 
+  renderIcon() {
+    if (typeof (this.props.icon) == 'string') {
+      return (
+        <CSSIcon
+          icon={this.props.icon}
+        />
+      );
+    }
+
+    return render(this.props.icon);
+  }
+
   render() {
     return (
       <div
-        className={cn(classes.TabCtrl, this.props.select && classes.Select)}
+        className={cn(css.TabCtrl, this.props.select && css.Select, 'horz-panel-1')}
         onClick={this.onClick}
         style={{maxWidth: this.props.maxWidth}}
       >
-        {render(this.props.label)}
+        {this.renderIcon()}
+        {this.props.label && <span>{render(this.props.label)}</span>}
       </div>
     );
   }

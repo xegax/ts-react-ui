@@ -2,24 +2,25 @@
 {
 	"editor.tabSize": 2,
 	"files.exclude": {
-		"build": true,
-		"common": true,
 		"app-comp-layout": true,
-		"prop-sheet": true,
-		"control": true,
+		"common": true,
+		"grid": true,
+		"panel": true,
+		"icons": true,
 		"model": true,
+		"prop-sheet": true,
+		"tree": true,
 		"**/.git": true,
 		"**/.DS_Store": true,
 		"**/.tscache": true,
 		"**/node_modules": true,
 		".gitignore": true,
-		"**/*.js": true,
-		"**/*.js.map": true,
-		"{!typings,*.d.ts,**/*.d.ts}": true,
+		"src/**/*.js": true,
+		"src/**/*.js.map": true,
+		"*.d.ts": true,
 		"*.js": true,
 		"*.scss": true,
 		"*.js.map": true
-	}
-,
-"typescript.check.workspaceVersion": false
+	},
+	"typescript.check.workspaceVersion": false
 }
