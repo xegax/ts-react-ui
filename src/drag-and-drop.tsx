@@ -27,7 +27,7 @@ export class Draggable extends React.Component<DragProps, {}> {
     let dragData = this.props.data;
     const { onDragStart } = this.props;
 
-    startDragging({ x: 0, y: 0, minDist: 5 }, {
+    startDragging({ x: 0, y: 0, minDist: 5, preventDefault: false }, {
       onDragStart: () => {
         onDragStart && onDragStart();
         setTimeout(() => {

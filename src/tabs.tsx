@@ -6,6 +6,7 @@ import { CSSIcon } from './cssicon';
 const css = {
   TabsCtrl: 'tabs-ctrl',
   TabCtrl: 'tab-ctrl',
+  TabWrap: 'tab-wrap',
   Select: 'select',
   disabled: 'disabled',
   Content: 'tab-content',
@@ -78,6 +79,7 @@ export class Tabs extends React.Component<Props, State> {
         style={{...this.props.style, width: this.props.width}}
       >
         <div ref={this.ref} className={css.tabsWrap} onWheel={this.onWheel}>
+          <div className={css.spacer} style={{ width: 5, flexShrink: 0, flexGrow: 0 }}/>
           {children}
           <div className={css.spacer}></div>
         </div>
@@ -117,12 +119,16 @@ export class Tab extends React.Component<TabProps> {
   render() {
     return (
       <div
-        className={cn(css.TabCtrl, this.props.select && css.Select, 'horz-panel-1')}
+        className={cn(css.TabCtrl, this.props.select && css.Select)}
         onClick={this.onClick}
         style={{maxWidth: this.props.maxWidth}}
       >
-        {this.renderIcon()}
-        {this.props.label && <span>{render(this.props.label)}</span>}
+        {this.props.label && (
+          <div className={cn(css.TabWrap, 'horz-panel-1')}>
+            {this.renderIcon()}
+            <span>{render(this.props.label)}</span>
+          </div>
+        )}
       </div>
     );
   }

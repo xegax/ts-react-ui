@@ -8,14 +8,14 @@
     display: flex;
     padding-top: 2px;
     background-color: #ececec;
-
+/*
     > .tab-ctrl {
       border-left: 1px solid lightgray; 
     }
   
     > .tab-ctrl:first-child {
       border-left: 1px solid transparent;
-    }
+    }*/
   }
   .tabs-spacer {
     flex-grow: 1;
@@ -23,29 +23,35 @@
     background-color: #ececec;
   }
   .tab-ctrl {
-    max-width: 8em;
     flex-shrink: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
     display: inline-block;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    padding-left: 8px;
-    padding-right: 8px;
     background-color: #ececec;
     cursor: default;
     user-select: none;
-    border-bottom: 1px solid silver;
-    border-top: 1px solid transparent;
+    border: none;
     color: #6d6d6d;
+    .tab-wrap {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 8em;
+      padding-top: 4px;
+      padding-bottom: 4px;
+      padding-left: 8px;
+      padding-right: 8px;
+      border: 1px solid transparent;
+      border-bottom: 1px solid silver;
+    }
   }
 
   .tab-ctrl.select {
     background-color: white;
-    border: 1px solid silver;
-    border-bottom: none;
+    border: none;
     position: relative;
     color: black;
+    .tab-wrap {
+      border: 1px solid silver;
+      border-bottom: 1px solid transparent;
+    }
   }
   .tab-ctrl.select + .tab-ctrl  {
     border-left: none;
