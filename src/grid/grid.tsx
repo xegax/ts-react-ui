@@ -54,7 +54,9 @@ export interface Props {
   autoresize?: boolean;
 
   headerBorder?: boolean;
-  bodyBorder?: boolean;  
+  bodyBorder?: boolean;
+  oddRow?: string;
+  evenRow?: string;
 
   renderHeader?(props: HeaderProps): React.ReactChild;
   renderCell(props: CellProps): React.ReactChild;
@@ -246,6 +248,13 @@ export class Grid extends React.Component<Props, State> {
     const style: React.CSSProperties = {
       ...props.style
     };
+
+    if (this.props.oddRow && !(rowDataIdx % 2))
+      style.backgroundColor = this.props.oddRow;
+
+    if (this.props.evenRow && (rowDataIdx % 2))
+      style.backgroundColor = this.props.evenRow;
+
     if (style.height)
       style.lineHeight = props.style.height + 'px';
 

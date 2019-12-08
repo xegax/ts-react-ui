@@ -17,7 +17,7 @@
 
   &.border {
     border-left: 1px solid silver;
-    border-right: 1px solid transparent;
+    border-right: none;
     border-bottom: 1px solid silver;
     border-top: 1px solid silver;
     border-radius: 0px;
@@ -49,23 +49,23 @@
   background-color: white;
 
   &.grid-row-sel {
-    background-color: #cce8ff;
+    background-color: #cce8ff !important;
   }
 
   &.grid-cell-sel {
-    background-color: #74b9f3;
+    background-color: #74b9f3 !important;
     color: white;
   }
 
   &.grid-focus-row {
-    background-color: #e5f3ff;
+    background-color: #e5f3ff !important;
   }
 
   &.border {
     border-left: 1px solid silver;
-    border-right: 1px solid transparent;
+    border-right: none;
     border-top: 1px solid silver;
-    border-bottom: 1px solid transparent;
+    border-bottom: none;
     border-radius: 0px;
 
     &.last-col {
