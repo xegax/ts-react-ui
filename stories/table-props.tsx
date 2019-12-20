@@ -63,7 +63,7 @@ model.subscribe(() => {
 }, 'change-filter-values');
 
 storiesOf('Table props', module)
-  .add('props', () => {
+  .add('filters', () => {
     return (
       <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, overflow: 'hidden', display: 'flex' }}>
         <div style={{ position: 'relative', display: 'flex', flexGrow: 1 }}>

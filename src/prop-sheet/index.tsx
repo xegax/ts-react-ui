@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { classes } from './classes';
+import { css } from './classes';
 export { PropsGroup } from './props-group';
 export {
   PropItem,
   TextPropItem,
   DropDownPropItem,
+  DropDownPropItem2,
   SliderPropItem,
   SwitchPropItem
 } from './prop-item';
@@ -31,8 +32,8 @@ export class PropSheet extends React.Component<Props, State> {
     const width = this.state.width == null ? this.props.defaultWidth : this.state.width;
 
     return (
-      <div ref={this.ref} style={{ width }} className={cn(classes.propSheetWrap, this.props.fitToAbs && classes.fitToAbs)}>
-        <div className={classes.propSheet}>
+      <div ref={this.ref} style={{ width }} className={cn(css.propSheetWrap, this.props.fitToAbs && css.fitToAbs)}>
+        <div className={css.propSheet}>
           {React.Children.map(this.props.children, child => {
             if (!child)
               return null;

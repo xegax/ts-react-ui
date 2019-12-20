@@ -272,8 +272,11 @@ class View extends React.Component<{ model: Model, defaultWidth?: number, fitToA
               value={model.getSelectImage()}
               onSelect={scene => model.setImage(scene)}
             />
-            <PropItem label='scenes' inline={false}>
-              <ListView values={model.getScenes()} />
+            <PropItem label='scenes' inline={false} maxWidth=''>
+              <ListView
+                style={{ flexGrow: 1}} 
+                values={model.getScenes()}
+              />
             </PropItem>
           </Tab>
         </Tabs>

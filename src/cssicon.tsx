@@ -7,12 +7,13 @@ const css = {
   hidden: 'hidden',
   disabled: 'disabled',
   clickable: 'clickable',
-  displayFlex: 'display-flex'
+  displayFlex: 'inline-flex'
 };
 
 export interface Props {
   icon: string;
 
+  align?: 'left' | 'right';
   title?: string;
   hidden?: boolean;
   disabled?: boolean;
@@ -31,7 +32,8 @@ export function CSSIcon(props: Props) {
     props.showOnHover && css.showOnHover,
     props.hidden && css.hidden,
     props.onClick && css.clickable,
-    props.displayFlex !== false && css.displayFlex
+    props.displayFlex !== false && css.displayFlex,
+    props.align
   );
 
   return (

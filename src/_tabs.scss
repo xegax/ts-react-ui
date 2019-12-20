@@ -1,31 +1,30 @@
 .tabs-ctrl {
   white-space: nowrap;
   overflow-x: hidden;
+
   .tab-content {
     padding: 5px;
   }
+
   .tabs-wrap {
     display: flex;
     padding-top: 2px;
-    background-color: #ececec;
-/*
-    > .tab-ctrl {
-      border-left: 1px solid lightgray; 
-    }
-  
-    > .tab-ctrl:first-child {
-      border-left: 1px solid transparent;
-    }*/
   }
+
+  &.background {
+    .tabs-wrap {
+      background-color: #ececec;
+    }
+  }
+
   .tabs-spacer {
     flex-grow: 1;
     border-bottom: 1px solid silver;
-    background-color: #ececec;
   }
+
   .tab-ctrl {
     flex-shrink: 0;
     display: inline-block;
-    background-color: #ececec;
     cursor: default;
     user-select: none;
     border: none;

@@ -28,4 +28,11 @@
   &.inline-flex {
     display: inline-flex;
   }
+
+  &.left {
+    justify-content: left;
+  }
+  &.right {
+    justify-content: right;
+  }
 }

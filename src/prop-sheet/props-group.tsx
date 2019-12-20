@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Props as ItemProps } from './prop-item';
-import { classes } from './classes';
+import { css } from './classes';
 import { className as cn } from '../common/common';
 import { HorizontalResizer } from '../resizer';
 
@@ -94,20 +94,20 @@ export class PropsGroup extends React.Component<Props, State> {
 
     return (
       <div
-        className={cn(classes.group, this.props.className)}
+        className={cn(css.group, this.props.className)}
         onDragEnter={this.props.onDragEnter}
         onDragLeave={this.props.onDragLeave}
         onDrop={this.props.onDrop}
         onDragOver={this.props.onDragOver}
       >
         <div
-          className={classes.header}
+          className={css.header}
           onClick={e => {
             this.toggleGroup();
           }}
         >
           <div
-            className={cn(classes.wrap, 'horz-panel-1')}
+            className={cn(css.wrap, 'horz-panel-1')}
             style={{
               paddingLeft: depth * (this.props.levelPadding || 5)
             }}
@@ -119,7 +119,7 @@ export class PropsGroup extends React.Component<Props, State> {
         </div>
         <div
           ref={this.ref}
-          className={cn(classes.wrap, this.props.itemWrap != false && classes.itemWrap)}
+          className={cn(css.wrap, this.props.itemWrap != false && css.itemWrap)}
           style={{
             padding: this.props.padding == false ? 0 : undefined,
             display: !isOpen ? 'none' : null,

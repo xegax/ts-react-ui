@@ -9,7 +9,8 @@ import {
   PropItem,
   TextPropItem,
   SwitchPropItem,
-  DropDownPropItem
+  DropDownPropItem,
+  DropDownPropItem2
 } from '../src/prop-sheet';
 
 interface State {
@@ -144,6 +145,21 @@ let remoteData = {
   objs: makeObjData(300)
 };
 
+const sources = Object.keys(remoteData)
+  .map(value => {
+    return { value };
+  });
+
+const selection = [
+      {
+        value: 'none'
+      }, {
+        value: 'rows'
+      }, {
+        value: 'cells'
+      }
+];
+
 class Dummy extends React.Component<{}, State> {
   state: State = { rnd: Math.random() };
   rows = Array<Object>();
@@ -244,6 +260,7 @@ class Dummy extends React.Component<{}, State> {
 
   render() {
     const grid = this.model;
+
     return (
       <div style={{
         position: 'absolute',
@@ -255,13 +272,11 @@ class Dummy extends React.Component<{}, State> {
       >
         <div style={{ display: 'flex', position: 'relative', flexGrow: 1}}>
           <PropSheet defaultWidth={200} resize>
-            <PropsGroup label='grid'>
-              <DropDownPropItem
-                label='source'
-                value={{ value: this.dataKey }}
-                values={Object.keys(remoteData).map(value => {
-                  return { value };
-                })}
+            <PropsGroup label='Grid'>
+              <DropDownPropItem2
+                label='Source'
+                value={sources.find(v => v.value == this.dataKey)}
+                values={sources}
                 onSelect={item => {
                   this.dataKey = item.value;
                   this.setSource(
@@ -272,25 +287,25 @@ class Dummy extends React.Component<{}, State> {
               />
               {grid && <>
                 <PropItem
-                  label='rows'
+                  label='Rows'
                   value={grid.getTotalRowsCount()}
                 />
                 <SwitchPropItem
-                  label='border'
+                  label='Border'
                   value={grid.getBodyBorder()}
                   onChanged={() => {
                     grid.setBodyBorder(!grid.getBodyBorder());
                   }}
                 />
                 <SwitchPropItem
-                  label='header'
+                  label='Header'
                   value={grid.getHeader()}
                   onChanged={() => {
                     grid.setHeader(!grid.getHeader());
                   }}
                 />
                 <TextPropItem
-                  label='header size'
+                  label='Header size'
                   show={grid.getHeader()}
                   value={grid.getHeaderSize()}
                   onEnter={v => {
@@ -298,53 +313,34 @@ class Dummy extends React.Component<{}, State> {
                   }}
                 />
                 <TextPropItem
-                  label='row size'
+                  label='Row size'
                   value={grid.getRowSize()}
                   onEnter={v => {
                     grid.setRowSize(+v);
                   }}
                 />
                 <SwitchPropItem
-                  label='reverse'
+                  label='Reverse'
                   value={grid.getReverse()}
                   onChanged={() => {
                     grid.setReverse(!grid.getReverse());
                   }}
                 />
                 <SwitchPropItem
-                  label='autosize'
+                  label='Autosize'
                   value={grid.getAutosize()}
                   onChanged={() => {
                     grid.setAutosize(!grid.getAutosize());
                   }}
                 />
-                <DropDownPropItem
-                  label='select'
-                  value={{ value: grid.getSelectType() }}
-                  values={[
-                    {
-                      value: 'none'
-                    }, {
-                      value: 'rows'
-                    }, {
-                      value: 'cells'
-                    }
-                  ]}
+                <DropDownPropItem2
+                  label='Select'
+                  value={selection.find(v => v.value == grid.getSelectType())}
+                  values={selection}
                   onSelect={v => grid.setSelectType(v.value as any)}
                 />
                 <TextPropItem
                   value={this.state.cellData}
-                  /*onEnter={v => {
-                    const row = grid.getRowFocus(true);
-
-                    const col = grid.getColFocus();
-                    const prev = remoteData[row][ this.cols[col] ];
-                    if (prev == v)
-                      return;
-
-                    remoteData[row][ this.cols[col] ] = v;
-                    this.model.reloadCurrent();
-                  }}*/
                 />
               </>}
             </PropsGroup>

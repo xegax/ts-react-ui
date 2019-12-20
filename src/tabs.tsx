@@ -7,6 +7,7 @@ const css = {
   TabsCtrl: 'tabs-ctrl',
   TabCtrl: 'tab-ctrl',
   TabWrap: 'tab-wrap',
+  Background: 'background',
   Select: 'select',
   disabled: 'disabled',
   Content: 'tab-content',
@@ -16,6 +17,7 @@ const css = {
 
 interface Props {
   disabled?: boolean;
+  background?: boolean;
   select?: string;
   defaultSelect?: string;
   onSelect?(id: string): void;
@@ -29,6 +31,10 @@ interface State {
 }
 
 export class Tabs extends React.Component<Props, State> {
+  static defaultProps: Props = {
+    background: true
+  };
+
   state: Readonly<State> = { select: this.props.defaultSelect };
   ref = React.createRef<HTMLDivElement>();
 
@@ -75,13 +81,13 @@ export class Tabs extends React.Component<Props, State> {
 
     return (
       <div
-        className={cn(css.TabsCtrl, this.props.disabled && css.disabled)}
+        className={cn(css.TabsCtrl, this.props.disabled && css.disabled, this.props.background && css.Background)}
         style={{...this.props.style, width: this.props.width}}
       >
         <div ref={this.ref} className={css.tabsWrap} onWheel={this.onWheel}>
           <div className={css.spacer} style={{ width: 5, flexShrink: 0, flexGrow: 0 }}/>
           {children}
-          <div className={css.spacer}></div>
+          <div className={css.spacer}/>
         </div>
         {tabContent}
       </div>

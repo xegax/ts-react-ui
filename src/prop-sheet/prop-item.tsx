@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { className as cn } from '../common/common';
-import { classes } from './classes';
+import { css } from './classes';
 import { KeyCode } from '../common/keycode';
 import { DropDown, Props as DDProps } from '../drop-down';
 import { Slider, Props as SliderBaseProps } from '../slider';
-import { Switch } from '@blueprintjs/core';
+import { CSSIcon } from '../cssicon';
+import { ListView, Item } from '../list-view2';
+import { Popover, Classes } from '../popover';
 
 export interface Props {
   label?: string;
@@ -13,6 +15,8 @@ export interface Props {
   disabled?: boolean;
   fit?: boolean;
   wrapValue?: boolean;
+  grow?: boolean;
+  maxWidth?: string;
 
   inline?: boolean;
 
@@ -28,8 +32,8 @@ function hasClass(e: Element, name: string) {
 function scrollIntoView(e: React.MouseEvent) {
   let parent = e.currentTarget;
   let value: HTMLElement;
-  while( parent && !hasClass(parent, classes.group) ) {
-    if (!value && parent && hasClass(parent, classes.valueWrap))
+  while( parent && !hasClass(parent, css.group) ) {
+    if (!value && parent && hasClass(parent, css.valueWrap))
       value = parent as HTMLElement;
     parent = parent.parentElement;
   }
@@ -53,20 +57,28 @@ export const PropItem: React.SFC<Props> = (props: Props) => {
 
   let value: JSX.Element = props.children || props.value;
   if (props.fit)
-    value = <div className={classes.fit}>{value}</div>;
+    value = <div className={css.fit}>{value}</div>;
 
-  const nc = cn(classes.item, inline && classes.inline);
-  const vc = cn(classes.value, props.wrapValue != false && classes.valueWrap);
+  const nc = cn(css.item, inline && css.inline, props.grow && css.grow);
+  const vc = cn(css.value, props.wrapValue != false && css.valueWrap);
+
   return (
     <div
       className={nc}
       title={props.label}
       key={props.key}
     >
-      {props.label && <div className={classes.nameWrap}>
-        {props.label}
-      </div>}
-      <div className={vc} onMouseDown={scrollIntoView} title={typeof value == 'string' ? value : null}>
+      {props.label && (
+        <div className={css.nameWrap}>
+          {props.label}
+        </div>
+      )}
+      <div
+        className={vc}
+        style={{ maxWidth: props.maxWidth }}
+        onMouseDown={scrollIntoView}
+        title={typeof value == 'string' ? value : null}
+      >
         {value}
       </div>
     </div>
@@ -118,7 +130,7 @@ export class TextPropItem extends React.PureComponent<TextProps, Partial<TextSta
   render() {
     const {value, ...props} = this.props;
     return (
-      <PropItem {...props} fit>
+      <PropItem {...props} fit grow>
         <input
           tabIndex={0}
           autoFocus={props.autoFocus}
@@ -158,7 +170,7 @@ type DropDownProps = Props & DDProps & { left?: Array<JSX.Element>, right?: Arra
 export const DropDownPropItem: React.SFC<DropDownProps> = (props: DropDownProps) => {
   const { show, inline, label } = props;
   return (
-    <PropItem show={show} inline={inline} label={label} wrapValue={false}>
+    <PropItem show={show} inline={inline} label={label} wrapValue={false} grow>
       <div style={{display: 'flex', flexGrow: 1, alignItems: 'center'}} className='horz-panel-1'>
         {props.left}
         <DropDown {...props}/>
@@ -172,7 +184,7 @@ type SliderProps = Props & SliderBaseProps & { left?: Array<JSX.Element>, right?
 export const SliderPropItem: React.SFC<SliderProps> = (props: SliderProps) => {
   const { show, inline, label } = props;
   return (
-    <PropItem show={show} inline={inline} label={label} wrapValue={false}>
+    <PropItem show={show} inline={inline} label={label} wrapValue={false} grow>
       <div style={{display: 'flex', flexGrow: 1, alignItems: 'center'}} className='horz-panel-1'>
         {props.left}
         <div style={{flexGrow: 1, display: 'flex'}}>
@@ -190,15 +202,71 @@ interface SwitchProps extends Props {
 
 export const SwitchPropItem: React.SFC<SwitchProps> = (props: SwitchProps) => {
   const { show, inline, label } = props;
+  const checkIcon = (
+    <CSSIcon
+      title={props.value ? 'On' : 'Off'}
+      width='1em'
+      align='left'
+      displayFlex
+      icon={`fa ${props.value ? 'fa-check-square-o' : 'fa-square-o'}`}
+      onClick={() => props && props.onChanged(!props.value)}
+    />
+  );
+
   return (
-    <PropItem show={show} inline={inline} label={label} wrapValue={false}>
-      <Switch
-        disabled={props.disabled}
-        checked={props.value}
-        onChange={e => {
-          props.onChanged && props.onChanged(e.currentTarget.checked);
-        }}
-      />
+    <PropItem
+      show={show}
+      inline={inline}
+      label={label}
+      wrapValue={false}
+    >
+      <div className='horz-panel-1'>
+        {props.children}
+        {checkIcon}
+      </div>
     </PropItem>
   );
+}
+
+
+type DropDownProps2 = { value?: Item, values: Array<Item>, onSelect?(v: Item): void } & Props;
+type State = {
+  valueArr: Array<Item>,
+  value: Item
+};
+
+export class DropDownPropItem2 extends React.Component<DropDownProps2, State> {
+  state = {
+    valueArr: [],
+    value: undefined
+  };
+
+  static getDerivedStateFromProps(p: DropDownProps2, s: State): Partial<State> | null {
+    if (s.value != p.value) {
+      return {
+        valueArr: p.values.filter(v => v == p.value),
+        value: p.value
+      };
+    }
+    return null;
+  }
+
+  render() {
+    const { show, inline, label } = this.props;
+    const value: Item = this.state.valueArr[0];
+    return (
+      <PropItem show={show} inline={inline} label={label} wrapValue={false}>
+        <Popover>
+          <span>{!value ? 'Not selected' : value.render || value.value}</span>
+          <ListView
+            value={this.state.valueArr}
+            values={this.props.values}
+            itemsPerPage={7}
+            itemClassName={Classes.POPOVER_DISMISS}
+            onSelect={items => this.props.onSelect(items[0])}
+          />
+        </Popover>
+      </PropItem>
+    );
+  }
 }

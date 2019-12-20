@@ -1,10 +1,12 @@
-export const classes = {
+export const css = {
   propSheetWrap: 'prop-sheet-wrap',
+  grow: 'grow',
   fitToAbs: 'fit-to-abs',
   propSheet: 'prop-sheet',
   item: 'prop-item',
   itemWrap: 'prop-item-wrap',
   nameWrap: 'name-wrap',
+  name: 'name',
   valueWrap: 'value-wrap',
   value: 'value',
   wrap: 'wrap',
