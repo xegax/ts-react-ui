@@ -24,6 +24,7 @@ export interface Props {
   scrollbars?: boolean;
   flex?: boolean;
   resize?: boolean;
+  grow?: boolean;
 
   onDragEnter?(e: React.DragEvent): void;
   onDragLeave?(e: React.DragEvent): void;
@@ -95,7 +96,7 @@ export class PropsGroup extends React.Component<Props, State> {
 
     return (
       <div
-        className={cn(css.group, this.props.className)}
+        className={cn(css.group, this.props.className, this.props.grow && css.grow)}
         onDragEnter={this.props.onDragEnter}
         onDragLeave={this.props.onDragLeave}
         onDrop={this.props.onDrop}

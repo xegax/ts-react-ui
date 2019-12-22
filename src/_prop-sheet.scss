@@ -112,6 +112,16 @@ $prop-group-color: lightgray;
     }
   }
 
+  .prop-group.grow {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    > .wrap {
+      flex-grow: 1;
+      position: relative;
+    }
+  }
+
   .prop-item:first-child {
     margin-top: 0px;
   }
