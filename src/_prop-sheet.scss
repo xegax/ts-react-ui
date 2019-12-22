@@ -29,6 +29,51 @@ $prop-group-color: lightgray;
     }
   }
 
+  .prop-group2 {
+    position: relative;
+
+    &-label {
+      font-weight: bold;
+      line-height: 0.8em;
+      color: #1a0dab;
+      &:hover {
+        cursor: pointer;
+        text-decoration: underline;
+      }
+    }
+
+    &-content {
+      padding: 5px;
+      padding-top: 0px;
+    }
+
+    &-border {
+      .prop-group2-label {
+        position: absolute;
+        left: 0.5em;
+        top: 0px;
+        font-weight: bold;
+        background-color: white;
+        padding-left: 3px;
+        padding-right: 3px;
+      }
+      .prop-group2-content {
+        margin-top: 0.5em;
+        border: 1px solid silver;
+        border-radius: 4px;
+        padding-top: 5px;
+      }
+    }
+
+    &-close.prop-group2-border {
+      .prop-group2-content {
+        border: none;
+        border-top: 1px solid silver;
+        border-radius: 0px;
+      }
+    }
+  }
+
   .prop-group {
     outline: none;
     position: relative;

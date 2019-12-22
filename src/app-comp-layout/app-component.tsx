@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { className as cn } from '../common/common';
 
-const classes = {
+const scss = {
   componentIcon: 'app-component-icon'
 };
 
@@ -15,13 +15,16 @@ export interface Props {
   style?: React.CSSProperties;
 }
 
-export const AppComponent: React.SFC<Props> = (props: Props) => {
+export const AppComponent: React.SFC<Props> = props => {
+  const onClick = () => {
+    props.onSelect && props.onSelect(props.id);
+  };
+
   return (
     <div
-      className={cn(classes.componentIcon, props.select && 'select')}
-      onClick={() => {
-        props.onSelect && props.onSelect(props.id);
-      }}
+      className={cn(scss.componentIcon, props.select && 'select')}
+      title={props.title}
+      onClick={onClick}
     >
       <i className={cn(props.faIcon)}/>
     </div>

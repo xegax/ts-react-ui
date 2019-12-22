@@ -23,6 +23,7 @@ export interface Props {
   padding?: boolean;
   scrollbars?: boolean;
   flex?: boolean;
+  resize?: boolean;
 
   onDragEnter?(e: React.DragEvent): void;
   onDragLeave?(e: React.DragEvent): void;
@@ -81,13 +82,13 @@ export class PropsGroup extends React.Component<Props, State> {
     children = children.filter((item: React.ReactElement<ItemProps>) => {
       return item.props.show != false;
     }).map(item => {
-      let height = this.state.height || this.props.height || this.props.defaultHeight;
+      // let height = this.state.height || this.props.height || this.props.defaultHeight;
 
       return (
         React.cloneElement(item, {
           disabled: item.props.disabled || this.props.disabled,
           // height,
-          border: false
+          border: 'border' in item.props ? item.props['border'] : false
         })
       );
     });
@@ -130,7 +131,7 @@ export class PropsGroup extends React.Component<Props, State> {
         >
           {this.renderChildren(children)}
         </div>
-        <HorizontalResizer
+        {this.props.resize && <HorizontalResizer
           style={{ display: !isOpen ? 'none' : null }}
           size={() => this.getSize()}
           onResizing={newSize => {
@@ -139,7 +140,7 @@ export class PropsGroup extends React.Component<Props, State> {
           onDoubleClick={() => {
             this.setState({ height: null });
           }}
-        />
+        />}
       </div>
     );
   }

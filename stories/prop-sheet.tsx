@@ -17,6 +17,7 @@ import { Timer } from 'objio/common/timer';
 import { Tabs, Tab } from '../src/tabs';
 import { Classes, PopoverIcon } from '../src/popover';
 import { CheckIcon } from '../src/checkicon';
+import { PropGroup2 } from '../src/prop-sheet/props-group2';
 
 function tableActions() {
   return (
@@ -272,7 +273,7 @@ class View extends React.Component<{ model: Model, defaultWidth?: number, fitToA
               value={model.getSelectImage()}
               onSelect={scene => model.setImage(scene)}
             />
-            <PropItem label='scenes' inline={false} maxWidth=''>
+            <PropItem label='scenes' inline={false}>
               <ListView
                 style={{ flexGrow: 1}} 
                 values={model.getScenes()}
@@ -302,11 +303,52 @@ class View extends React.Component<{ model: Model, defaultWidth?: number, fitToA
     );
   }
 
+  videoFile() {
+    return (
+      <PropsGroup label='Stream'>
+        <PropGroup2
+          label='Video'
+          defaultOpen={false}
+        >
+          <PropItem
+            label='Codec'
+            value='h264'
+          />
+          <PropItem
+            label='FPS'
+            value='30'
+          />
+          <PropItem
+            label='Bitrate'
+            value='5000 kb/s'
+          />
+        </PropGroup2>
+        <PropGroup2
+          label='Audio'
+        >
+          <PropItem
+            label='Codec'
+            value='aac'
+          />
+          <PropItem
+            label='Freq.'
+            value='44 KHz'
+          />
+          <PropItem
+            label='Bitrate'
+            value='1000 kb/s'
+          />
+        </PropGroup2>
+      </PropsGroup>
+    );
+  }
+
   render() {
     const model = this.props.model;
     const select = model.getSelectImage();
     return (
       <PropSheet defaultWidth={this.props.defaultWidth} fitToAbs={this.props.fitToAbs} resize>
+        {this.videoFile()}
         <PropsGroup label='list'>
           <ListView values={model.getScenes()} />
         </PropsGroup>
