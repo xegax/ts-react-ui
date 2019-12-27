@@ -1,5 +1,6 @@
 $prop-name-color: #e9e9e9;
 $prop-group-color: lightgray;
+$line-height: 1.2em;
 
 .prop-sheet {
   position: absolute;
@@ -139,16 +140,15 @@ $prop-group-color: lightgray;
       display: flex;
       align-items: center;
       white-space: nowrap;
-      // overflow: hidden;
-      // text-overflow: ellipsis;
+      line-height: $line-height;
       color: gray;
       margin-bottom: 0px;
       font-weight: bold;
     }
 
     .value {
-      min-height: 1.5em;
-      line-height: 1.5em;
+      min-height: $line-height;
+      line-height: $line-height;
       color: gray;
       display: flex;
       align-items: center;
