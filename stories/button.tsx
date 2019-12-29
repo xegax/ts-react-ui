@@ -4,9 +4,20 @@ import { storiesOf } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { ContainerModel } from '../src/container';
 import { Draggable, Droppable } from '../src/drag-and-drop';
+import { showVideo } from '../src/video';
 
 storiesOf('Button', module)
-  .add('with text', () => <button onClick={action('clicked')}>Hello Button 2</button>)
+  .add('show dialog', () => {
+    const click = () => {
+      showVideo({ src: 'contra.mp4' });
+    };
+
+    return (
+      <button onClick={click}>
+        Hello Button 2
+      </button>
+    );
+  })
   .add('with some emoji', () => (
     <button onClick={action('clicked')}>
       <span role="img" aria-label="so cool">

@@ -6,6 +6,9 @@ import { VolumeBar } from './volume-bar';
 import { clamp, clone } from './common/common';
 import { startDragging, isDragging } from './common/start-dragging';
 import { Rect } from './common/rect';
+import { showModal } from './show-modal';
+import { Dialog } from './blueprint';
+import { CSSIcon } from './cssicon';
 
 export { Range };
 
@@ -149,6 +152,7 @@ interface Props {
   onChangedData?(data: VideoData): void;
   onChangedCtrl?(ctrl: CtrlData): void;
 
+  showToolbar?: boolean;
   toolbar?: Array<JSX.Element>;
   tags?: Array<React.ReactElement<Tag>>;
   autoPlay?: boolean;
@@ -168,6 +172,10 @@ interface State {
 }
 
 export class Video extends React.Component<Props, State> {
+  static defaultProps: Partial<Props> = {
+    showToolbar: false
+  };
+
   private ref = React.createRef<HTMLVideoElement>();
 
   constructor(props: Props) {
@@ -346,6 +354,89 @@ export class Video extends React.Component<Props, State> {
     ].filter(v => v) as any;
   }
 
+  private renderToolbar() {
+    const video = this.ref.current;
+    if (!video || this.props.showToolbar === false)
+      return null;
+
+    return (
+      <div className='horz-panel-1' style={{ paddingBottom: 5 }}>
+        <CheckIcon
+          title='Loop'
+          value={this.state.ctrl.loop}
+          faIcon='fa fa-refresh'
+          onChange={this.setLoop}
+        />
+        <CheckIcon
+          title='Zoom cut'
+          value
+          faIcon='fa fa-cut'
+          onChange={() => {
+            if (this.state.range) {
+              this.setState({ range: null });
+            } else {
+              const trim = this.state.data.trim;
+              const time = clamp(this.state.time, [trim.from, trim.to]);
+              this.setState({
+                time,
+                range: { ...trim }
+              });
+              video.currentTime = time;
+            }
+          }}
+        />
+        <CheckIcon
+          title='Trim start'
+          value
+          faIcon='fa fa-step-forward'
+          onChange={() => {
+            const trim: Range = { ...this.state.data.trim };
+            trim.from = this.state.time;
+            if (trim.to == null)
+              trim.to = this.getRange().to;
+
+            this.state.data.trim = trim;
+            this.setState({});
+          }}
+        />
+        <CheckIcon
+          title='Trim end'
+          value
+          faIcon='fa fa-step-backward'
+          onChange={() => {
+            const trim: Range = { ...this.state.data.trim };
+            trim.to = this.state.time;
+            if (trim.from == null)
+              trim.from = this.getRange().from;
+
+            this.state.data.trim = trim;
+            this.setState({});
+          }}
+        />
+        <CheckIcon
+          title='Crop'
+          value={!!this.state.data.crop}
+          faIcon='fa fa-crop'
+          onChange={() => {
+            if (this.state.data.crop) {
+              this.setCrop(null);
+            } else {
+              this.setCrop({
+                x: 0,
+                y: 0,
+                width: video.videoWidth,
+                height: video.videoHeight
+              });
+            }
+          }}
+        />
+        {(this.props.toolbar || []).map((tool, i: number) => {
+          return React.cloneElement(tool, { key: tool.key || i });
+        })}
+      </div>
+    );
+  }
+
   renderControl() {
     const video = this.ref.current;
     if (!video)
@@ -354,80 +445,7 @@ export class Video extends React.Component<Props, State> {
     const range = this.getRange();
     return (
       <div style={{ padding: 5, backgroundColor: 'white' }}>
-        <div className='horz-panel-1' style={{ paddingBottom: 5 }}>
-          <CheckIcon
-            title='Loop'
-            value={this.state.ctrl.loop}
-            faIcon='fa fa-refresh'
-            onChange={this.setLoop}
-          />
-          <CheckIcon
-            title='Zoom cut'
-            value
-            faIcon='fa fa-cut'
-            onChange={() => {
-              if (this.state.range) {
-                this.setState({ range: null });
-              } else {
-                const trim = this.state.data.trim;
-                const time = clamp(this.state.time, [trim.from, trim.to]);
-                this.setState({
-                  time,
-                  range: { ...trim }
-                });
-                video.currentTime = time;
-              }
-            }}
-          />
-          <CheckIcon
-            title='Trim start'
-            value
-            faIcon='fa fa-step-forward'
-            onChange={() => {
-              const trim: Range = { ...this.state.data.trim };
-              trim.from = this.state.time;
-              if (trim.to == null)
-                trim.to = this.getRange().to;
-
-              this.state.data.trim = trim;
-              this.setState({});
-            }}
-          />
-          <CheckIcon
-            title='Trim end'
-            value
-            faIcon='fa fa-step-backward'
-            onChange={() => {
-              const trim: Range = { ...this.state.data.trim };
-              trim.to = this.state.time;
-              if (trim.from == null)
-                trim.from = this.getRange().from;
-
-              this.state.data.trim = trim;
-              this.setState({});
-            }}
-          />
-          <CheckIcon
-            title='Crop'
-            value={!!this.state.data.crop}
-            faIcon='fa fa-crop'
-            onChange={() => {
-              if (this.state.data.crop) {
-                this.setCrop(null);
-              } else {
-                this.setCrop({
-                  x: 0,
-                  y: 0,
-                  width: video.videoWidth,
-                  height: video.videoHeight
-                });
-              }
-            }}
-          />
-          {(this.props.toolbar || []).map((tool, i: number) => {
-            return React.cloneElement(tool, { key: tool.key || i });
-          })}
-        </div>
+        {this.renderToolbar()}
         <Timeline
           value={video.currentTime}
           minValue={range.from}
@@ -521,4 +539,35 @@ export class Video extends React.Component<Props, State> {
       </div>
     );
   }
+}
+
+export function showVideo(args: { src: string }) {
+  const dlg = showModal(
+    <Dialog
+      style={{ width: 'unset', padding: 0 }}
+      canEscapeKeyClose
+      canOutsideClickClose
+      isOpen
+      isCloseButtonShown
+      onClose={() => dlg.close()}
+    >
+      <div
+        className='abs-fit-noscroll'
+        style={{ pointerEvents: 'none', display: 'flex' }}
+      >
+        <video
+          src={args.src}
+          controls
+          autoPlay
+          style={{ pointerEvents: 'initial', objectFit: 'scale-down', width: '100%' }}
+        />
+        <CSSIcon
+          title='Close'
+          icon='fa fa-close'
+          style={{ position: 'absolute', right: 5, top: 5, fontSize: '24pt', pointerEvents: 'initial' }}
+          onClick={() => dlg.close()}
+        />
+      </div>
+    </Dialog>
+  );
 }

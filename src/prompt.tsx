@@ -5,7 +5,6 @@ import {
   FormGroup,
   Button,
   Intent,
-  Callout,
   Classes as cs,
   IconName
 } from '@blueprintjs/core';
