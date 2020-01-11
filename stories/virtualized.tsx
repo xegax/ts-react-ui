@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { storiesOf } from '@storybook/react';
-import { Grid, CellProps, HeaderProps } from '../src/grid/grid';
+import { Grid, CellProps, CardProps, HeaderProps } from '../src/grid/grid';
 import { GridLoadableModel } from '../src/grid/grid-loadable-model';
 import { CheckIcon } from '../src/checkicon';
 import {
@@ -9,7 +9,6 @@ import {
   PropItem,
   TextPropItem,
   SwitchPropItem,
-  DropDownPropItem,
   DropDownPropItem2
 } from '../src/prop-sheet';
 
@@ -19,6 +18,7 @@ interface State {
   rows?: number;
   cellData?: string | number;
   dataVersion?: string;
+  cardsView?: boolean;
 }
 
 interface RowData {
@@ -140,8 +140,8 @@ function rndHex(s = 16) {
 }
 
 let remoteData = {
-  rnd: makeRowData(50),
-  files: makeFileData(100),
+  rnd: makeRowData(3),
+  files: makeFileData(50),
   objs: makeObjData(300)
 };
 
@@ -214,6 +214,14 @@ class Dummy extends React.Component<{}, State> {
     this.setState({});
   }
 
+  renderCard = (props: CardProps) => {
+    const rowObj = this.model.getRowOrLoad(props.row);
+    if (!rowObj)
+      return;
+
+    return rowObj.cell[0];
+  }
+
   renderCell = (props: CellProps) => {
     const rnd = Math.round(this.state.rnd * 100) / 100;
     const rowObj = this.model.getRowOrLoad(props.row);
@@ -247,10 +255,12 @@ class Dummy extends React.Component<{}, State> {
 
     return (
       <Grid
+        cardsView={this.state.cardsView}
         model={this.model}
         headerBorder
         renderHeader={this.renderHeader}
         renderCell={this.renderCell}
+        renderCard={this.renderCard}
         onScrollToBottom={() => {
           this.model.loadNext();
         }}
@@ -331,6 +341,48 @@ class Dummy extends React.Component<{}, State> {
                   value={grid.getAutosize()}
                   onChanged={() => {
                     grid.setAutosize(!grid.getAutosize());
+                  }}
+                />
+                <SwitchPropItem
+                  label='Cards view'
+                  value={this.state.cardsView}
+                  onChanged={() => {
+                    this.setState({ cardsView: !this.state.cardsView})
+                  }}
+                />
+                <SwitchPropItem
+                  label='Card border'
+                  value={grid.getCardBorder()}
+                  onChanged={v => {
+                    grid.setCardBorder(v);
+                  }}
+                />
+                <TextPropItem
+                  label='Card width'
+                  value={grid.getCardWidth()}
+                  onEnter={v => {
+                    grid.setCardWidth(+v);
+                  }}
+                />
+                <TextPropItem
+                  label='Card height'
+                  value={grid.getCardHeight()}
+                  onEnter={v => {
+                    grid.setCardHeight(+v);
+                  }}
+                />
+                <TextPropItem
+                  label='Cards per rows'
+                  value={grid.getCardsPerRow()}
+                  onEnter={v => {
+                    grid.setCardsPerRow(+v);
+                  }}
+                />
+                <TextPropItem
+                  label='Cards padding'
+                  value={grid.getCardsPadding()}
+                  onEnter={v => {
+                    grid.setCardsPadding(+v);
                   }}
                 />
                 <DropDownPropItem2

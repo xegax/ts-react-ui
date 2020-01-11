@@ -4,6 +4,7 @@ import { clamp } from '../common/common';
 export type EventType = 'resize' | 'col-resized' | 'render' | 'select' | 'resize-row' | 'scroll-top';
 export type SelectType = 'none' | 'rows' | 'cells';
 export type SelectCells = {[row: number]: Set<number>};
+export type ViewType = 'rows' | 'cards';
 
 export interface GridModelArgs<T = GridModel> {
   rowsCount: number;
@@ -33,11 +34,18 @@ export class GridModel extends Publisher<EventType> {
   private renderRowCount: number = 0;
   private bodyBorder: boolean = true;
   private header: boolean = true;
+  private cardBorder: boolean = true;
   private selectType: SelectType = 'cells';
+  private viewType: ViewType = 'rows';
+  private cardWidth: number = 200;
+  private cardHeight: number = 300;
+  private cardsPerRow: number = -1;
+  private cardsPadding: number = 4;
 
   protected naturalIdx = (idx: number) => idx;
   protected reverseIdx = (idx: number) => this.rowsCount - idx - 1;
   getRowIdx = this.naturalIdx;
+
   constructor(args?: GridModelArgs) {
     super();
 
@@ -46,6 +54,75 @@ export class GridModel extends Publisher<EventType> {
       this.colsCount = args.colsCount;
       this.restoreStateFrom(args.prev);
     }
+  }
+
+  setCardsPadding(p: number) {
+    if (this.cardsPadding == p)
+      return;
+
+    this.cardsPadding = p;
+    this.delayedNotify({ type: 'resize-row' });
+  }
+
+  getCardsCols() {
+    let cols = this.cardsPerRow;
+    if (cols == -1)
+      cols = Math.max(1, Math.floor(this.width / this.cardWidth));
+    return cols;
+  }
+
+  getCardFromRow(row: number): { rowIndex: number, colIndex: number } {
+    const cols = this.getCardsCols();
+    return {
+      rowIndex: Math.floor(row / cols),
+      colIndex: row % cols
+    };
+  }
+
+  getRowFromCard(args: { rowIndex: number, colIndex: number }) {
+    const cols = this.getCardsCols();
+    const rows = Math.ceil(this.rowsCount / cols);
+    return clamp(args.rowIndex, [0, rows - 1]) * cols + clamp(args.colIndex, [0, cols - 1]);
+  }
+
+  getCardsPadding() {
+    return this.cardsPadding;
+  }
+
+  setCardsPerRow(cards: number) {
+    if (this.cardsPerRow == cards)
+      return;
+
+    this.cardsPerRow = cards;
+    this.delayedNotify();
+  }
+
+  getCardsPerRow() {
+    return this.cardsPerRow;
+  }
+
+  getCardWidth() {
+    return this.cardWidth;
+  }
+
+  setCardWidth(w: number) {
+    if (this.cardWidth == w)
+      return;
+
+    this.cardWidth = w;
+    this.delayedNotify();
+  }
+
+  getCardHeight() {
+    return this.cardHeight;
+  }
+
+  setCardHeight(h: number) {
+    if (this.cardHeight == h)
+      return;
+
+    this.cardHeight = h;
+    this.delayedNotify({ type: 'resize-row' });
   }
 
   restoreStateFrom(m: GridModel) {
@@ -60,6 +137,25 @@ export class GridModel extends Publisher<EventType> {
     this.headerHeight = m.headerHeight;
     this.width = m.width;
     this.height = m.height;
+    this.cardsPadding = m.cardsPadding;
+    this.cardWidth = m.cardWidth;
+    this.cardHeight = m.cardHeight;
+    this.cardsPerRow = m.cardsPerRow;
+    this.cardBorder = m.cardBorder;
+    this.viewType = m.viewType;
+  }
+
+  setViewType(view: ViewType) {
+    if (view == this.viewType)
+      return;
+
+    this.viewType = view;
+    this.delayedNotify({ type: 'resize' });
+    this.delayedNotify({ type: 'select' });
+  }
+
+  getViewType() {
+    return this.viewType;
   }
 
   setBodyBorder(border: boolean) {
@@ -68,6 +164,18 @@ export class GridModel extends Publisher<EventType> {
 
     this.bodyBorder = border;
     this.delayedNotify();
+  }
+
+  setCardBorder(border: boolean) {
+    if (this.cardBorder == border)
+      return;
+
+    this.cardBorder = border;
+    this.delayedNotify();
+  }
+
+  getCardBorder() {
+    return this.cardBorder;
   }
 
   getBodyBorder() {

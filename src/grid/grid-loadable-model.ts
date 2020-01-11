@@ -185,4 +185,11 @@ export class GridLoadableModel<T = Object> extends GridModel {
   getTotalRowsCount() {
     return this.rowsCount;
   }
+
+  setSelect(args: { row: number, col?: number, select: boolean, multiple?: boolean }) {
+    if (args.select && args.row >= this.loadedRows)
+      return;
+
+    super.setSelect(args);
+  }
 }
