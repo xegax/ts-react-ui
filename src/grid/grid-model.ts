@@ -41,6 +41,7 @@ export class GridModel extends Publisher<EventType> {
   private cardHeight: number = 300;
   private cardsPerRow: number = -1;
   private cardsPadding: number = 4;
+  private scrollSize: number = 0;
 
   protected naturalIdx = (idx: number) => idx;
   protected reverseIdx = (idx: number) => this.rowsCount - idx - 1;
@@ -56,6 +57,18 @@ export class GridModel extends Publisher<EventType> {
     }
   }
 
+  setScrollSize(size: number) {
+    if (this.scrollSize == size)
+      return;
+
+    this.scrollSize = size;
+    this.delayedNotify();
+  }
+
+  getScrollSize() {
+    return this.scrollSize;
+  }
+
   setCardsPadding(p: number) {
     if (this.cardsPadding == p)
       return;
@@ -67,7 +80,7 @@ export class GridModel extends Publisher<EventType> {
   getCardsCols() {
     let cols = this.cardsPerRow;
     if (cols == -1)
-      cols = Math.max(1, Math.floor(this.width / this.cardWidth));
+      cols = Math.max(1, Math.floor((this.width - this.scrollSize) / this.cardWidth));
     return cols;
   }
 

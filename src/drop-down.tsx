@@ -3,8 +3,12 @@ import * as ReactDOM from 'react-dom';
 import { ListView, ListViewModel, ListProps } from './list-view';
 import { className as cn } from './common/common';
 import { KeyCode } from './common/keycode';
-import { Popover, Classes } from './popover';
+import { Popover, Classes, PopoverLink } from './popover';
 import { ElementType } from './react-common';
+import { ListView as ListView2 } from './list-view2';
+import { Position } from '@blueprintjs/core';
+
+export { Position };
 
 export interface Item {
   render?: string | ElementType<Item>;
@@ -311,4 +315,50 @@ export class DropDown<T extends Props = Props> extends React.Component<T, State>
       </div>
     );
   }
+}
+
+export interface SelectProps {
+  items: Array<Item>;
+  onSelect(item: Item): void;
+  icon?: string;
+  text?: string;
+  itemsPerPage?: number;
+  position?: Position;
+}
+
+export const SelectItem: React.SFC<SelectProps> = props => {
+  return (
+    <PopoverLink
+      text={props.text}
+      icon={props.icon}
+      position={props.position}
+    >
+      <ListView2
+        multiselect={false}
+        itemClassName={Classes.POPOVER_DISMISS}
+        itemsPerPage={props.itemsPerPage}
+        values={props.items}
+        onSelect={v => props.onSelect(v[0])}
+      />
+    </PopoverLink>
+  );
+}
+
+export type SelectStringProps = {
+  items: Array<string>;
+  onSelect(item: string): void;
+  icon?: string;
+  text?: string;
+  itemsPerPage?: number;
+  position?: Position;
+};
+
+export const SelectString: React.SFC<SelectStringProps> = props => {
+  return (
+    <SelectItem
+      {...props}
+      items={props.items.map(value => ({ value }))}
+      onSelect={v => props.onSelect(v.value)}
+    />
+  );
 }

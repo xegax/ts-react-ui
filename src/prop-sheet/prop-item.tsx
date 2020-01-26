@@ -257,7 +257,7 @@ export class DropDownPropItem2 extends React.Component<DropDownProps2, State> {
     return (
       <PropItem show={show} inline={inline} label={label} wrapValue={false}>
         <Popover>
-          <span>{!value ? 'Not selected' : value.render || value.value}</span>
+          <a>{!value ? 'Not selected' : value.render || value.value}</a>
           <ListView
             value={this.state.valueArr}
             values={this.props.values}

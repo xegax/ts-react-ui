@@ -59,13 +59,17 @@ export class Tabs extends React.Component<Props, State> {
 
   render() {
     let children = React.Children.map(this.props.children, (tab: React.ReactElement<TabProps>) => {
+      if (!tab.props.show)
+        return null;
+
       return (
         React.cloneElement(tab, {
           onSelect: this.getOnSelect(tab.props),
           select: tab.props.select != null ? tab.props.select : this.state.select == tab.props.id
         })
       );
-    });
+    }).filter(c => c);
+
     const selectTab = children.find(tab => {
       return tab.props.select != null ? tab.props.select : this.state.select == tab.props.id;
     });
@@ -98,6 +102,7 @@ export class Tabs extends React.Component<Props, State> {
 interface TabProps {
   icon?: ElementType;
   label?: ElementType;
+  show?: boolean;
   maxWidth?: number;
   id: string;
   select?: boolean;
@@ -106,6 +111,10 @@ interface TabProps {
 }
 
 export class Tab extends React.Component<TabProps> {
+  static defaultProps: Partial<TabProps> = {
+    show: true
+  };
+
   onClick = () => {
     this.props.onSelect && this.props.onSelect(this.props.id);
   }
@@ -129,12 +138,10 @@ export class Tab extends React.Component<TabProps> {
         onClick={this.onClick}
         style={{maxWidth: this.props.maxWidth}}
       >
-        {this.props.label && (
-          <div className={cn(css.TabWrap, 'horz-panel-1')}>
-            {this.renderIcon()}
-            <span>{render(this.props.label)}</span>
-          </div>
-        )}
+        <div className={cn(css.TabWrap, 'horz-panel-1')}>
+          {this.renderIcon()}
+          {this.props.label && <span>{render(this.props.label)}</span>}
+        </div>
       </div>
     );
   }

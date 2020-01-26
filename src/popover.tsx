@@ -40,7 +40,7 @@ export interface IconProps extends FontIconProps {
   position?: bp.Position;
 }
 
-let open: PopoverIcon = null;
+let open: React.Component = null;
 export class PopoverIcon extends React.Component<IconProps> {
   render() {
     return (
@@ -74,6 +74,61 @@ export class PopoverIcon extends React.Component<IconProps> {
         />
         {this.props.children}
       </Popover>
+    );
+  }
+}
+
+interface LinkProps {
+  style?: React.CSSProperties;
+  children: React.ReactChild;
+  position?: bp.Position;
+  icon?: string;
+  text: string;
+}
+
+export class PopoverLink extends React.Component<LinkProps> {
+  render() {
+    return (
+      <span>
+        <Popover
+          position={this.props.position}
+          popoverWillOpen={() => {
+            open = this;
+            this.setState({});
+          }}
+          popoverDidClose={() => {
+            if (open == this)
+              open = null;
+
+            this.setState({});
+          }}
+        >
+          <a
+            className='horz-panel-1'
+            style={{
+              color: open == this ? 'white' : undefined,
+              backgroundColor: open == this ? 'black' : undefined,
+              ...this.props.style
+            }}
+            onClick={e => {
+              e.preventDefault();
+            }}
+          >
+            {this.props.icon && <CSSIcon
+              icon={this.props.icon}
+              style={{
+                display: 'inline-flex',
+                paddingLeft: 3,
+                paddingRight: 3,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            />}
+            {this.props.text}
+          </a>
+          {this.props.children}
+        </Popover>
+      </span>
     );
   }
 }

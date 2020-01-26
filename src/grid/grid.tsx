@@ -31,7 +31,6 @@ interface State {
   model: GridModel;
   key?: number;
   view?: Grid;
-  scrollSize?: number;
 }
 
 export interface HeaderProps {
@@ -85,7 +84,7 @@ export class Grid extends React.Component<Props, Partial<State>> {
     super(props);
 
     const m = props.model || new GridModel();
-    this.state = { model: m, view: this, scrollSize: 0 };
+    this.state = { model: m, view: this };
     this.subscribe(m);
   }
 
@@ -255,7 +254,7 @@ export class Grid extends React.Component<Props, Partial<State>> {
 
     const padding = m.getCardsPadding();
     let cardWidth = m.getCardWidth();
-    const w = m.getWidth() - this.state.scrollSize;
+    const w = m.getWidth() - m.getScrollSize();
     let newCols = m.getCardsPerRow();
     if (newCols == -1) {
       newCols = Math.max(1, Math.floor(w / cardWidth));
@@ -393,13 +392,13 @@ export class Grid extends React.Component<Props, Partial<State>> {
   private getColWidth = (col: { index: number }) => {
     const m = this.state.model;
     if (m.getViewType() == 'cards')
-      return m.getWidth() - this.state.scrollSize;
+      return m.getWidth() - m.getScrollSize();
 
     return m.getColWidth(col);
   }
 
   private onScrollbarPresence = (p: ScrollbarPresenceParams) => {
-    this.setState({ scrollSize: p.size });
+    this.state.model.setScrollSize(p.size);
   }
 
   private renderTable = (w: number, h: number) => {
