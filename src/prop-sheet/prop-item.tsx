@@ -7,6 +7,7 @@ import { Slider, Props as SliderBaseProps } from '../slider';
 import { CSSIcon } from '../cssicon';
 import { ListView, Item } from '../list-view2';
 import { Popover, Classes } from '../popover';
+import { render } from '../react-common'
 
 export interface Props {
   label?: string;
@@ -229,7 +230,12 @@ export const SwitchPropItem: React.SFC<SwitchProps> = (props: SwitchProps) => {
 }
 
 
-type DropDownProps2 = { value?: Item, values: Array<Item>, onSelect?(v: Item): void } & Props;
+type DropDownProps2 = {
+  value?: Item
+  values: Array<Item>, onSelect?(v: Item): void
+  renderSelect?(value: Item): JSX.Element;
+} & Props;
+
 type State = {
   valueArr: Array<Item>,
   value: Item
@@ -251,13 +257,20 @@ export class DropDownPropItem2 extends React.Component<DropDownProps2, State> {
     return null;
   }
 
+  private renderSelect(item: Item): React.ReactChild {
+    if (this.props.renderSelect)
+      return this.props.renderSelect(item);
+
+    return render(item.render, item) || item.value;
+  }
+
   render() {
     const { show, inline, label } = this.props;
     const value: Item = this.state.valueArr[0];
     return (
       <PropItem show={show} inline={inline} label={label} wrapValue={false}>
         <Popover>
-          <a>{!value ? 'Not selected' : value.render || value.value}</a>
+          <a>{!value ? 'Not selected' : this.renderSelect(value)}</a>
           <ListView
             value={this.state.valueArr}
             values={this.props.values}
