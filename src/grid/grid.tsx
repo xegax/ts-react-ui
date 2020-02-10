@@ -165,6 +165,7 @@ export class Grid extends React.Component<Props, Partial<State>> {
   }
 
   private onRender = () => {
+    this.setState({});
     this.ref.current && this.ref.current.forceUpdateGrids();
   }
 
