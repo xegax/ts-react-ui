@@ -9,34 +9,42 @@ export interface LoginResult {
   pass: string;
 }
 
-export interface LoginArgs extends LoginResult {
-  error?: string;
-}
-
 export interface Props {
-  error?: string;
-  onLogin(args: LoginArgs): void;
+  onLogin(args: LoginResult): Promise<void>;
 }
 
-export class LoginForm extends React.Component<Props> {
+interface State {
+  error?: string;
+  req?: Promise<void>;
+}
+
+export class LoginForm extends React.Component<Props, State> {
   private login = React.createRef<HTMLInputElement>();
   private pass = React.createRef<HTMLInputElement>();
+  state: State = {};
 
   private onLogin = () => {
-    this.props.onLogin && this.props.onLogin({
+    if (!this.props.onLogin || this.state.req)
+      return;
+
+    const req = this.props.onLogin({
       login: this.login.current.value,
       pass: this.pass.current.value
+    }).catch((error: string) => {
+      this.setState({ error, req: null })
     });
+
+    this.setState({ req });
   }
 
   private showError(): JSX.Element {
-    if (!this.props.error)
+    if (!this.state.error)
       return null;
 
     return (
       <div className={cn(cs.CALLOUT, cs.INTENT_DANGER)}>
         <h4>Login failed</h4>
-        {this.props.error}
+        {this.state.error}
       </div>
     );
   }
@@ -47,6 +55,7 @@ export class LoginForm extends React.Component<Props> {
   };
 
   render() {
+    const disabled = this.state.req != null;
     return (
       <Dialog
         isOpen
@@ -57,6 +66,7 @@ export class LoginForm extends React.Component<Props> {
           {this.showError()}
           <FormGroup label='Login:' labelFor='login'>
             <input
+              disabled={disabled}
               ref={this.login}
               autoFocus
               id='login'
@@ -67,6 +77,7 @@ export class LoginForm extends React.Component<Props> {
           </FormGroup>
           <FormGroup label='Password:' labelFor='passwd'>
             <input
+              disabled={disabled}
               ref={this.pass}
               id='passwd'
               placeholder='Password'
@@ -77,7 +88,13 @@ export class LoginForm extends React.Component<Props> {
         <div className={cs.DIALOG_FOOTER}>
           <div className={cs.DIALOG_FOOTER_ACTIONS}>
             <Button
-              text='Login'
+              disabled={disabled}
+              text={
+                <div className='horz-panel-1'>
+                  {disabled ? <i className='fa fa-spinner fa-spin' /> : null}
+                  <span>Login</span>
+                </div>
+              }
               intent={Intent.PRIMARY}
               onClick={this.onLogin}
             />
@@ -88,15 +105,19 @@ export class LoginForm extends React.Component<Props> {
   }
 }
 
-export function showLogin(error?: string): Promise<LoginResult> {
+export function showLogin<T = any>(args: { login(args: LoginResult): Promise<T> }): Promise<T> {
   return new Promise(resolve => {
     const dlg = showModal(
       <LoginForm
-        onLogin={args => {
-          dlg.close();
-          resolve(args);
+        onLogin={p => {
+          return (
+            args.login(p)
+            .then(res => {
+              dlg.close();
+              resolve(res);
+            })
+          );
         }}
-        error={error}
       />
     );
   });
