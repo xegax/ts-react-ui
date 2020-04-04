@@ -17,6 +17,7 @@ export interface PromptArgs {
   value?: string;
   prompt?: string;
   placeholder?: string;
+  type?: 'password';
 }
 
 interface Props extends PromptArgs {
@@ -44,6 +45,7 @@ export class Prompt extends React.Component<Props, {}> {
               autoFocus
               ref={this.input}
               id='prompt'
+              type={this.props.type}
               placeholder={this.props.placeholder}
               className={cn(cs.INPUT, cs.LARGE, cs.FILL)}
               defaultValue={this.props.value}

@@ -81,7 +81,9 @@ export class LoginForm extends React.Component<Props, State> {
               ref={this.pass}
               id='passwd'
               placeholder='Password'
+              type='password'
               className={cn(cs.INPUT, cs.LARGE, cs.FILL)}
+              onKeyDown={this.onKeyDown}
             />
           </FormGroup>
         </div>

@@ -2,6 +2,8 @@
 {
 	"editor.tabSize": 2,
 	"files.exclude": {
+		"control": true,
+		"forms": true,
 		"app-comp-layout": true,
 		"common": true,
 		"grid": true,
