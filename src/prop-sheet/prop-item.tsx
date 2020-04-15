@@ -231,9 +231,11 @@ export const SwitchPropItem: React.SFC<SwitchProps> = (props: SwitchProps) => {
 
 
 type DropDownProps2 = {
-  value?: Item
-  values: Array<Item>, onSelect?(v: Item): void
+  value?: Item;
+  values: Array<Item>;
+  onSelect?(v: Item): void;
   renderSelect?(value: Item): JSX.Element;
+  renderOptions?(value: Item): JSX.Element;
 } & Props;
 
 type State = {
@@ -269,16 +271,19 @@ export class DropDownPropItem2 extends React.Component<DropDownProps2, State> {
     const value: Item = this.state.valueArr[0];
     return (
       <PropItem show={show} inline={inline} label={label} wrapValue={false}>
-        <Popover>
-          <a>{!value ? 'Not selected' : this.renderSelect(value)}</a>
-          <ListView
-            value={this.state.valueArr}
-            values={this.props.values}
-            itemsPerPage={7}
-            itemClassName={Classes.POPOVER_DISMISS}
-            onSelect={items => this.props.onSelect(items[0])}
-          />
-        </Popover>
+        <span className='horz-panel-1'>
+          <Popover>
+            <a>{!value ? 'Not selected' : this.renderSelect(value)}</a>
+            <ListView
+              value={this.state.valueArr}
+              values={this.props.values}
+              itemsPerPage={7}
+              itemClassName={Classes.POPOVER_DISMISS}
+              onSelect={items => this.props.onSelect(items[0])}
+            />
+          </Popover>
+          {value && this.props.renderOptions && this.props.renderOptions(value)}
+        </span>
       </PropItem>
     );
   }

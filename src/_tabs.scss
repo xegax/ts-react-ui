@@ -1,3 +1,5 @@
+$bgcolor: #ececec;
+
 .tabs-ctrl {
   white-space: nowrap;
   overflow-x: hidden;
@@ -13,7 +15,10 @@
 
   &.background {
     .tabs-wrap {
-      background-color: #ececec;
+      background-color: $bgcolor;
+    }
+    .tab-content {
+      background-color: white;
     }
   }
 

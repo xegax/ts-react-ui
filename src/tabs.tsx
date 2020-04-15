@@ -18,11 +18,13 @@ const css = {
 interface Props {
   disabled?: boolean;
   background?: boolean;
+  flex?: boolean;
   select?: string;
   defaultSelect?: string;
   onSelect?(id: string): void;
   width?: number;
   height?: number;
+  className?: string;
   style?: React.CSSProperties;
 }
 
@@ -77,15 +79,28 @@ export class Tabs extends React.Component<Props, State> {
     let tabContent: JSX.Element;
     if (selectTab) {
       tabContent = (
-        <div className={css.Content} style={{maxHeight: this.props.height}}>
+        <div
+          className={cn(
+            css.Content,
+            this.props.flex && 'flexcol1'
+          )}
+          style={{maxHeight: this.props.height}}
+        >
           {selectTab.props.children}
         </div>
       );
     }
 
+    const className = this.props.flex ? 'flexcol1' : '';
     return (
       <div
-        className={cn(css.TabsCtrl, this.props.disabled && css.disabled, this.props.background && css.Background)}
+        className={cn(
+          css.TabsCtrl,
+          this.props.disabled && css.disabled,
+          this.props.background && css.Background,
+          this.props.className,
+          className
+        )}
         style={{...this.props.style, width: this.props.width}}
       >
         <div ref={this.ref} className={css.tabsWrap} onWheel={this.onWheel}>
@@ -102,6 +117,7 @@ export class Tabs extends React.Component<Props, State> {
 interface TabProps {
   icon?: ElementType;
   label?: ElementType;
+  title?: ElementType;
   show?: boolean;
   maxWidth?: number;
   id: string;
@@ -115,25 +131,28 @@ export class Tab extends React.Component<TabProps> {
     show: true
   };
 
-  onClick = () => {
+  private onClick = () => {
     this.props.onSelect && this.props.onSelect(this.props.id);
   }
 
-  renderIcon() {
-    if (typeof (this.props.icon) == 'string') {
-      return (
-        <CSSIcon
-          icon={this.props.icon}
-        />
-      );
-    }
+  private renderIcon() {
+    const icon = this.props.icon;
 
-    return render(this.props.icon);
+    if (typeof icon != 'string')
+      return render(icon);
+
+    return (
+      <CSSIcon
+        icon={icon}
+      />
+    );
   }
 
   render() {
+    const t = this.props.title;
     return (
       <div
+        title={t && typeof t == 'string' ? t : undefined}
         className={cn(css.TabCtrl, this.props.select && css.Select)}
         onClick={this.onClick}
         style={{maxWidth: this.props.maxWidth}}
