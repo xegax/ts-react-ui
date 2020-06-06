@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 export type IconEntry = JSX.Element | (() => JSX.Element);
 export type IconMapObj = {[id: string]: IconEntry};
 
@@ -14,18 +16,22 @@ export class IconMap {
     return global;
   }
 
-  static render(...args: Array<string>): JSX.Element | undefined {
-    return global.render(...args);
+  static render<T = React.Props<any>>(icon: string | string[], p?: T): JSX.Element | undefined {
+    return global.render(icon, p);
   }
 
-  render(...args: Array<string>): JSX.Element | undefined {
-    for (let n = 0; n < args.length; n++) {
-      let icon = this.map[args[n]];
+  render<T = React.Props<any>>(icon: string | string[], p?: T): JSX.Element | undefined {
+    const iconsArr = Array.isArray(icon) ? icon : [icon];
+    for (let n = 0; n < iconsArr.length; n++) {
+      let icon = this.map[iconsArr[n]];
       if (!icon)
         continue;
 
       if (typeof icon == 'function')
         return icon();
+
+      if (p)
+        icon = React.cloneElement(icon, p);
 
       return icon;
     }

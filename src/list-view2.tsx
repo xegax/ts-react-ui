@@ -80,6 +80,7 @@ export interface ListProps {
 
   onDragAndDropTo?(args: DragAndDropArgs): void;
   onMoveTo?(args: MoveToArgs): void;
+  renderItem?(item: Item, jsx: React.ReactChild, idx: number): React.ReactChild;
 
   noDataToDisplay?: JSX.Element;
   ref?: React.RefObject<any>;
@@ -408,6 +409,9 @@ export class ListView extends React.Component<ListProps, State> implements IList
     } else if (typeof jsx == 'string' && jsx.trim() == '') {
       jsx = <span style={{visibility: 'hidden'}}>?</span>;
     }
+
+    if (this.props.renderItem)
+      jsx = this.props.renderItem(item, jsx, idx);
 
     const select = this.state.model.getSelect().indexOf(item) != -1 || this.state.drag == item;
     const className = cn(

@@ -7,6 +7,14 @@
     cursor: pointer;
   }
 
+  &.checked {
+    opacity: 1;
+  }
+
+  &.unchecked {
+    opacity: 0.3;
+  }
+
   &.disabled {
     color: silver;
     cursor: default;

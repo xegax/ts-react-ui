@@ -158,6 +158,7 @@ $bg-color-1: #d2e2ec;
 .border {
   border: 1px solid silver;
   border-radius: 2px;
+  box-sizing: border-box;
 }
 
 .focus {
@@ -205,6 +206,14 @@ $bg-color-1: #d2e2ec;
   flex-direction: row;
 }
 
+.h-center {
+  justify-content: center;
+}
+
+.v-center {
+  align-items: center;
+}
+
 .flexcol {
   display: flex;
   flex-direction: column;
@@ -243,15 +252,32 @@ $bg-color-1: #d2e2ec;
 }
 
 .resizer {
-  position: absolute;
   background-color: lightsteelblue;
   opacity: 0;
   &:hover {
     opacity: 1;
   }
+  &.drag {
+    opacity: 1;
+  }
+  &.disabled {
+    cursor: default;
+    opacity: 0;
+  }
+}
+
+.flex-vert-resizer {
+  width: 5px;
+  cursor: e-resize;
+}
+
+.flex-horz-resizer {
+  height: 5px;
+  cursor: n-resize;
 }
 
 .vertical-resizer {
+  position: absolute;
   width: 5px;
   cursor: e-resize;
   &.fit-to-abs {
@@ -273,6 +299,7 @@ $bg-color-1: #d2e2ec;
 }
 
 .horizontal-resizer {
+  position: absolute;
   height: 5px;
   cursor: n-resize;
   &.fit-to-abs {
@@ -349,3 +376,4 @@ $bg-color-1: #d2e2ec;
 @import './progress';
 @import './icon-svg';
 @import './tree';
+@import './layout2';

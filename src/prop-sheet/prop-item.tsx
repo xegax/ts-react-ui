@@ -89,9 +89,11 @@ export const PropItem: React.SFC<Props> = (props: Props) => {
 interface TextProps extends Props {
   onChanged?(value: string): string | void;
   onEnter?(value: string): string | void;
+  onEnterNum?(value?: number): number | void;
   onCancel?();
   autoFocus?: boolean;
-}
+  icon?: JSX.Element;
+};
 
 interface TextState {
   value: string;
@@ -113,6 +115,13 @@ export class TextPropItem extends React.PureComponent<TextProps, Partial<TextSta
 
   onEnter(value: string) {
     let newValue = this.props.onEnter && this.props.onEnter(value);
+    if (this.props.onEnterNum) {
+      let numValue = Number.parseFloat(value);
+      if (!Number.isFinite(numValue) || numValue == null || numValue == Number.NaN)
+        numValue = undefined;
+      this.props.onEnterNum(numValue);
+    }
+
     if (typeof newValue == 'string' && this.props.value == null)
       this.setState({ value: newValue as string });
   }
@@ -162,6 +171,7 @@ export class TextPropItem extends React.PureComponent<TextProps, Partial<TextSta
             this.props.onChanged && this.props.onChanged(e.currentTarget.value);
           }}
         />
+        {this.props.icon}
       </PropItem>
     );
   }

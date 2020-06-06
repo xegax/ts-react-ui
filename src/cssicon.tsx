@@ -7,13 +7,16 @@ const css = {
   hidden: 'hidden',
   disabled: 'disabled',
   clickable: 'clickable',
-  displayFlex: 'inline-flex'
+  displayFlex: 'inline-flex',
+  checked: 'checked',
+  unchecked: 'unchecked'
 };
 
 export interface Props {
   icon: string;
 
   align?: 'left' | 'right';
+  checked?: boolean;
   title?: string;
   hidden?: boolean;
   disabled?: boolean;
@@ -30,6 +33,8 @@ export function CSSIcon(props: Props) {
     css.cssicon,
     props.disabled && css.disabled,
     props.showOnHover && css.showOnHover,
+    props.checked && css.checked,
+    'checked' in props && !props.checked && css.unchecked,
     props.hidden && css.hidden,
     props.onClick && css.clickable,
     props.displayFlex !== false && css.displayFlex,

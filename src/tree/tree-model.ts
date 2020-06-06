@@ -194,7 +194,7 @@ export class TreeModel extends Publisher {
   }
 
   setSelect(sel: Array<ValuePath>) {
-    if (sel == this.selectPath)
+    if (!sel || sel == this.selectPath)
       return;
 
     this.selectPath = sel;

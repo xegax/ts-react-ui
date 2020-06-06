@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { startDragging } from './common/start-dragging';
-import { className as cn } from './common/common';
+import { className as cn, clamp } from './common/common';
 
 export interface Props<T = 'left' | 'center' | 'right'> {
   side?: T;
@@ -104,6 +104,70 @@ export class HorizontalResizer extends React.Component<Props<'top' | 'center' | 
           e.stopPropagation();
           this.props.onDoubleClick && this.props.onDoubleClick(e);
         }}
+      />
+    );
+  }
+}
+
+interface FlexProps {
+  vertical?: boolean;
+  tgtSize: number;
+  size?: number;
+
+  min?: number;
+  max?: number;
+
+  onResizing?(newSize: number): void;
+  onResized?(newSize: number): void;
+  onReset?(): void;
+}
+
+interface FlexState {
+  drag?: boolean;
+}
+
+export class FlexResizer extends React.Component<FlexProps, FlexState> {
+  state: FlexState = {
+    drag: false
+  };
+
+  private onMouseDown = (e: React.MouseEvent) => {
+    const { onResizing, onResized, vertical, min, max } = this.props;
+    if (!onResizing && !onResized)
+      return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const vmin = min != null ? min : -10000;
+    const vmax = max != null ? max : 10000;
+    const currSize = this.props.tgtSize;
+    startDragging({ x: 0, y: 0, minDist: 0 }, {
+        onDragStart: () => {
+          this.setState({ drag: true });
+        },
+        onDragging: evt => {
+          onResizing && onResizing( clamp(currSize + (vertical ? evt.x : evt.y), [vmin, vmax]) );
+        },
+        onDragEnd: evt => {
+          this.setState({ drag: false });
+          onResized && onResized( clamp(currSize + (vertical ? evt.x : evt.y), [vmin, vmax]) );
+        }
+    })(e.nativeEvent);
+  }
+
+  render() {
+    return (
+      <div
+        className={cn(
+          'resizer',
+          this.props.vertical ? 'flex-vert-resizer' : 'flex-horz-resizer',
+          this.state.drag && 'drag',
+          !this.props.onResizing && !this.props.onResized && 'disabled'
+        )}
+        style={this.props.vertical ? { width: this.props.size } : { height: this.props.size }}
+        onMouseDown={this.onMouseDown}
+        onDoubleClick={this.props.onReset}
       />
     );
   }

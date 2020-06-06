@@ -151,6 +151,7 @@ export const Header = (props: HeaderProps) => {
 }
 
 export interface Props {
+  className?: string;
   model?: LayoutModel;
   width?: number;
   height?: number;
@@ -299,7 +300,7 @@ export class Layout extends React.Component<Props, State> {
     const model = this.state.model;
     const layout = model.getLayout();
     const el = (
-      <div className={classes.layout} style={{width, height}}>
+      <div className={cn(classes.layout, this.props.className)} style={{width, height}}>
         {this.renderCont(layout)}
       </div>
     );
