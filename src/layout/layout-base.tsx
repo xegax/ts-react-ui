@@ -42,16 +42,14 @@ export interface KeyToItem {
 
 interface ItemSize {
   curr: number;
-  min: number;
   fixed: number;
+  min: number;
 }
 
 export interface Resizer {
   getGrow(item: SchemaItem, newSize?: number): number;
   getFullSize(): number;
   getSize(elIdx: number): ItemSize;
-  // getMin(elIdx: number): number;
-  getMinSizeRange(item1: SchemaItem, item2: SchemaItem): number[];
 }
 
 interface State {
@@ -193,10 +191,12 @@ export class LayoutBase extends React.Component<Props, State> {
     const { cont, el } = isSchemaElement(item);
     if (el) {
       const tmp = this.state.keyToItem[item.key];
+      let size = 0;
       if (this.getGrow(tmp.cont, item) == 0)
-        return (type == 'row' ? item.width : item.height) || 0;
+        size = (type == 'row' ? item.width : item.height) || 0;
 
-      return 0;
+      // size += (type == 'row' ? item.minWidth : item.minHeight) || 0;
+      return size;
     }
 
     type = type || cont.type;
@@ -211,6 +211,23 @@ export class LayoutBase extends React.Component<Props, State> {
     if (type == cont.type && cont.items.length > 1)
       size += Math.max(0, cont.items.length - 1) * this.props.splitSize;
 
+    return size;
+  }
+
+  private findItemMinSize(item: SchemaItem, type?: ContainerType) {
+    const { cont, el } = isSchemaElement(item);
+    if (el)
+      return (type == 'row' ? item.minWidth : item.minHeight) || 0;
+
+    type = type || cont.type;
+    let size = 0;
+    for (let next of cont.items) {
+      const sz = this.findItemMinSize(next, type);
+      if (type == cont.type)
+        size += sz;
+      else
+        size = Math.max(sz, size);
+    }
     return size;
   }
 
@@ -254,14 +271,14 @@ export class LayoutBase extends React.Component<Props, State> {
   getResizer(cont: SchemaContainer): Resizer {
     const fullSize = this.getItemMinSize(cont);
     const growable = cont.items.length;
-    const sizes = Array<{ curr: number; min: number; fixed: number }>();
+    const sizes = Array<ItemSize>();
 
     const getSize = (idx: number) => {
       if (!sizes[idx]) {
         sizes[idx] = {
           curr: this.getSize(cont, idx),
-          min: this.getMinSize(cont, idx),
-          fixed: this.findItemFixedSize(cont.items[idx], cont.type)
+          fixed: this.findItemFixedSize(cont.items[idx], cont.type),
+          min: this.findItemMinSize(cont.items[idx], cont.type)
         };
       }
 
@@ -275,13 +292,15 @@ export class LayoutBase extends React.Component<Props, State> {
           throw new Error('Element not found');
 
         const size = getSize(idx);
-        newSize = (newSize != null ? newSize : (size.curr - size.min)) - size.fixed;
+        newSize = (newSize != null ? newSize : size.curr);
+        newSize -= (size.fixed + size.min);
+        if (newSize == 0 && !size.fixed && size.min)
+          return cont.items.length;
+
         return clamp(newSize * growable / fullSize, [0.0001, growable]);
       },
-      getSize: (elIdx: number) => {
-        return getSize(elIdx);
-      },
-      getFullSize: () => fullSize,
+      getSize,
+      getFullSize: () => fullSize/*,
       getMinSizeRange: (first: SchemaElement, next: SchemaElement) => {
         const idx1 = cont.items.findIndex(ci => ci == first);
         if (idx1 == -1)
@@ -296,7 +315,7 @@ export class LayoutBase extends React.Component<Props, State> {
         const minSize1 = Math.min(size1.curr, this.getMaxSize(cont.type, next) - size2.curr);
         const minSize2 = Math.min(size2.curr, this.getMaxSize(cont.type, first) - size1.curr);
         return [ minSize1, minSize2 ];
-      }
+      }*/
     };
   }
 
@@ -326,8 +345,8 @@ export class LayoutBase extends React.Component<Props, State> {
           resizer.getSize(firstIdx + 1)
         ];
         min = [
-          -(size[0].curr - size[0].fixed),
-          size[1].curr - size[1].fixed
+          -(size[0].curr - (size[0].fixed + size[0].min)),
+          size[1].curr - (size[1].fixed + size[1].min)
         ];
       }
       delta = clamp(delta, min);

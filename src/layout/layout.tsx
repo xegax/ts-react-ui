@@ -68,14 +68,6 @@ export class Layout extends React.Component<Props, State> implements DragHandle 
     return this.ref.current.getDOMElement(key);
   }
 
-  private getGrow(p: SchemaContainer, c: SchemaItem) {
-    return this.ref.current.getGrow(p, c);
-  }
-
-  private getSize(c: SchemaContainer, itemIdx: number) {
-    return this.ref.current.getSize(c, itemIdx);
-  }
-
   private onChanged() {
     this.ref.current.onChanged();
   }
@@ -120,7 +112,7 @@ export class Layout extends React.Component<Props, State> implements DragHandle 
   }
 
   remove(key: string) {
-    const { item, cont } = this.findItemByKey(key);
+    let { item, cont } = this.findItemByKey(key);
     if (!item || !cont)
       return;
 
