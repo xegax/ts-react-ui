@@ -1,7 +1,7 @@
 import { makeEval } from '../common/eval';
 
 describe('eval.ts', () => {
-  it('usage', () => {
+  /*it('usage', () => {
     const res = makeEval('trim(" " + $rand + trim($col["col 1"]) + $recno + " ")');
     expect(Array.from(res.funcs)).toEqual(['trim']);
     expect(Array.from(res.vars)).toEqual(['rand', 'col', 'recno']);
@@ -14,5 +14,10 @@ describe('eval.ts', () => {
       }
     );
     expect(r).toEqual('xyz[col1-data]10');
+  });*/
+
+  it('strings', () => {
+    const res = makeEval('"https://www.kinopoisk.ru/images/sm_film/" + $col["kpId"] + ".jpg"');
+    console.log(res.s);
   });
 });
