@@ -48,10 +48,10 @@ export interface Pos {
   top: number;
 }
 
-export function show(pos: Pos, items: Array<IMenuItem | ISubmenuItem>) {
+export function showMenu(pos: Pos, items: Array<IMenuItem | ISubmenuItem>) {
   ContextMenu.show(renderMenu(items), pos);
 }
 
-export function hide() {
+export function hideMenu() {
   ContextMenu.hide();
 }

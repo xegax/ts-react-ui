@@ -35,6 +35,7 @@ interface State {
 
 export interface HeaderProps {
   col: number;
+  wrapperProps: React.HTMLProps<HTMLDivElement>;
 }
 
 export interface CellProps {
@@ -53,7 +54,7 @@ export interface RowsRange {
   firstRow: number;
   rowsCount: number;
 }
-
+ 
 export interface Props {
   model?: GridModel;
 
@@ -223,10 +224,14 @@ export class Grid extends React.Component<Props, Partial<State>> {
       props.columnIndex == m.getColsCount() - 1 && scss.last
     );
 
-    const jsx = this.props.renderHeader ? this.props.renderHeader({ col: props.columnIndex }) : null;
+    const header: HeaderProps = {
+      col: props.columnIndex,
+      wrapperProps: {}
+    };
+    const jsx = this.props.renderHeader ? this.props.renderHeader(header) : null;
     return (
       <div style={hdr} className={className}>
-        <div className={cn('horz-panel-1', scss.labelWrapper)}>
+        <div className={cn('horz-panel-1', scss.labelWrapper)} {...header.wrapperProps}>
           {jsx}
         </div>
         <VerticalResizer
