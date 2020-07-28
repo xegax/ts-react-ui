@@ -12,8 +12,10 @@ import {
   DropDownPropItem2
 } from '../src/prop-sheet';
 import { GridViewModel } from '../src/grid/grid-view-model';
-import { GridView } from '../src/grid/grid-view';
+import { GridView, onColumnCtxMenu } from '../src/grid/grid-view';
 import { GridArrayRequestor } from '../src/grid/grid-requestor';
+import { CSSIcon } from '../src/cssicon';
+import { GridViewAppr } from '../src/grid/grid-view-appr';
 
 interface SourceRows {
   value: string;
@@ -62,6 +64,7 @@ interface State {
   source?: SourceRows;
 }
 
+let appr: Partial<GridViewAppr> = {};
 class Dummy extends React.Component<{}, State> {
   model = new GridViewModel();
   state: State = {};
@@ -85,6 +88,7 @@ class Dummy extends React.Component<{}, State> {
     return (
       <GridView
         model={this.model}
+        onColumnCtxMenu={onColumnCtxMenu}
       />
     );
   }
@@ -194,6 +198,21 @@ class Dummy extends React.Component<{}, State> {
                     grid.setCardsPadding(+v);
                   }}
                 />
+                <div className='horz-panel-1'>
+                  <CSSIcon
+                    icon='fa fa-copy'
+                    onClick={() => {
+                      appr = this.model.getApprChange();
+                      console.log(JSON.stringify(appr));
+                    }}
+                  />
+                  <CSSIcon
+                    icon='fa fa-paste'
+                    onClick={() => {
+                      this.model.setApprChange(appr);
+                    }}
+                  />
+                </div>
               </>}
             </PropsGroup>
           </PropSheet>

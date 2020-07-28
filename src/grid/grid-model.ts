@@ -351,6 +351,13 @@ export class GridModel extends Publisher<EventType> {
     this.delayedNotify({ type: 'col-resized' });
   }
 
+  resetAllColSize() {
+    this.columnWidth = [];
+    this.recalcFixedSizes();
+    this.delayedNotify({ type: 'resize' });
+    this.delayedNotify({ type: 'col-resized' });
+  }
+
   setColSize(col: number, size: number) {
     this.columnWidth[col] = size;
     this.recalcFixedSizes();

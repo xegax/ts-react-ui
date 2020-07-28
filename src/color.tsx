@@ -9,34 +9,32 @@ interface GetColorArgs {
   onChanging?(newColor: string): void;
 }
 
-export function getColor(args: GetColorArgs): Promise<string> {
+export function getColor(args: GetColorArgs) {
   let newColor: string = args.color;
-  let p = Promise.defer<string>();
+  return new Promise<string>((resolve, reject) => {
+    const dlg = showModal(
+      <Dialog
+        title={args.title}
+        isCloseButtonShown
+        isOpen
+        onClose={evt => {
+          if (evt.type == 'keydown')
+            reject('cancel');
+          else
+            resolve(newColor);
 
-  const dlg = showModal(
-    <Dialog
-      title={args.title}
-      isCloseButtonShown
-      isOpen
-      onClose={evt => {
-        if (evt.type == 'keydown')
-          p.reject('cancel');
-        else
-          p.resolve(newColor);
-
-        dlg.close();
-      }}
-      style={{width: 'unset', height: 'unset', padding: 0}}
-    >
-      <SketchPicker
-        color={args.color}
-        onChangeComplete={color => {
-          newColor = color.hex;
-          args.onChanging && args.onChanging(color.hex);
+          dlg.close();
         }}
-      />
-    </Dialog>
-  );
-
-  return p.promise;
+        style={{width: 'unset', height: 'unset', padding: 0}}
+      >
+        <SketchPicker
+          color={args.color}
+          onChangeComplete={color => {
+            newColor = color.hex;
+            args.onChanging && args.onChanging(color.hex);
+          }}
+        />
+      </Dialog>
+    );
+  });
 }

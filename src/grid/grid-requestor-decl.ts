@@ -38,7 +38,7 @@ export interface ViewArgs<T extends WrapperArgs<string, any>> {
 
   filter?: FilterArgs;
   sorting?: {
-    cols: Array<string>;
+    cols: Array<{ name: string; asc: boolean }>;
     reverse?: boolean;
   };
   columns?: Array<string>;

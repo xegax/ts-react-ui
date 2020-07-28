@@ -42,7 +42,7 @@ interface Props {
 
   left?: Array<React.ReactChild> | React.ReactChild;
   right?: Array<React.ReactChild> | React.ReactChild;
-  tags?: Array<React.ReactElement<Tag>>;
+  tags?: Array<JSX.Element>;
 }
 
 interface State {
@@ -357,7 +357,7 @@ export class TimelineImpl extends React.Component<Props, Partial<State>> {
   }
 }
 
-interface TagProps {
+export interface TagProps {
   color?: string;
   show?: boolean;
   icon?: string;

@@ -61,7 +61,7 @@ export class GridArrayRequestor extends GridRequestorBase {
 
       if (args.sorting && args.sorting.cols.length) {
         const reverse = args.sorting.reverse == true;
-        const cidx = this.source.cols.indexOf(args.sorting.cols[0]);
+        const cidx = this.source.cols.findIndex(c => c == args.sorting.cols[0].name);
         if (cidx != -1) {
           view.rowsIdx = this.source.rows.map((_, i) => i);
           view.rowsIdx.sort((r1, r2) => {

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { storiesOf } from '@storybook/react';
-import { Timeline, Range, Tag, EditValue } from '../src/timeline';
+import { Timeline, Range, Tag, TagProps, EditValue } from '../src/timeline';
 import { Rect } from '../src/common/rect';
 import '../src/_base.scss';
 import { clamp } from '../src/common/common';
