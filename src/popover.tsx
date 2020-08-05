@@ -21,7 +21,6 @@ export function Popover(props: Props): JSX.Element {
   };
 
   const { modifiers, ...other } = props;
-
   return (
     <bp.Popover
       minimal

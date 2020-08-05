@@ -9,6 +9,8 @@ import { ListView, Item } from '../list-view2';
 import { Popover, Classes } from '../popover';
 import { render } from '../react-common'
 
+export { Item };
+
 export interface Props {
   label?: string;
   value?: any;
@@ -281,9 +283,16 @@ export class DropDownPropItem2 extends React.Component<DropDownProps2, State> {
     const value: Item = this.state.valueArr[0];
     return (
       <PropItem show={show} inline={inline} label={label} wrapValue={false}>
-        <span className='horz-panel-1'>
+        <span className='horz-panel-1 flex popover-wrapper-flex'>
           <Popover>
-            <a>{!value ? 'Not selected' : this.renderSelect(value)}</a>
+            <a
+              style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {!value ? 'Not selected' : this.renderSelect(value)}
+            </a>
             <ListView
               value={this.state.valueArr}
               values={this.props.values}

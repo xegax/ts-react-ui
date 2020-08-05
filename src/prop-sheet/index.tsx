@@ -7,7 +7,8 @@ export {
   DropDownPropItem,
   DropDownPropItem2,
   SliderPropItem,
-  SwitchPropItem
+  SwitchPropItem,
+  Item
 } from './prop-item';
 import { VerticalResizer } from '../resizer';
 import { cn } from '../common/common';

@@ -18,6 +18,10 @@ $line-height: 1.2em;
   box-sizing: border-box;
   user-select: none;
 
+  a {
+    color: #106ba3;
+  }
+
   &-wrap {
     position: relative;
 
@@ -37,7 +41,7 @@ $line-height: 1.2em;
     &-label {
       font-weight: bold;
       line-height: 0.8em;
-      color: #1a0dab;
+      color: #106ba3;
       &:hover {
         cursor: pointer;
         text-decoration: underline;
@@ -48,6 +52,7 @@ $line-height: 1.2em;
       padding: 5px;
       padding-top: 0px;
       padding-right: 0px;
+      margin-top: 4px;
     }
 
     &-border {

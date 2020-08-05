@@ -59,6 +59,19 @@ $bg-color-1: #d2e2ec;
   @include horz-panel(5px);
 }
 
+.popover-wrapper-flex {
+  .pt-popover-wrapper {
+    display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pt-popover-target {
+    display: flex;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 // card
 
 @mixin card($padding) {

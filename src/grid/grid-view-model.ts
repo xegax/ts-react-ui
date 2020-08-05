@@ -5,7 +5,6 @@ import { GridViewAppr, getGridViewApprDefault, GridSortAppr } from './grid-view-
 import { ApprObject } from '../common/appr-object';
 import { isEquals } from '../common/common';
 import { SelectType } from './grid-model';
-import { GridView } from "./grid-view";
 
 export type EventType = string;
 export type GridRequestorT = GridRequestor<WrapperArgs<string, any>, ArrCell>;
@@ -62,22 +61,25 @@ export class GridViewModel extends Publisher<EventType> {
     return this.appr.get();
   }
 
-  getApprChange() {
-    return this.appr.getChange();
+  getApprRef(): Pick<ApprObject<GridViewAppr>, 'isModified' | 'getChange'> {
+    return this.appr;
+  }
+
+  modifyAppr(callback: (appr: ApprObject<GridViewAppr>) => void) {
+    callback(this.appr);
+    this.delayedNotify();
+    this.updateViewArgs(false);
   }
 
   setApprChange(appr: Partial<GridViewAppr>) {
-    this.appr.resetToDefault();
-    this.appr.set(appr);
-
-    this.updateViewArgs(false);
+    this.modifyAppr(ref => {
+      ref.set(appr);
+    });
   }
 
   setRequestor(req: GridRequestorT) {
     this.req = req;
     this.viewId = undefined;
-    this.appr.resetToDefault();
-
     this.updateViewArgs(true);
   }
 
@@ -106,7 +108,14 @@ export class GridViewModel extends Publisher<EventType> {
     const sortCols = appr.sort.columns;
 
     this.grid.setHeader(appr.header.show);
+    this.grid.setBodyBorder(appr.body.border);
     this.grid.setHeaderSize(appr.header.font.sizePx + appr.header.padding * 2);
+    
+    this.grid.setCardWidth(appr.cardsView.width);
+    this.grid.setCardHeight(appr.cardsView.height);
+    this.grid.setCardBorder(appr.cardsView.border);
+    this.grid.setCardsPadding(appr.cardsView.padding);
+    this.grid.setViewType(appr.viewType);
     
     let rowSize = appr.body.font.sizePx;
     this.grid.resetAllColSize();
@@ -131,11 +140,13 @@ export class GridViewModel extends Publisher<EventType> {
       };
     }
 
-    if (appr.colsOrder.length) {
+    if (appr.viewType == 'rows' && appr.colsOrder.length) {
       const allCols = new Set(this.allCols);
       const cols = appr.colsOrder.filter(c => allCols.has(c));
       if (cols.length)
         viewArgs.columns = cols;
+    } else if (appr.viewType == 'cards' && appr.cardsView.columns.length) {
+      viewArgs.columns = appr.cardsView.columns;
     }
 
     this.updateViewId(viewArgs, force)

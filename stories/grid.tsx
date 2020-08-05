@@ -16,6 +16,7 @@ import { GridView, onColumnCtxMenu } from '../src/grid/grid-view';
 import { GridArrayRequestor } from '../src/grid/grid-requestor';
 import { CSSIcon } from '../src/cssicon';
 import { GridViewAppr } from '../src/grid/grid-view-appr';
+import { GridApprPanel } from '../src/grid/grid-appr-panel';
 
 interface SourceRows {
   value: string;
@@ -37,7 +38,7 @@ let sources: Array<SourceRows> = [
   }, {
     value: 'Random data',
     rows: [],
-    cols: ['row', 'cats1', 'hexRandom', 'col4', 'intRandom', 'col6'],
+    cols: ['row', 'cats1', 'hexRandom xxx ttt yyy  hhff fhfghf fghfgh fghfghfgh', 'col4', 'intRandom', 'col6'],
     create: (src: SourceRows) => {
       const total = 10000;
 
@@ -95,6 +96,7 @@ class Dummy extends React.Component<{}, State> {
 
   render() {
     const m = this.model;
+    const currAppr = m.getAppr();
     const grid = m.getGrid();
 
     return (
@@ -115,106 +117,10 @@ class Dummy extends React.Component<{}, State> {
                 values={sources}
                 onSelect={this.setSource}
               />
-              {grid && <>
-                <PropItem
-                  label='Rows'
-                  value={this.state.source?.rows.length || 0}
-                />
-                <SwitchPropItem
-                  label='Border'
-                  value={grid.getBodyBorder()}
-                  onChanged={() => {
-                    grid.setBodyBorder(!grid.getBodyBorder());
-                  }}
-                />
-                <SwitchPropItem
-                  label='Header'
-                  value={grid.getHeader()}
-                  onChanged={() => {
-                    grid.setHeader(!grid.getHeader());
-                  }}
-                />
-                <TextPropItem
-                  label='Header size'
-                  show={grid.getHeader()}
-                  value={grid.getHeaderSize()}
-                  onEnter={v => {
-                    grid.setHeaderSize(+v);
-                  }}
-                />
-                <TextPropItem
-                  label='Row size'
-                  value={grid.getRowSize()}
-                  onEnter={v => {
-                    grid.setRowSize(+v);
-                  }}
-                />
-                <SwitchPropItem
-                  label='Reverse'
-                  value={grid.getReverse()}
-                  onChanged={() => {
-                    grid.setReverse(!grid.getReverse());
-                  }}
-                />
-                <SwitchPropItem
-                  label='Autosize'
-                  value={grid.getAutosize()}
-                  onChanged={() => {
-                    grid.setAutosize(!grid.getAutosize());
-                  }}
-                />
-                <SwitchPropItem
-                  label='Card border'
-                  value={grid.getCardBorder()}
-                  onChanged={v => {
-                    grid.setCardBorder(v);
-                  }}
-                />
-                <TextPropItem
-                  label='Card width'
-                  value={grid.getCardWidth()}
-                  onEnter={v => {
-                    grid.setCardWidth(+v);
-                  }}
-                />
-                <TextPropItem
-                  label='Card height'
-                  value={grid.getCardHeight()}
-                  onEnter={v => {
-                    grid.setCardHeight(+v);
-                  }}
-                />
-                <TextPropItem
-                  label='Cards per rows'
-                  value={grid.getCardsPerRow()}
-                  onEnter={v => {
-                    grid.setCardsPerRow(+v);
-                  }}
-                />
-                <TextPropItem
-                  label='Cards padding'
-                  value={grid.getCardsPadding()}
-                  onEnter={v => {
-                    grid.setCardsPadding(+v);
-                  }}
-                />
-                <div className='horz-panel-1'>
-                  <CSSIcon
-                    icon='fa fa-copy'
-                    onClick={() => {
-                      appr = this.model.getApprChange();
-                      console.log(JSON.stringify(appr));
-                    }}
-                  />
-                  <CSSIcon
-                    icon='fa fa-paste'
-                    onClick={() => {
-                      this.model.setApprChange(appr);
-                    }}
-                  />
-                </div>
-              </>}
             </PropsGroup>
+            <GridApprPanel
+              grid={this.model.getGrid() ? this.model : undefined}
+            />
           </PropSheet>
           <div style={{ position: 'relative', flexGrow: 1 }}>
             {this.renderView()}

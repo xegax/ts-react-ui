@@ -2,12 +2,19 @@ import { FontAppr, getFontApprDefault } from '../common/font-appr';
 import { copyKeys } from '../common/common';
 
 export interface GridColumnAppr {
+  icon?: string;
   label?: string;
-  font: Partial<FontAppr>;
+  font?: Partial<FontAppr>;
   width?: number;
 }
 
 export interface GridCardsViewAppr {
+  width: number;
+  height: number;
+  border: boolean;
+  padding: number;
+  color: string;
+  columns: Array<string>;
 }
 
 export interface GridSortAppr {
@@ -15,7 +22,7 @@ export interface GridSortAppr {
   reverse: boolean;
 }
 
-export type GridViewType = 'grid' | 'cards';
+export type GridViewType = 'rows' | 'cards';
 export interface GridHeaderAppr {
   show: boolean;
   font: Partial<FontAppr>;
@@ -56,6 +63,12 @@ export function getGridViewApprDefault(override?: Partial<GridViewAppr>) {
   };
 
   const cardsView: GridCardsViewAppr = {
+    width: 200,
+    height: 250,
+    border: true,
+    padding: 5,
+    color: '#ffffff',
+    columns: []
   };
 
   const sort: GridSortAppr = {
@@ -70,7 +83,7 @@ export function getGridViewApprDefault(override?: Partial<GridViewAppr>) {
     colsOrder: [],
     cardsView,
     sort,
-    viewType: 'grid'
+    viewType: 'rows'
   };
 
   if (override)

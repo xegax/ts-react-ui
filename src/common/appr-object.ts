@@ -71,17 +71,16 @@ export class ApprObject<T extends Object> {
       throw 'Path length must be less 6';
 
     let p = this.changed;
-    for (let n = 0; n < arguments.length; n++) {
-      const key: string = arguments[n];
-      if (n == arguments.length - 1) {
-        delete p[key];
-        return true;
-      }
-
+    let key = arguments[0];
+    for (let n = 1; n < arguments.length; n++) {
       p = p[key];
       if (p == null)
         return false;
+
+      key = arguments[n];
     }
+    delete p[key];
+    this.results = undefined;
     return true;
   }
 }

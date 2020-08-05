@@ -47,6 +47,7 @@ export interface CellProps {
 
 export interface CardProps {
   readonly row: number;
+  style?: React.CSSProperties;
   className?: string;
 }
 
@@ -299,7 +300,7 @@ export class Grid extends React.Component<Props, Partial<State>> {
           return (
             <div
               className={className}
-              style={{ width: cardWidth, marginLeft: i != 0 ? padding : undefined }}
+              style={{ ...card.style, width: cardWidth, marginLeft: i != 0 ? padding : undefined }}
               key={i}
               onClick={e => {
                 m.setSelect({

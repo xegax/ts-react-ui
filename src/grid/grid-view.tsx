@@ -1,13 +1,21 @@
 import * as React from 'react';
 import { GridViewModel } from './grid-view-model';
-import { Grid, CellProps, HeaderProps } from './grid';
+import { Grid, CellProps, HeaderProps, CardProps } from './grid';
 import { showMenu, IMenuItem, ISubmenuItem } from '../menu';
 import { prompt } from '../prompt';
 import { getStyleFromAppr } from '../common/font-appr';
+import { CSSIcon } from '../cssicon';
+import { cpChild } from '../common/cp-child-worker';
+
+export interface RenderIconArgs {
+  col: string;
+  icon: string;
+}
 
 interface Props {
   model?: GridViewModel;
   onColumnCtxMenu?(model: GridViewModel, col: string): Array<ISubmenuItem | IMenuItem>;
+  renderIcon?(args: RenderIconArgs): JSX.Element;
 }
 
 export class GridView extends React.Component<Props> {
@@ -41,6 +49,35 @@ export class GridView extends React.Component<Props> {
     );
   }
 
+  private renderCard = (p: CardProps) => {
+    const m = this.props.model.getGrid();
+    const row = m.getRowOrLoad(p.row);
+    if (!row)
+      return null;
+
+    const appr = this.props.model.getAppr();
+    const cols = this.props.model.getViewColumns();
+    p.style = { backgroundColor: appr.cardsView.color };
+    return (
+      <div className='abs fit-to-abs'>
+        {row.cell.map((v, i) => <div key={i}>{cols[i]}: {v}</div>)}
+      </div>
+    );
+  }
+
+  private renderIcon(args: RenderIconArgs) {
+    if (!this.props.renderIcon) {
+      return (
+        <CSSIcon
+          displayFlex={false}
+          icon={args.icon}
+        />
+      );
+    }
+
+    return this.props.renderIcon(args);
+  }
+
   private renderHeader = (header: HeaderProps) => {
     const cols = this.props.model.getViewColumns();
     const colName = cols[header.col];
@@ -63,9 +100,26 @@ export class GridView extends React.Component<Props> {
     };
 
     const appr = this.props.model.getAppr();
+    const col = appr.columns[colName] || {};
+    let sortIcon: JSX.Element | undefined;
+    const sortCol = appr.sort.columns.find(c => c.name == colName);
+    if (sortCol) {
+      sortIcon = (
+        <CSSIcon
+          displayFlex={false}
+          icon={(sortCol.asc && !appr.sort.reverse) ? 'fa fa-angle-down' : 'fa fa-angle-up'}
+        />
+      );
+    }
+
     return (
-      <span style={getStyleFromAppr(appr.header.font)}>
-        {appr.columns[colName]?.label || colName}
+      <span
+        style={{ ...getStyleFromAppr(appr.header.font), justifyContent: 'center' }}
+        className='horz-panel-1 flex'
+      >
+        {col.icon ? this.renderIcon({ icon: col.icon, col: colName }) : undefined}
+        <div style={{ textOverflow: 'ellipsis', overflowX: 'hidden' }}>{col.label || colName}</div>
+        {sortIcon}
       </span>
     );
   }
@@ -74,15 +128,13 @@ export class GridView extends React.Component<Props> {
     if (!this.props.model.getRequestor())
       return null;
 
-    const appr = this.props.model.getAppr();
     const m = this.props.model.getGrid();
     return (
       <Grid
-        headerBorder={appr.header.border}
-        bodyBorder={appr.body.border}
         model={m}
         renderCell={this.renderCell}
         renderHeader={this.renderHeader}
+        renderCard={this.renderCard}
         onScrollToBottom={() => {
           m.loadNext();
         }}
