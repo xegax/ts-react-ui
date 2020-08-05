@@ -21,7 +21,7 @@ const viewType: Array<Item> = [
   { value: 'cards' }
 ];
 
-export class GridApprPanel extends React.Component<Props> {
+export class GridPanelAppr extends React.Component<Props> {
   constructor(props: Props) {
     super(props);
 

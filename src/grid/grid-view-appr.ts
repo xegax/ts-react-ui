@@ -43,7 +43,7 @@ export interface GridViewAppr {
   columns: {[column: string]: Partial<GridColumnAppr>};
   colsOrder: Array<string>;
   cardsView: Partial<GridCardsViewAppr>;
-  sort: GridSortAppr;
+  sort: Partial<GridSortAppr>;
   viewType: GridViewType;
 };
 

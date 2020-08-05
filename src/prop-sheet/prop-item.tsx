@@ -13,6 +13,7 @@ export { Item };
 
 export interface Props {
   label?: string;
+  margin?: boolean;
   value?: any;
   show?: boolean;
   disabled?: boolean;

@@ -16,7 +16,8 @@ import { GridView, onColumnCtxMenu } from '../src/grid/grid-view';
 import { GridArrayRequestor } from '../src/grid/grid-requestor';
 import { CSSIcon } from '../src/cssicon';
 import { GridViewAppr } from '../src/grid/grid-view-appr';
-import { GridApprPanel } from '../src/grid/grid-appr-panel';
+import { GridPanelAppr } from '../src/grid/grid-panel-appr';
+import { GridPanelSort } from '../src/grid/grid-panel-sort';
 
 interface SourceRows {
   value: string;
@@ -110,17 +111,23 @@ class Dummy extends React.Component<{}, State> {
       >
         <div style={{ display: 'flex', position: 'relative', flexGrow: 1}}>
           <PropSheet defaultWidth={200} resize>
-            <PropsGroup label='Grid'>
+            <PropsGroup label='Grid' padding={false}>
               <DropDownPropItem2
+                margin
                 label='Source'
                 value={this.state.source}
                 values={sources}
                 onSelect={this.setSource}
               />
+              <GridPanelAppr
+                grid={this.model.getGrid() ? this.model : undefined}
+              />
             </PropsGroup>
-            <GridApprPanel
-              grid={this.model.getGrid() ? this.model : undefined}
-            />
+            <PropsGroup label='Sort'>
+              <GridPanelSort
+                model={this.model}
+              />
+            </PropsGroup>
           </PropSheet>
           <div style={{ position: 'relative', flexGrow: 1 }}>
             {this.renderView()}

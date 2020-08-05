@@ -5,7 +5,6 @@ import { showMenu, IMenuItem, ISubmenuItem } from '../menu';
 import { prompt } from '../prompt';
 import { getStyleFromAppr } from '../common/font-appr';
 import { CSSIcon } from '../cssicon';
-import { cpChild } from '../common/cp-child-worker';
 
 export interface RenderIconArgs {
   col: string;
