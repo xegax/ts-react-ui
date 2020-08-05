@@ -38,6 +38,6 @@ export interface IMsgHolder {
   id?: number;
   msgData?: {
     handler: string;
-    args?: Object;
+    args?: any[];
   };
 }

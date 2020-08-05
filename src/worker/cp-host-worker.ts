@@ -16,7 +16,7 @@ class CPWorkerImpl {
     this.modules.set(m, cp);
 
     let handlers = Array<T1>();
-    let invoke: any = (name: string, args: any) => {
+    const invoke: any = (name: string, ...args: any[]) => {
       const msg: IMsgHolder = {
         type: 'invoke',
         msgData: { handler: name, args }
@@ -24,7 +24,7 @@ class CPWorkerImpl {
       cp.postMessage(msg);
     };
 
-    let get: any = (name: string, ...args: any[]) => {
+    const get: any = (name: string, ...args: any[]) => {
       const msg: IMsgHolder = {
         type: 'get',
         id: this.msgIdCounter++,
