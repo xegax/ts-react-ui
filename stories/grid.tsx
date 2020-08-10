@@ -18,12 +18,14 @@ import { CSSIcon } from '../src/cssicon';
 import { GridViewAppr } from '../src/grid/grid-view-appr';
 import { GridPanelAppr } from '../src/grid/grid-panel-appr';
 import { GridPanelSort } from '../src/grid/grid-panel-sort';
+import { delay } from 'bluebird';
 
 interface SourceRows {
   value: string;
   rows: Array< Array<string | number> >;
   cols: Array<string>;
-  create?(src: SourceRows): Array< Array<string | number> >;
+  create?(src: SourceRows);
+  push?(src: SourceRows);
 }
 
 let sources: Array<SourceRows> = [
@@ -39,25 +41,24 @@ let sources: Array<SourceRows> = [
   }, {
     value: 'Random data',
     rows: [],
-    cols: ['row', 'cats1', 'hexRandom xxx ttt yyy  hhff fhfghf fghfgh fghfghfgh', 'col4', 'intRandom', 'col6'],
+    cols: ['row', 'perc', 'cats1', 'hexRandom xxx ttt yyy  hhff fhfghf fghfgh fghfghfgh', 'col4', 'intRandom', 'col6'],
     create: (src: SourceRows) => {
-      const total = 10000;
+      const total = 500;
 
+      while (src.rows.length < total)
+        src.push(src);
+    },
+    push: (src: SourceRows) => {
       let cats = ['xxYYzz', '@####', '????', '!!!!!!', '12345', 'abc', '0', ''];
       let cols: {[col: string]: (idx: number) => string | number} = {
         row: n => n,
         hexRandom: n => Math.random().toString(16).substr(2),
         intRandom: n => Math.floor(Math.random() * n),
-        cats1: n => cats[Math.floor(Math.random() * (cats.length - 1))]
+        cats1: n => cats[Math.floor(Math.random() * (cats.length - 1))],
+        perc: n => 0
       };
       const defaultCol = (n: number) => Math.random();
- 
-      let rows = [];
-      while (rows.length < total) {
-        rows.push( src.cols.map(c => (cols[c] || defaultCol)(rows.length)) );
-      }
-
-      return rows;
+      src.rows.push(src.cols.map(c => (cols[c] || defaultCol)(src.rows.length)));
     }
   }
 ];
@@ -66,7 +67,6 @@ interface State {
   source?: SourceRows;
 }
 
-let appr: Partial<GridViewAppr> = {};
 class Dummy extends React.Component<{}, State> {
   model = new GridViewModel();
   state: State = {};
@@ -77,9 +77,10 @@ class Dummy extends React.Component<{}, State> {
 
   private setSource = (source: SourceRows) => {
     if (source.create && !source.rows.length)
-      source.rows = source.create(source);
+      source.create(source);
 
     this.model.setRequestor(new GridArrayRequestor(source));
+    this.model.setAllColumns(source.cols);
     this.setState({ source });
   }
 
@@ -87,19 +88,44 @@ class Dummy extends React.Component<{}, State> {
     if (!this.model)
       return null;
 
+    const colRenderer = {
+      'perc': v => {
+        return `${Math.round(v * 100)}%`;
+      }
+    };
+
     return (
       <GridView
         model={this.model}
         onColumnCtxMenu={onColumnCtxMenu}
+        customRender={colRenderer}
       />
     );
   }
 
-  render() {
+  updateProgress() {
+    const src = this.state.source;
     const m = this.model;
-    const currAppr = m.getAppr();
-    const grid = m.getGrid();
+    const cidx = src.cols.indexOf('perc');
+    if (cidx == -1)
+      return Promise.resolve();
+  
+    let rowIdx = Math.round(Math.random() * (src.rows.length - 1));
+    const row = src.rows[rowIdx] as Array<number>;
+    row[cidx] = Math.min(row[cidx] + 0.1, 1);
+    if (row[cidx] == 1) {
+      src.rows.splice(0, 1);
+      this.setState({});
+    }
+    m.reloadCurrent();
+  
+    if (!src.rows.length)
+      return Promise.resolve();
+  
+    return delay(100).then(() => this.updateProgress());
+  }
 
+  render() {
     return (
       <div style={{
           position: 'absolute',
@@ -119,6 +145,10 @@ class Dummy extends React.Component<{}, State> {
                 values={sources}
                 onSelect={this.setSource}
               />
+              <PropItem
+                label='Rows'
+                value={'' + (this.state.source?.rows.length || '')}
+              />
               <GridPanelAppr
                 grid={this.model.getGrid() ? this.model : undefined}
               />
@@ -128,6 +158,14 @@ class Dummy extends React.Component<{}, State> {
                 model={this.model}
               />
             </PropsGroup>
+            <div style={{ marginRight: 5, textAlign: 'right' }}>
+              <CSSIcon
+                icon='fa fa-rocket'
+                onClick={() => {
+                  this.updateProgress();
+                }}
+              />
+            </div>
           </PropSheet>
           <div style={{ position: 'relative', flexGrow: 1 }}>
             {this.renderView()}

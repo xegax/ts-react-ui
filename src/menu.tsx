@@ -5,7 +5,7 @@ export interface IMenuItem {
   icon?: JSX.Element;
   disabled?: boolean;
   name: string;
-  cmd(): void;
+  cmd(item: IMenuItem): void;
 }
 
 export interface ISubmenuItem {
@@ -29,7 +29,7 @@ export function renderMenuItem(item: IMenuItem | ISubmenuItem, i?: number): JSX.
     <MenuItem
       key={i}
       text={item.name}
-      onClick={item.cmd}
+      onClick={() => item.cmd(item)}
       disabled={item.disabled}
     />
   );

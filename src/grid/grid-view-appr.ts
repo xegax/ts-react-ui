@@ -22,6 +22,11 @@ export interface GridSortAppr {
   reverse: boolean;
 }
 
+export interface GridSortSchema {
+  name: string;
+  schema: GridSortAppr;
+}
+
 export type GridViewType = 'rows' | 'cards';
 export interface GridHeaderAppr {
   show: boolean;
@@ -44,6 +49,7 @@ export interface GridViewAppr {
   colsOrder: Array<string>;
   cardsView: Partial<GridCardsViewAppr>;
   sort: Partial<GridSortAppr>;
+  sortSchema: Array<GridSortSchema>;
   viewType: GridViewType;
 };
 
@@ -83,6 +89,7 @@ export function getGridViewApprDefault(override?: Partial<GridViewAppr>) {
     colsOrder: [],
     cardsView,
     sort,
+    sortSchema: [],
     viewType: 'rows'
   };
 

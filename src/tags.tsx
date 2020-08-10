@@ -28,6 +28,7 @@ export interface Props {
   onClick?(e: React.MouseEvent<HTMLElement>): void;
   onChange?(tags: Array<Tag>): void;
   onRemove?(tag: Tag): void;
+  onTagClick?(tag: Tag): void;
   wrapTag?(tag: Tag, tagEl: JSX.Element): React.ReactChild;
   first?: React.ReactChild;
 }
@@ -50,6 +51,14 @@ export class Tags extends React.Component<Props> {
     onChange && onChange(this.props.values.filter(t => t != tag));  
   }
 
+  private onTagClick(tag: Tag) {
+    const i = this.props.values.indexOf(tag);
+    if (i == -1)
+      return;
+
+    this.props?.onTagClick(tag);
+  }
+
   renderTagImpl = (tag: Tag) => {
     const { onChange, onRemove } = this.props;
     let jsx: React.ReactChild = tag.value;
@@ -66,7 +75,10 @@ export class Tags extends React.Component<Props> {
           //e.stopPropagation();
         }}
       >
-        <div className={cn(css.tag, 'horz-panel-1')}>
+        <div
+          className={cn(css.tag, 'horz-panel-1')}
+          onClick={() => this.onTagClick(tag)}
+        >
           {tag.icon}
           <div className={css.label}>
             {jsx}

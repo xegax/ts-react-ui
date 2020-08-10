@@ -39,7 +39,6 @@ export interface ViewArgs<T extends WrapperArgs<string, any>> {
   filter?: FilterArgs;
   sorting?: {
     cols: Array<{ name: string; asc: boolean }>;
-    reverse?: boolean;
   };
   columns?: Array<string>;
   wrapper?: T;  // distinct, ...
@@ -55,4 +54,5 @@ export interface ViewResult {
 export interface GridRequestor<TWrapper extends WrapperArgs<string, any>, TCell extends Cell> {
   createView(args: ViewArgs<TWrapper>): Promise<ViewResult>;
   getRows(args: RowsArgs): Promise<RowsResult<TCell>>;
+  clearCache(): void;
 }

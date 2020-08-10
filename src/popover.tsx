@@ -46,6 +46,9 @@ export class PopoverIcon extends React.Component<IconProps> {
       <Popover
         position={this.props.position}
         popoverWillOpen={() => {
+          if (this.props.disabled)
+            return;
+
           open = this;
           this.setState({});
         }}
@@ -71,7 +74,7 @@ export class PopoverIcon extends React.Component<IconProps> {
             ...this.props.style
           }}
         />
-        {this.props.children}
+        {this.props.disabled !== true ? this.props.children : null}
       </Popover>
     );
   }

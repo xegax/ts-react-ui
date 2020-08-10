@@ -160,6 +160,7 @@ export class GridLoadableModel<T = Object> extends GridModel {
       block.task = null;
       this.loadedRows = Math.max(this.loadedRows, naturalFrom + count);
       this.notify('render');
+      return null;
     })
     .catch(() => {
       let row = Array<Row2<T>>();
@@ -173,6 +174,7 @@ export class GridLoadableModel<T = Object> extends GridModel {
       block.row = row;
       block.task = null;
       this.delayedNotify({ type: 'render' });
+      return null;
     });
 
     return block.task;

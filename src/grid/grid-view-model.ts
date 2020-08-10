@@ -5,6 +5,7 @@ import { GridViewAppr, getGridViewApprDefault, GridSortAppr } from './grid-view-
 import { ApprObject } from '../common/appr-object';
 import { isEquals } from '../common/common';
 import { SelectType } from './grid-model';
+import { clone } from "../common/common";
 
 export type EventType = string;
 export type GridRequestorT = GridRequestor<WrapperArgs<string, any>, ArrCell>;
@@ -103,9 +104,25 @@ export class GridViewModel extends Publisher<EventType> {
     return this.allCols;
   }
 
+  setAllColumns(cols: Array<string>) {
+    this.viewCols = this.allCols = cols.slice();
+    this.delayedNotify();
+  }
+
+  reloadCurrent(args: { clearCache: boolean } = { clearCache: true }) {
+    if (args?.clearCache)
+      this.req.clearCache();
+
+    this.viewId = undefined;
+    this.updateViewArgs(true);
+  }
+
+  updateData() {
+    this.grid.reloadCurrent();
+  }
+
   private updateViewArgs(force: boolean) {
     const appr = this.appr.get();
-    const sortCols = appr.sort.columns;
 
     this.grid.setHeader(appr.header.show);
     this.grid.setBodyBorder(appr.body.border);
@@ -118,7 +135,6 @@ export class GridViewModel extends Publisher<EventType> {
     this.grid.setViewType(appr.viewType);
     
     let rowSize = appr.body.font.sizePx;
-    this.grid.resetAllColSize();
     this.viewCols.forEach((c, i) => {
       const col = appr.columns[c];
       if (!col)
@@ -133,12 +149,10 @@ export class GridViewModel extends Publisher<EventType> {
       descAttrs: ['rows', 'columns']
     };
 
-    if (sortCols.length || appr.sort.reverse) {
-      viewArgs.sorting = {
-        cols: appr.sort.columns,
-        reverse: appr.sort.reverse
-      };
-    }
+    viewArgs.sorting = clone({
+      cols: appr.sort.columns
+    });
+    this.grid.setReverse(appr.sort.reverse);
 
     if (appr.viewType == 'rows' && appr.colsOrder.length) {
       const allCols = new Set(this.allCols);
@@ -149,17 +163,7 @@ export class GridViewModel extends Publisher<EventType> {
       viewArgs.columns = appr.cardsView.columns;
     }
 
-    this.updateViewId(viewArgs, force)
-    .then(() => {
-      this.viewCols.forEach((c, i) => {
-        const col = appr.columns[c];
-        if (!col)
-          return;
-  
-        if (col.width)
-          this.grid.setColSize(i, col.width);
-      });
-    });
+    this.updateViewId(viewArgs, force);
   }
 
   moveColumnTo(col: string, relCol: string, type: 'before' | 'after') {
@@ -221,6 +225,10 @@ export class GridViewModel extends Publisher<EventType> {
     this.grid.delayedNotify({ type: 'render' });
   }
 
+  isInProgress() {
+    return this.updViewTask != null;
+  }
+
   private loader: Loader<any> = (from: number, count: number) => {
     if (!this.req || !this.viewId)
       return Promise.resolve([]);
@@ -236,8 +244,23 @@ export class GridViewModel extends Publisher<EventType> {
   };
 
   private updateViewId(view: ViewArgs< WrapperArgs<string, any> >, force: boolean) {
-    if (!force && isEquals(view, this.viewArgs))
+    const updateSizes = () => {
+      this.grid.resetAllColSize();
+      const appr = this.appr.get();
+      this.viewCols.forEach((c, i) => {
+        const col = appr.columns[c];
+        if (!col)
+          return;
+  
+        if (col.width)
+          this.grid.setColSize(i, col.width);
+      });
+    };
+
+    if (!force && isEquals(view, this.viewArgs)) {
+      updateSizes();
       return Promise.resolve();
+    }
 
     if (this.updViewTask)
       this.updViewTask.cancel();
@@ -247,25 +270,24 @@ export class GridViewModel extends Publisher<EventType> {
       this.req.createView(view)
       .then(res => {
         this.updViewTask = undefined;
-        if (this.viewId == res.viewId)
-          return;
-
-        if (!this.viewId) {
-          this.allCols = res.desc.columns;
-          this.viewCols = this.allCols.slice();
-        } else {
-          this.viewCols = res.desc.columns;
+        if (this.viewId == res.viewId) {
+          updateSizes();
+          return null;
         }
+
+        this.viewCols = res.desc.columns;
 
         this.viewId = res.viewId;
         console.log(res.viewId);
 
         this.grid.setRowsCount(res.desc.rows);
         this.grid.setColsCount(this.viewCols.length);
+        updateSizes();
 
-        this.grid.reload();
+        this.grid.reloadCurrent();
         this.grid.delayedNotify({ type: 'resize' });
         this.delayedNotify();
+        return null;
       })
     );
 

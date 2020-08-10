@@ -5,6 +5,7 @@ import { showMenu, IMenuItem, ISubmenuItem } from '../menu';
 import { prompt } from '../prompt';
 import { getStyleFromAppr } from '../common/font-appr';
 import { CSSIcon } from '../cssicon';
+import { Progress } from '../progress';
 
 export interface RenderIconArgs {
   col: string;
@@ -15,6 +16,7 @@ interface Props {
   model?: GridViewModel;
   onColumnCtxMenu?(model: GridViewModel, col: string): Array<ISubmenuItem | IMenuItem>;
   renderIcon?(args: RenderIconArgs): JSX.Element;
+  customRender?: Record<string, ((value: string | number, col: string) => React.ReactChild)>;
 }
 
 export class GridView extends React.Component<Props> {
@@ -40,11 +42,15 @@ export class GridView extends React.Component<Props> {
     const colName = cols[p.col];
 
     const appr = this.props.model.getAppr();
-    const style = getStyleFromAppr({...appr.body.font, ...appr.columns[colName]});
+    const style = getStyleFromAppr({...appr.body.font, ...appr.columns[colName]?.font});
+    style.overflow = 'hidden';
+    style.textOverflow = 'ellipsis';
+
+    let cell = row.cell[p.col];
     return (
-      <span style={style}>
-        {row.cell[p.col]}
-      </span>
+      <div style={style}>
+        {this.props.customRender?.[colName]?.(cell, colName) ?? cell}
+      </div>
     );
   }
 
@@ -116,7 +122,7 @@ export class GridView extends React.Component<Props> {
         style={{ ...getStyleFromAppr(appr.header.font), justifyContent: 'center' }}
         className='horz-panel-1 flex'
       >
-        {col.icon ? this.renderIcon({ icon: col.icon, col: colName }) : undefined}
+        {col.icon || this.props.renderIcon ? this.renderIcon({ icon: col.icon, col: colName }) : undefined}
         <div style={{ textOverflow: 'ellipsis', overflowX: 'hidden' }}>{col.label || colName}</div>
         {sortIcon}
       </span>
@@ -129,15 +135,18 @@ export class GridView extends React.Component<Props> {
 
     const m = this.props.model.getGrid();
     return (
-      <Grid
-        model={m}
-        renderCell={this.renderCell}
-        renderHeader={this.renderHeader}
-        renderCard={this.renderCard}
-        onScrollToBottom={() => {
-          m.loadNext();
-        }}
-      />
+      <div className='abs-fit'>
+        {this.props.model.isInProgress() ? <Progress/> : undefined}
+        <Grid
+          model={m}
+          renderCell={this.renderCell}
+          renderHeader={this.renderHeader}
+          renderCard={this.renderCard}
+          onScrollToBottom={() => {
+            m.loadNext();
+          }}
+        />
+      </div>
     );
   }
 }

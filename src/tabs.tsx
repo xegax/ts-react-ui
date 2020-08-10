@@ -2,6 +2,7 @@ import * as React from 'react';
 import { cn } from './common/common';
 import { ElementType, render } from './react-common';
 import { CSSIcon } from './cssicon';
+import { findParentByFunc } from './common/dom';
 
 const css = {
   TabsCtrl: 'tabs-ctrl',
@@ -40,14 +41,6 @@ export class Tabs extends React.Component<Props, State> {
   state: Readonly<State> = { select: this.props.defaultSelect };
   ref = React.createRef<HTMLDivElement>();
 
-  getOnSelect(tab: TabProps) {
-    return () => {
-      this.setState({ select: this.props.select || tab.id });
-      tab.onSelect &&  tab.onSelect(tab.id);
-      this.props.onSelect && this.props.onSelect(tab.id);
-    };
-  }
-
   static getDerivedStateFromProps(props: Props, state: State): State {
     return { select: props.select || state.select };
   }
@@ -59,14 +52,22 @@ export class Tabs extends React.Component<Props, State> {
     e.stopPropagation();
   }
 
+  private onSelectTab = (evt: React.MouseEvent<any>) => {
+    const tabId = findParentByFunc(evt.target as HTMLDivElement, f => {
+      return f?.className == css.TabCtrl;
+    })?.getAttribute('data-tabid');
+
+    if (tabId)
+      this.setState({ select: tabId });
+  };
+
   render() {
     let children = React.Children.map(this.props.children, (tab: React.ReactElement<TabProps>) => {
-      if (!tab.props.show)
+      if (tab.props.show === false)
         return null;
 
       return (
         React.cloneElement(tab, {
-          onSelect: this.getOnSelect(tab.props),
           select: tab.props.select != null ? tab.props.select : this.state.select == tab.props.id
         })
       );
@@ -102,6 +103,7 @@ export class Tabs extends React.Component<Props, State> {
           className
         )}
         style={{...this.props.style, width: this.props.width}}
+        onClick={this.onSelectTab}
       >
         <div ref={this.ref} className={css.tabsWrap} onWheel={this.onWheel}>
           <div className={css.spacer} style={{ width: 5, flexShrink: 0, flexGrow: 0 }}/>
@@ -152,6 +154,7 @@ export class Tab extends React.Component<TabProps> {
     const t = this.props.title;
     return (
       <div
+        data-tabid={this.props.id}
         title={t && typeof t == 'string' ? t : undefined}
         className={cn(css.TabCtrl, this.props.select && css.Select)}
         onClick={this.onClick}

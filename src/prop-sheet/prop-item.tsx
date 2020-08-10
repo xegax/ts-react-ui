@@ -295,6 +295,7 @@ export class DropDownPropItem2 extends React.Component<DropDownProps2, State> {
               {!value ? 'Not selected' : this.renderSelect(value)}
             </a>
             <ListView
+              noDataToDisplay={<div style={{ padding: 5, color: 'silver' }}>No data to display</div>}
               value={this.state.valueArr}
               values={this.props.values}
               itemsPerPage={7}
@@ -302,7 +303,7 @@ export class DropDownPropItem2 extends React.Component<DropDownProps2, State> {
               onSelect={items => this.props.onSelect(items[0])}
             />
           </Popover>
-          {value && this.props.renderOptions && this.props.renderOptions(value)}
+          {this.props.renderOptions && this.props.renderOptions(value)}
         </span>
       </PropItem>
     );

@@ -2,8 +2,8 @@ import { GridRequestorT } from './grid-view-model';
 import { ViewArgsT, ViewResult, RowsArgs, RowsResult, ArrCell } from './grid-requestor-decl';
 import { clone } from '../common/common';
 
-abstract class GridRequestorBase implements GridRequestorT {
-  private viewArgsMap = new Map<string, ViewArgsT>();
+export abstract class GridRequestorBase implements GridRequestorT {
+  protected viewArgsMap = new Map<string, ViewArgsT>();
   protected viewIdCounter = 0;
 
   protected findViewId(args: ViewArgsT) {
@@ -23,6 +23,7 @@ abstract class GridRequestorBase implements GridRequestorT {
 
   abstract createView(args: ViewArgsT): Promise<ViewResult>;
   abstract getRows(args: RowsArgs): Promise<RowsResult<ArrCell>>;
+  abstract clearCache(): void;
 }
 
 interface ViewCache {
@@ -44,6 +45,12 @@ export class GridArrayRequestor extends GridRequestorBase {
     this.source = source;
   }
 
+  clearCache() {
+    this.viewCacheMap.clear();
+    this.viewArgsMap.clear();
+    this.viewIdCounter = 0;
+  }
+
   createView(args: ViewArgsT): Promise<ViewResult> {
     args = clone(args);
     let viewId = this.findViewId(args);
@@ -60,7 +67,7 @@ export class GridArrayRequestor extends GridRequestorBase {
       }
 
       if (args.sorting && args.sorting.cols.length) {
-        const reverse = args.sorting.reverse == true;
+        const reverse = false;
         const cidx = this.source.cols.findIndex(c => c == args.sorting.cols[0].name);
         if (cidx != -1) {
           view.rowsIdx = this.source.rows.map((_, i) => i);
