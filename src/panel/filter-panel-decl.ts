@@ -3,7 +3,7 @@ import { ElementType } from '../react-common';
 
 export { DBColType };
 
-interface GetValuesArgs {
+export interface GetValuesArgs {
   from: number;
   count: number;
   filters: Array<FilterHolder>;

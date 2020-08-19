@@ -1,14 +1,19 @@
 import * as React from 'react';
 import { SwitchPropItem, DropDownPropItem2 } from '../prop-sheet';
 import { GridViewModel } from './grid-view-model';
-import { Tags } from '../tags';
+import { Tags, Tag } from '../tags';
 import { PopoverIcon } from '../popover';
 import { renderMenu } from '../menu';
 import { prompt } from '../prompt';
 import { clone } from '../common/common';
 import { GridSortAppr } from './grid-view-appr';
 import { Item } from '../list-view-loadable';
-import { Tag } from '@blueprintjs/core';
+import { CSSIcon } from '../cssicon';
+import { Subscriber } from '../subscriber';
+
+interface ColTag extends Tag {
+  asc: boolean;
+}
 
 interface Props {
   model: GridViewModel;
@@ -16,37 +21,47 @@ interface Props {
 
 interface State {
   schemaIdx?: number;
-  model?: GridViewModel;
-  subscriber?(): void;
 }
 
 export class GridPanelSort extends React.Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-
-    this.state = {
-      subscriber: () => {
-        this.setState({});
-      }
-    };
-  }
-
-  static getDerivedStateFromProps(next: Props, state: State): State | null {
-    if (next.model != state.model) {
-      state.model?.unsubscribe(state.subscriber);
-      next.model?.subscribe(state.subscriber);
-
-      return { model: next.model };
-    }
-    return null;
-  }
+  state: State = {};
 
   render() {
+    return (
+      <Subscriber
+        model={this.props.model}
+        render={this.renderPanel}
+      />
+    );
+  }
+
+  private renderCol = (col: { name: string; asc: boolean }) => {
+    return (
+      <>
+        <CSSIcon
+          icon={col.asc ? 'fa fa-angle-down' : 'fa fa-angle-up'}
+          style={{ marginRight: 5 }}
+        />
+        {col.name}
+      </>
+    );
+  };
+
+  private renderPanel = () => {
     const m = this.props.model;
     const appr = m.getAppr();
     const schemaArr = appr.sortSchema.map(s => {
       return {
         value: s.name
+      };
+    });
+
+    const cols: Array<ColTag> = appr.sort.columns.map(c => {
+      return {
+        asc: c.asc,
+        value: c.name,
+        render: this.renderCol(c),
+        removeable: true
       };
     });
 
@@ -81,12 +96,7 @@ export class GridPanelSort extends React.Component<Props, State> {
             col.asc = col.asc ? false : true;
             m.setApprChange({ sort: appr.sort });
           }}
-          values={appr.sort.columns.map(c => {
-            return {
-              value: c.name,
-              removeable: true
-            };
-          })}
+          values={cols}
           onRemove={c => {
             m.setApprChange({ sort: { columns: appr.sort.columns.filter(col => col.name != c.value) } });
           }}

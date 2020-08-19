@@ -112,7 +112,7 @@ export class GridView extends React.Component<Props> {
       sortIcon = (
         <CSSIcon
           displayFlex={false}
-          icon={(sortCol.asc && !appr.sort.reverse) ? 'fa fa-angle-down' : 'fa fa-angle-up'}
+          icon={sortCol.asc ? 'fa fa-angle-down' : 'fa fa-angle-up'}
         />
       );
     }

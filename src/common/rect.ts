@@ -7,6 +7,31 @@ export interface Rect {
   height: number;
 }
 
+export interface CSSRect {
+  left: number;
+  top: number;
+  bottom: number;
+  right: number;
+}
+
+export function toCSSRect(rect: Rect): CSSRect {
+  return {
+    left: rect.x,
+    top: rect.y,
+    right: rect.x + rect.width,
+    bottom: rect.y + rect.height
+  };
+}
+
+export function fromCSSRect(rect: CSSRect): Rect {
+  return {
+    x: rect.left,
+    y: rect.top,
+    width: rect.right - rect.left,
+    height: rect.bottom - rect.top
+  };
+}
+
 export function isRectsEqual(r1: Rect, r2: Rect) {
   return (
     r1.x == r2.x &&

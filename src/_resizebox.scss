@@ -1,0 +1,28 @@
+.resizebox {
+  & .point {
+    background-color: black;
+    opacity: .2;
+    width: 5px;
+    height: 5px;
+  }
+  & .point.lt {
+    left: 0px;
+    top: 0px;
+    cursor: nw-resize;
+  }
+  & .point.rt {
+    right: 0px;
+    top: 0px;
+    cursor: sw-resize;
+  }
+  & .point.rb {
+    right: 0px;
+    bottom: 0px;
+    cursor: nw-resize;
+  }
+  & .point.lb {
+    left: 0px;
+    bottom: 0px;
+    cursor: sw-resize;
+  }
+}

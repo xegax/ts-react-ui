@@ -5,39 +5,7 @@ import { FontProp, FontAppr } from '../prop-sheet/font-prop';
 import { PropGroup2 } from '../prop-sheet/props-group2';
 import { GridViewType } from './grid-view-appr';
 import { ColorProp } from '../prop-sheet/color-prop';
-import { Publisher } from 'objio';
-
-interface Props {
-  model: Publisher;
-  render(): JSX.Element;
-}
-
-interface State {
-  model?: Publisher;
-  subscriber?(): void;
-}
-
-class Subscriber extends React.Component<Props, State> {
-  state: State = {
-    subscriber: () => {
-      this.setState({});
-    }
-  };
-
-  static getDerivedStateFromProps(next: Props, state: State): State | null {
-    if (next.model != state.model) {
-      state.model?.unsubscribe(state.subscriber);
-      next.model?.subscribe(state.subscriber);
-
-      return { model: next.model };
-    }
-    return null;
-  }
-
-  render() {
-    return this.props.render();
-  }
-}
+import { Subscriber } from '../subscriber';
 
 const viewType: Array<Item> = [
   { value: 'rows' },

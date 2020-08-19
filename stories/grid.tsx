@@ -1,29 +1,25 @@
 import * as React from 'react';
 import { storiesOf } from '@storybook/react';
-import { Grid, CellProps, CardProps, HeaderProps } from '../src/grid/grid';
-import { GridLoadableModel } from '../src/grid/grid-loadable-model';
-import { CheckIcon } from '../src/checkicon';
 import {
   PropSheet,
   PropsGroup,
   PropItem,
-  TextPropItem,
-  SwitchPropItem,
   DropDownPropItem2
 } from '../src/prop-sheet';
-import { GridViewModel } from '../src/grid/grid-view-model';
+import { GridViewModel, ColAndType } from '../src/grid/grid-view-model';
 import { GridView, onColumnCtxMenu } from '../src/grid/grid-view';
+import { GridPanelFilter } from '../src/grid/grid-panel-filter';
 import { GridArrayRequestor } from '../src/grid/grid-requestor';
 import { CSSIcon } from '../src/cssicon';
-import { GridViewAppr } from '../src/grid/grid-view-appr';
-import { GridPanelAppr } from '../src/grid/grid-panel-appr';
+import { GridApprTab, GridCardsTab } from '../src/grid/grid-tabs-appr';
 import { GridPanelSort } from '../src/grid/grid-panel-sort';
 import { delay } from 'bluebird';
+import { Tabs, Tab } from '../src/tabs';
 
 interface SourceRows {
   value: string;
   rows: Array< Array<string | number> >;
-  cols: Array<string>;
+  cols: Array<ColAndType>;
   create?(src: SourceRows);
   push?(src: SourceRows);
 }
@@ -37,11 +33,29 @@ let sources: Array<SourceRows> = [
       [ 'title.jpg', 10000000, '.jpg'],
       [ 'temp', 0, '' ]
     ],
-    cols: [ 'file', 'size', 'type' ]
+    cols: [ {
+      name: 'file',
+      type: 'string'
+    }, {
+      name: 'size',
+      type: 'integer'
+    }, {
+      name: 'type',
+      type: 'string'
+    } ]
   }, {
     value: 'Random data',
     rows: [],
-    cols: ['row', 'perc', 'cats1', 'hexRandom xxx ttt yyy  hhff fhfghf fghfgh fghfghfgh', 'col4', 'intRandom', 'col6'],
+    cols: [
+      { name: 'row', type: 'integer' },
+      { name: 'perc', type: 'numeric' },
+      { name: 'cats1', type: 'string' },
+      { name: 'cats2', type: 'string' },
+      { name: 'hexRandom xxx ttt yyy  hhff fhfghf fghfgh fghfghfgh', type: 'numeric' },
+      { name: 'col4', type: 'numeric' },
+      { name: 'intRandom', type: 'integer' },
+      { name: 'col6', type: 'numeric' }
+    ],
     create: (src: SourceRows) => {
       const total = 500;
 
@@ -50,15 +64,17 @@ let sources: Array<SourceRows> = [
     },
     push: (src: SourceRows) => {
       let cats = ['xxYYzz', '@####', '????', '!!!!!!', '12345', 'abc', '0', ''];
+      let cats2 = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
       let cols: {[col: string]: (idx: number) => string | number} = {
         row: n => n,
         hexRandom: n => Math.random().toString(16).substr(2),
         intRandom: n => Math.floor(Math.random() * n),
-        cats1: n => cats[Math.floor(Math.random() * (cats.length - 1))],
+        cats1: n => cats[n % cats.length],
+        cats2: n => cats[n % cats.length],
         perc: n => 0
       };
       const defaultCol = (n: number) => Math.random();
-      src.rows.push(src.cols.map(c => (cols[c] || defaultCol)(src.rows.length)));
+      src.rows.push(src.cols.map(c => (cols[c.name] || defaultCol)(src.rows.length)));
     }
   }
 ];
@@ -106,7 +122,7 @@ class Dummy extends React.Component<{}, State> {
   updateProgress() {
     const src = this.state.source;
     const m = this.model;
-    const cidx = src.cols.indexOf('perc');
+    const cidx = src.cols.findIndex(c => c.name == 'perc');
     if (cidx == -1)
       return Promise.resolve();
   
@@ -149,15 +165,27 @@ class Dummy extends React.Component<{}, State> {
                 label='Rows'
                 value={'' + (this.state.source?.rows.length || '')}
               />
-              <GridPanelAppr
-                grid={this.model.getGrid() ? this.model : undefined}
-              />
+              <Tabs defaultSelect='appr'>
+                <Tab icon='fa fa-paint-brush' id='appr'>
+                  <GridApprTab
+                    grid={this.model.getGrid() ? this.model : undefined}
+                  />
+                </Tab>
+                <Tab icon='fa fa-id-card-o' id='card'>
+                  <GridCardsTab
+                    grid={this.model.getGrid() ? this.model : undefined}
+                  />
+                </Tab>
+              </Tabs>
             </PropsGroup>
             <PropsGroup label='Sort'>
               <GridPanelSort
                 model={this.model}
               />
             </PropsGroup>
+            <GridPanelFilter
+              model={this.model}
+            />
             <div style={{ marginRight: 5, textAlign: 'right' }}>
               <CSSIcon
                 icon='fa fa-rocket'

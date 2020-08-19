@@ -309,3 +309,26 @@ export class DropDownPropItem2 extends React.Component<DropDownProps2, State> {
     );
   }
 }
+
+interface DDStringProps extends Props {
+  value?: string;
+  values: string[];
+  onChange?(value: string): void;
+}
+
+export const DropDownString: React.SFC<DDStringProps> = props => {
+  const values = props.values.map(value => {
+    return { value };
+  });
+
+  return (
+    <DropDownPropItem2
+      {...props}
+      values={values}
+      value={props.value ? values.find(v => v.value == props.value) : undefined}
+      onSelect={item => {
+        props.onChange?.(item.value);
+      }}
+    />
+  );
+};

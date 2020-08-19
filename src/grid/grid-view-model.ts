@@ -1,6 +1,6 @@
-import { Publisher } from "objio";
+import { Publisher } from 'objio';
 import { GridLoadableModel, Loader } from './grid-loadable-model';
-import { GridRequestor, WrapperArgs, ArrCell, ViewArgs } from './grid-requestor-decl';
+import { GridRequestor, ArrCell, ViewArgs, FilterArgs } from './grid-requestor-decl';
 import { GridViewAppr, getGridViewApprDefault, GridSortAppr } from './grid-view-appr';
 import { ApprObject } from '../common/appr-object';
 import { isEquals } from '../common/common';
@@ -8,23 +8,30 @@ import { SelectType } from './grid-model';
 import { clone } from "../common/common";
 
 export type EventType = string;
-export type GridRequestorT = GridRequestor<WrapperArgs<string, any>, ArrCell>;
+export type GridRequestorT = GridRequestor<ArrCell>;
+export type ColType = 'integer' | 'numeric' | 'string' | 'text';
+export interface ColAndType {
+  name: string;
+  type: ColType;
+}
 
 interface GridViewArgs {
   selType: SelectType;
 }
-
+ 
 export class GridViewModel extends Publisher<EventType> {
   private grid = new GridLoadableModel();
   private req?: GridRequestorT;
   private viewId?: string;
   private updViewTask?: Promise<void>;
-  private viewArgs: ViewArgs< WrapperArgs<string, any> > = {
+  private viewArgs: ViewArgs = {
     descAttrs: ['rows', 'columns']
   };
+  private colTypes = new Map<string, ColType>(); 
   private allCols = Array<string>();
   private viewCols = Array<string>();
   private appr = new ApprObject<GridViewAppr>(getGridViewApprDefault());
+  private filters?: FilterArgs;
 
   constructor(args?: GridViewArgs) {
     super();
@@ -78,6 +85,15 @@ export class GridViewModel extends Publisher<EventType> {
     });
   }
 
+  setFilters(filters?: FilterArgs) {
+    if (isEquals(filters, this.filters))
+      return;
+
+    this.filters = filters;
+    console.log(filters);
+    this.updateViewArgs(true);
+  }
+
   setRequestor(req: GridRequestorT) {
     this.req = req;
     this.viewId = undefined;
@@ -104,9 +120,19 @@ export class GridViewModel extends Publisher<EventType> {
     return this.allCols;
   }
 
-  setAllColumns(cols: Array<string>) {
-    this.viewCols = this.allCols = cols.slice();
+  setAllColumns(cols: Array<ColAndType>) {
+    this.colTypes.clear();
+    cols.forEach(col => {
+      this.colTypes.set(col.name, col.type);
+    });
+
+    this.viewCols = this.allCols = cols.map(c => c.name);
     this.delayedNotify();
+    this.delayedNotify({ type: 'columns' });
+  }
+
+  getColType(col: string) {
+    return this.colTypes.get(col) || 'string';
   }
 
   reloadCurrent(args: { clearCache: boolean } = { clearCache: true }) {
@@ -145,7 +171,8 @@ export class GridViewModel extends Publisher<EventType> {
     });
     this.grid.setRowSize(rowSize + appr.body.padding * 2);
 
-    const viewArgs: ViewArgs< WrapperArgs<string, any> > = {
+    const viewArgs: ViewArgs = {
+      filter: this.filters,
       descAttrs: ['rows', 'columns']
     };
 
@@ -243,7 +270,7 @@ export class GridViewModel extends Publisher<EventType> {
     );
   };
 
-  private updateViewId(view: ViewArgs< WrapperArgs<string, any> >, force: boolean) {
+  private updateViewId(view: ViewArgs, force: boolean) {
     const updateSizes = () => {
       this.grid.resetAllColSize();
       const appr = this.appr.get();

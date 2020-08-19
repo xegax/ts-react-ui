@@ -1,5 +1,14 @@
-interface FilterArgs {
-}
+export interface FilterValue {
+  column: string;
+  value: number | string;
+};
+
+export interface FilterCompound {
+  children: Array<FilterValue | FilterCompound>;
+  op: 'and' | 'or'
+};
+
+export type FilterArgs = FilterCompound;
 
 export type InfoAttrs = 'rows' | 'columns' | 'types';
 
@@ -29,11 +38,11 @@ export interface WrapperArgs<Type extends string, TArgs extends any> {
   args: TArgs;
 }
 
-export type Distinct = WrapperArgs<'distinct', {
+export interface Distinct {
   column: string;
-}>;
+};
 
-export interface ViewArgs<T extends WrapperArgs<string, any>> {
+export interface ViewArgs {
   viewId?: string;
 
   filter?: FilterArgs;
@@ -41,18 +50,17 @@ export interface ViewArgs<T extends WrapperArgs<string, any>> {
     cols: Array<{ name: string; asc: boolean }>;
   };
   columns?: Array<string>;
-  wrapper?: T;  // distinct, ...
+  distinct?: Distinct;
   descAttrs?: Array<InfoAttrs>;
 }
-export type ViewArgsT = ViewArgs<WrapperArgs<string, any>>;
 
 export interface ViewResult {
   viewId: string;
   desc: ViewDesc;
 }
 
-export interface GridRequestor<TWrapper extends WrapperArgs<string, any>, TCell extends Cell> {
-  createView(args: ViewArgs<TWrapper>): Promise<ViewResult>;
+export interface GridRequestor<TCell extends Cell> {
+  createView(args: ViewArgs): Promise<ViewResult>;
   getRows(args: RowsArgs): Promise<RowsResult<TCell>>;
   clearCache(): void;
 }

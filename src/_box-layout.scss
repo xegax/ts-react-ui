@@ -1,0 +1,13 @@
+.box-layout-editor {
+  outline: none;
+
+  & .boxitem {
+    padding: 5px;
+    border: 1px solid gray;
+    background-color: white;
+  }
+
+  & .boxitem.select-boxitem {
+    border: 1px solid red;
+  }
+}

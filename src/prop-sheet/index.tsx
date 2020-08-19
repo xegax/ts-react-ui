@@ -6,6 +6,7 @@ export {
   TextPropItem,
   DropDownPropItem,
   DropDownPropItem2,
+  DropDownString,
   SliderPropItem,
   SwitchPropItem,
   Item
