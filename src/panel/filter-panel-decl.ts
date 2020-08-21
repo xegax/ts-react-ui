@@ -14,7 +14,7 @@ interface FilterArgs {
   filters: Array<FilterHolder>;
 }
 
-interface GetRangeArgs {
+export interface GetRangeArgs {
   filters: Array<FilterHolder>;
 }
 
@@ -60,8 +60,8 @@ export type RangeFilter = {
 export type FilterData = CatFilter | TextFilter | RangeFilter;
 
 export interface FiltersMap {
-  include: {[column: string]: Array<FilterData>};
-  exclude: {[column: string]: Array<FilterData>};
+  include: Array<{ column: string; data: Array<FilterData> }>;
+  exclude: Array<{ column: string; data: Array<FilterData> }>;
 }
 
 export type FilterTgt = keyof FiltersMap;

@@ -1,14 +1,20 @@
+
 export interface FilterValue {
   column: string;
   value: number | string;
-};
+}
+
+export interface FilterRange {
+  column: string;
+  range: number[];
+}
 
 export interface FilterCompound {
-  children: Array<FilterValue | FilterCompound>;
+  children: Array<FilterValue | FilterRange | FilterCompound>;
   op: 'and' | 'or'
-};
+}
 
-export type FilterArgs = FilterCompound;
+export type FilterArgs = FilterCompound | FilterValue | FilterRange;
 
 export type InfoAttrs = 'rows' | 'columns' | 'types';
 
@@ -40,7 +46,13 @@ export interface WrapperArgs<Type extends string, TArgs extends any> {
 
 export interface Distinct {
   column: string;
-};
+}
+
+export interface Aggregate {
+  columns: string[];
+}
+
+export type AggFuncType = 'min' | 'max' | 'sum';
 
 export interface ViewArgs {
   viewId?: string;
@@ -51,6 +63,7 @@ export interface ViewArgs {
   };
   columns?: Array<string>;
   distinct?: Distinct;
+  aggregate?: Aggregate;
   descAttrs?: Array<InfoAttrs>;
 }
 

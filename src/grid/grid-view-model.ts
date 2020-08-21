@@ -6,6 +6,19 @@ import { ApprObject } from '../common/appr-object';
 import { isEquals } from '../common/common';
 import { SelectType } from './grid-model';
 import { clone } from "../common/common";
+import { FilterPanel } from '../panel/filter-panel';
+import {
+  FiltersMap,
+  GetValuesArgs,
+  GetRangeArgs,
+  SortType,
+  getCatFilter,
+  getRangeFilter,
+  ColItem,
+  Value,
+  FilterHolder,
+  DBColType
+} from '../panel/filter-panel-decl';
 
 export type EventType = string;
 export type GridRequestorT = GridRequestor<ArrCell>;
@@ -32,6 +45,7 @@ export class GridViewModel extends Publisher<EventType> {
   private viewCols = Array<string>();
   private appr = new ApprObject<GridViewAppr>(getGridViewApprDefault());
   private filters?: FilterArgs;
+  private filterPanel = new FilterPanel([]);
 
   constructor(args?: GridViewArgs) {
     super();
@@ -63,6 +77,7 @@ export class GridViewModel extends Publisher<EventType> {
 
   setDefaultAppr(appr: GridViewAppr) {
     this.appr = new ApprObject<GridViewAppr>(appr);
+    this.filterPanel.setFilters(this.appr.get().filters as FiltersMap);
   }
 
   getAppr() {
@@ -90,7 +105,6 @@ export class GridViewModel extends Publisher<EventType> {
       return;
 
     this.filters = filters;
-    console.log(filters);
     this.updateViewArgs(true);
   }
 
@@ -102,6 +116,10 @@ export class GridViewModel extends Publisher<EventType> {
 
   getGrid() {
     return this.grid;
+  }
+
+  getFiltersPanel() {
+    return this.filterPanel;
   }
 
   getRequestor() {
@@ -127,6 +145,8 @@ export class GridViewModel extends Publisher<EventType> {
     });
 
     this.viewCols = this.allCols = cols.map(c => c.name);
+    updateFilterColumns(this);
+
     this.delayedNotify();
     this.delayedNotify({ type: 'columns' });
   }
@@ -188,6 +208,10 @@ export class GridViewModel extends Publisher<EventType> {
         viewArgs.columns = cols;
     } else if (appr.viewType == 'cards' && appr.cardsView.columns.length) {
       viewArgs.columns = appr.cardsView.columns;
+    }
+
+    if (!isEquals(appr.filters, this.filterPanel.getFilters())) {
+      this.filterPanel.setFilters(clone(appr.filters as FiltersMap));
     }
 
     this.updateViewId(viewArgs, force);
@@ -320,4 +344,132 @@ export class GridViewModel extends Publisher<EventType> {
 
     return this.updViewTask;
   }
+}
+
+function updateFilterColumns(grid: GridViewModel) {
+  const filter = grid.getFiltersPanel();
+  const req = grid.getRequestor();
+
+  const collectValues = async (column: string, args: GetValuesArgs, sort?: SortType): Promise<{ total: number; values: Array<Value> }> => {
+    const viewArgs: ViewArgs = {
+      distinct: { column }
+    };
+
+    if (sort == 'count')
+      viewArgs.sorting = { cols: [{ name: 'count', asc: true }] };
+    else if (sort == 'value')
+      viewArgs.sorting = { cols: [{ name: 'value', asc: true }] };
+
+    if (args.filters.length) {
+      const filter = await req.createView({ filter: convertFilters(args.filters) });
+      viewArgs.viewId = filter.viewId;
+    }
+
+    const view = await req.createView(viewArgs);
+    const res = await req.getRows({ viewId: view.viewId, from: args.from, count: args.count });
+
+    return Promise.resolve({
+      total: view.desc.rows,
+      values: res.rows.map(row => {
+        return {
+          value: '' + row[0],
+          count: +row[1]
+        };
+      })
+    });
+  };
+
+  const makeColItem = (name: string): ColItem => {
+    let sort: SortType | undefined;
+    return {
+      name,
+      type: converType(grid.getColType(name)),
+      getValues: (args: GetValuesArgs) => collectValues(name, args, sort),
+      setSort: s => {
+        sort = s;
+        return Promise.resolve();
+      },
+      getNumRange: async (args: GetRangeArgs) => {
+        const viewArgs: ViewArgs = {
+          aggregate: { columns: [ name ] }
+        };
+
+        if (args.filters.length) {
+          const f = await req.createView({ filter: convertFilters(args.filters) });
+          viewArgs.viewId = f.viewId;
+        }
+
+        const view = await req.createView(viewArgs);
+        const res = await req.getRows({ viewId: view.viewId, from: 0, count: 1 });
+        const minIdx = view.desc.columns.findIndex(c => c == 'min');
+        const maxIdx = view.desc.columns.findIndex(c => c == 'max');
+
+        return {
+          minMax: [
+            res.rows[0][minIdx] as number,
+            res.rows[0][maxIdx] as number
+          ]
+        };
+      }
+    };
+  }
+
+  filter.setColumns(grid.getAllColumns().map(makeColItem));
+  filter.subscribe(() => {
+    grid.setFilters( convertFilters(filter.getFiltersArr('include')) );
+  }, 'change-filter-values');
+  filter.subscribe(() => {
+    grid.setApprChange({ filters: { include: filter.getFilters().include } });
+  }, 'change-filter-columns');
+}
+
+function converType(type: ColType): DBColType {
+  if (type == 'string')
+    return 'varchar';
+
+  if (type == 'numeric')
+    return 'real';
+
+  return type;
+}
+
+function convertFilters(filters: Array<FilterHolder>): FilterArgs | undefined {
+  const filter: FilterArgs = {
+    children: [],
+    op: 'and'
+  };
+
+  filters = filters.slice().sort((a, b) => a.order - b.order);
+  const colsMap = new Map<string, Array<FilterHolder>>();
+  filters.forEach(f => {
+    let fHolders = colsMap.get(f.column.name);
+    if (!fHolders)
+      colsMap.set(f.column.name, fHolders = []);
+
+    fHolders.push(f);
+  });
+
+  filters.forEach(f => {
+    const cat = getCatFilter(f.filter);
+    const range = getRangeFilter(f.filter);
+    if (cat) {
+      if (cat.values.length == 1)
+        filter.children.push({ column: f.column.name, value: cat.values[0] });
+      else
+        filter.children.push({ children: cat.values.map(value => ({ column: f.column.name, value })), op: 'or' });
+    } else if (range) {
+      filter.children.push({
+        column: f.column.name,
+        range: [
+          range.range[0] ?? range.rangeFull[0],
+          range.range[1] ?? range.rangeFull[1]
+        ]
+      });
+    }
+  });
+
+  if (!filter.children.length)
+    return undefined;
+
+  return filter;
 }

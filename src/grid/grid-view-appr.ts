@@ -1,5 +1,6 @@
 import { FontAppr, getFontApprDefault } from '../common/font-appr';
 import { copyKeys } from '../common/common';
+import { FiltersMap } from '../panel/filter-panel-decl';
 
 export interface GridColumnAppr {
   icon?: string;
@@ -51,6 +52,7 @@ export interface GridViewAppr {
   sort: Partial<GridSortAppr>;
   sortSchema: Array<GridSortSchema>;
   viewType: GridViewType;
+  filters: Partial<FiltersMap>;
 };
 
 export function getGridViewApprDefault(override?: Partial<GridViewAppr>) {
@@ -90,6 +92,10 @@ export function getGridViewApprDefault(override?: Partial<GridViewAppr>) {
     cardsView,
     sort,
     sortSchema: [],
+    filters: {
+      include: [],
+      exclude: []
+    },
     viewType: 'rows'
   };
 

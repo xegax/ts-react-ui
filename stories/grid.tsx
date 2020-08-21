@@ -97,6 +97,7 @@ class Dummy extends React.Component<{}, State> {
 
     this.model.setRequestor(new GridArrayRequestor(source));
     this.model.setAllColumns(source.cols);
+    this.model.subscribe(this.onUpdate);
     this.setState({ source });
   }
 
@@ -163,7 +164,7 @@ class Dummy extends React.Component<{}, State> {
               />
               <PropItem
                 label='Rows'
-                value={'' + (this.state.source?.rows.length || '')}
+                value={`${this.model.getGrid().getTotalRowsCount()} (${this.state.source?.rows.length || ''})`}
               />
               <Tabs defaultSelect='appr'>
                 <Tab icon='fa fa-paint-brush' id='appr'>

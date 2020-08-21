@@ -117,18 +117,28 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
 
   getFilters(): FiltersMap {
     let map: FiltersMap = {
-      include: {},
-      exclude: {}
+      include: [],
+      exclude: []
     };
 
     [
-      { tgt: 'include', arr: this.include },
-      { tgt: 'exclude', arr: this.exclude }
+      { src: this.include, dst: map.include },
+      { src: this.exclude, dst: map.exclude }
     ].forEach(obj => {
-      for (let data of obj.arr) {
-        const cf: Array<FilterData> = map[obj.tgt][data.column.name] || (map[obj.tgt][data.column.name] = []);
-        cf.push(clone(data.filter));
+      for (let n = 0; n < obj.src.length; n++) {
+        const data = obj.src[n];
+        let dst = obj.dst.find(item => item.column == data.column.name);
+        if (!dst)
+          obj.dst.push(dst = { column: data.column.name, data: [] });
+
+        if (getCatFilter(data.filter))
+          dst.data.push({ values: [] });
+        else if (getRangeFilter(data.filter))
+          dst.data.push({ range: [] });
+        else if (getTextFilter(data.filter))
+          dst.data.push({ filterText: '' });
       }
+      obj.dst.sort((a, b) => a.column.localeCompare(b.column));
     });
 
     return map;
@@ -143,24 +153,25 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
     this.include = [];
     this.exclude = [];
 
-    [
-      { cols: new Set(Object.keys(f.include)), arr: this.include, tgt: 'include' },
-      { cols: new Set(Object.keys(f.exclude)), arr: this.exclude, tgt: 'exclude' }
-    ].forEach(tgt => {
-      for (let c of tgt.cols) {
-        const column = this.columns.find(cn => cn.name == c);
-        if (!column || !f[tgt.tgt][column.name])
-          continue;
+    f.include.forEach(item => {
+      const column = this.columns.find(cn => cn.name == item.column);
+      if (!column)
+        return;
 
-        for (let filter of f[tgt.tgt][column.name]) {
-          tgt.arr.push({ column, filter });
-        }
-      }
+      item.data.forEach(filter => {
+        this.include.push({ column, filter });
+      });
     });
 
-    // TODO validation required
-    this.delayedNotify({ type: 'change-filter-values' });
-    this.delayedNotify({ type: 'change-filter-columns' });
+    f.exclude.forEach(item => {
+      const column = this.columns.find(cn => cn.name == item.column);
+      if (!column)
+        return;
+
+      item.data.forEach(filter => {
+        this.exclude.push({ column, filter });
+      });
+    });
   }
 
   getColumns(filter?: Array<string>): Array<ColItem> {
@@ -242,7 +253,7 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
       filters.push({ column, filter: f.filter });
     }
 
-    this.notify();
+    this.delayedNotify({ type: 'change-filter-columns' });
   }
 
   deleteFilter(tgt: FilterTgt, f: FilterData) {
@@ -250,7 +261,7 @@ export class FilterPanel extends Publisher<FilterEventType> implements FilterMod
     const i = arr.findIndex(fd => fd.filter == f);
     if (i != -1) {
       arr.splice(i, 1);
-      this.delayedNotify();
+      this.delayedNotify({ type: 'change-filter-columns' });
     }
   }
 
@@ -592,6 +603,7 @@ export class FilterPanelView extends React.Component<Props> {
           text='Category filter'
           onClick={() => {
             this.props.model.changeFilterTo(tgt, f, { values: [] as Array<string> });
+            this.props.model.delayedNotify({ type: 'change-filter-columns' });
           }}
         />
       );
@@ -604,6 +616,7 @@ export class FilterPanelView extends React.Component<Props> {
           text='Text filter'
           onClick={() => {
             this.props.model.changeFilterTo(tgt, f, { filterText: '' });
+            this.props.model.delayedNotify({ type: 'change-filter-columns' });
           }}
         />
       );
@@ -616,6 +629,7 @@ export class FilterPanelView extends React.Component<Props> {
           text='Range filter'
           onClick={() => {
             this.props.model.changeFilterTo(tgt, f, { range: [] });
+            this.props.model.delayedNotify({ type: 'change-filter-columns' });
           }}
         />
       );

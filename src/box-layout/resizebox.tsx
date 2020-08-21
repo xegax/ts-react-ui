@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { cn } from '../common/common';
 import { startDragging } from '../common/start-dragging';
-import { Rect, CSSRect, fromCSSRect } from '../common/rect';
+import { CSSRect } from '../common/rect';
 import { Point } from '../common/point';
-import { HandlerArgs } from '../../common/start-dragging';
+import { HandlerArgs } from '../common/start-dragging';
 
 const css = {
   resizebox: 'resizebox',
