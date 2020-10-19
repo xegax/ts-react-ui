@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Publisher } from 'objio/common/publisher';
 
+export { Publisher };
+
 export interface PropsOld<M extends Publisher = Publisher> {
   model?: M;
 }

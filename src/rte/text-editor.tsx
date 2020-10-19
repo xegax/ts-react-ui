@@ -6,9 +6,9 @@ import { findParent } from '../common/dom';
 import * as DropDown from '../simple-drop-down';
 import * as Color from '../color-swatches';
 import { FontSize } from '../font-size';
-import { TextEditorModel } from './text-editor-model';
+import { TextEditorJSON, TextEditorModel } from './text-editor-model';
 
-export { TextEditorModel };
+export { TextEditorModel, TextEditorJSON };
 
 const fontList = [
   'Arial',

@@ -13,6 +13,7 @@ import {
 import { Publisher } from 'objio';
 import { cn, clone } from '../common/common';
 import { OrderedSet } from 'immutable';
+import { EntProps, EntData, makeEntFindStrategy } from './helpers';
 
 interface SelState {
   anchorOffset: number;
@@ -69,29 +70,6 @@ interface Range {
   to: number;
 }
 
-interface EntData<T = any> {
-  label: string;
-  data?: T;
-  color?: string;
-  className?: string;
-}
-
-function makeEntFindStrategy() {
-  return (block: ContentBlock, callback: (start: number, end: number) => void, state: ContentState) => {
-    block.findEntityRanges(metadata => {
-      const entKey = metadata.getEntity();
-      return (entKey != null && state.getEntity(entKey).getType() != null);
-    }, callback);
-  };
-}
-
-interface CompProps {
-  children: JSX.Element;
-  contentState: ContentState;
-  entityKey: string;
-  offsetKey: string;
-}
-
 type StyleMap = Record<string, React.CSSProperties>;
 
 function isStyleAttrSame(s1: string, s2: string) {
@@ -126,7 +104,7 @@ export class TextEditorModel extends Publisher {
     this.decorator = new CompositeDecorator([
       {
         strategy: makeEntFindStrategy(),
-        component: (props: CompProps) => {
+        component: (props: EntProps) => {
           const data = props.contentState.getEntity(props.entityKey).getData();
           return this.renderEnt(data, props);
         }
@@ -135,26 +113,18 @@ export class TextEditorModel extends Publisher {
     this.state = content ? EditorState.createWithContent(content, this.decorator) : EditorState.createEmpty(this.decorator);
   }
 
-  static create(json: TextEditorJSON): TextEditorModel {
-    const m = new TextEditorModel(convertFromRaw(json.content));
-    m.styleMap = json.styles;
+  static create(json?: TextEditorJSON): TextEditorModel {
+    const m = new TextEditorModel(json ? convertFromRaw(json.content) : undefined);
+    m.styleMap = json?.styles || {};
     return m;
   }
 
-  private renderEnt(data: EntData, props: CompProps): React.ReactChild {
-    /*const children = React.Children.map(props.children, (child: JSX.Element) => {
-      return React.cloneElement(child, { styleSet: OrderedSet.of() });
-    });*/
-
-    let style: React.CSSProperties = {
-      backgroundColor: data.color
-    };
-
+  private renderEnt(data: EntData, props: EntProps): React.ReactChild {
     return (
       <div
         data-offset-key={props.offsetKey}
         className={cn('text-editor-ent', props.entityKey == this.selEnt && 'text-editor-focus-ent', data.className)}
-        style={style}
+        // style={data.style}
       >
         {props.children}
       </div>
