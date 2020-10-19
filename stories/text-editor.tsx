@@ -40,6 +40,7 @@ storiesOf('Text editor', module)
         return (
           <div onDoubleClick={edit}>
             <TextView
+              placeholder='Double click on me'
               json={m.get()}
               renderEnt={renderEnt}
             />

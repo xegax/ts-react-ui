@@ -1,5 +1,8 @@
 .text-editor {
   line-height: 1.5;
+  background-color: white;
+  height: 300px;
+  overflow-y: auto;
 
   &-ent {
     background-color: rgba(128, 128, 128, 0.2);

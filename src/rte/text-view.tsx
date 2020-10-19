@@ -3,9 +3,7 @@ import {
   Editor,
   EditorState,
   convertFromRaw,
-  CompositeDecorator,
-  ContentBlock,
-  ContentState
+  CompositeDecorator
 } from 'draft-js';
 import type { TextEditorJSON } from './text-editor-model';
 import { EntProps, EntData, makeEntFindStrategy } from './helpers';
@@ -16,7 +14,8 @@ const css = {
 };
 
 interface Props {
-  json: TextEditorJSON;
+  placeholder?: string;
+  json?: TextEditorJSON;
   renderEnt?(type: string, data: any): JSX.Element;
 }
 
@@ -91,7 +90,7 @@ export class TextView extends React.Component<Props, State> {
     return (
       <div className={css.textView}>
         <Editor
-          placeholder='Click me'
+          placeholder={this.props.placeholder}
           readOnly
           onChange={() => {}}
           editorState={this.state.editor}
