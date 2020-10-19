@@ -6,10 +6,14 @@ import { startDragging } from './common/start-dragging';
 import { findParentByFunc } from './common/dom';
 import { Timer } from 'objio/common/timer';
 import { FitToParent } from './fittoparent';
-import { ElementType } from './react-common';
+import { ElementType, render } from './react-common';
 
 const DEFAULT_CARD_WIDTH = 200;
 const DEFAULT_CARD_HEIGHT = 300;
+
+export function renderItem(item: Item) {
+  return render(item.render, item) || item.value;
+}
 
 const classes = {
   border: 'border',

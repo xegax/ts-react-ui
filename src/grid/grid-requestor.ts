@@ -5,13 +5,10 @@ import {
   RowsResult,
   ArrCell,
   ViewArgs,
-  FilterCompound,
-  FilterValue,
   FilterArgs,
   AggFuncType
 } from './grid-requestor-decl';
 import { clone } from '../common/common';
-
 
 function createCmpStr(filter: FilterArgs) {
   if ('value' in filter)
@@ -19,6 +16,9 @@ function createCmpStr(filter: FilterArgs) {
 
   if ('range' in filter)
     return `(row['${filter.column}'] >= ${filter.range[0]} && row['${filter.column}'] <= ${filter.range[1]})`;
+
+  if ('substr' in filter)
+    return `(row['${filter.column}'].indexOf(${JSON.stringify(filter.substr)}) != -1)`;
 
   return `(${filter.children.map(createCmpStr).join(filter.op == 'or' ? ' || ' : ' && ')})`;
 }

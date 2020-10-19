@@ -76,34 +76,34 @@ const renderCardsApprTab: React.SFC<{ grid: GridViewModel }> = props => {
         label='Border'
         value={appr.cardsView.border}
         onChanged={border => {
-          this.props.grid.setApprChange({ cardsView: { border } });
+          props.grid.setApprChange({ cardsView: { border } });
         }}
       />
       <TextPropItem
         label='Padding'
         value={appr.cardsView.padding}
         onEnterNum={padding => {
-          this.props.grid.setApprChange({ cardsView: { padding } });
+          props.grid.setApprChange({ cardsView: { padding } });
         }}
       />
       <ColorProp
         color={appr.cardsView.color}
         onChange={color => {
-          this.props.grid.setApprChange({ cardsView: { color } });
+          props.grid.setApprChange({ cardsView: { color } });
         }}
       />
       <TextPropItem
         label='Width'
         value={appr.cardsView.width}
         onEnterNum={width => {
-          this.props.grid.setApprChange({ cardsView: { width } });
+          props.grid.setApprChange({ cardsView: { width } });
         }}
       />
       <TextPropItem
         label='Height'
         value={appr.cardsView.height}
         onEnterNum={height => {
-          this.props.grid.setApprChange({ cardsView: { height } });
+          props.grid.setApprChange({ cardsView: { height } });
         }}
       />
     </>

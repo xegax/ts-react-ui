@@ -15,6 +15,7 @@ import { GridApprTab, GridCardsTab } from '../src/grid/grid-tabs-appr';
 import { GridPanelSort } from '../src/grid/grid-panel-sort';
 import { delay } from 'bluebird';
 import { Tabs, Tab } from '../src/tabs';
+import { CardEditorPanel } from '../src/grid/card-editor-panel';
 
 interface SourceRows {
   value: string;
@@ -64,13 +65,13 @@ let sources: Array<SourceRows> = [
     },
     push: (src: SourceRows) => {
       let cats = ['xxYYzz', '@####', '????', '!!!!!!', '12345', 'abc', '0', ''];
-      let cats2 = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+      let cats2 = ['one', 'two', 'https://assets.flatpyramid.com/wp-content/uploads/2017/09/11223302/squidward-lula-molusco-3d-model-263482.jpg', 'four', 'five', 'six', 'seven', 'eight'];
       let cols: {[col: string]: (idx: number) => string | number} = {
         row: n => n,
         hexRandom: n => Math.random().toString(16).substr(2),
         intRandom: n => Math.floor(Math.random() * n),
         cats1: n => cats[n % cats.length],
-        cats2: n => cats[n % cats.length],
+        cats2: n => cats2[n % cats2.length],
         perc: n => 0
       };
       const defaultCol = (n: number) => Math.random();
@@ -142,9 +143,68 @@ class Dummy extends React.Component<{}, State> {
     return delay(100).then(() => this.updateProgress());
   }
 
+  private renderProps() {
+    if (this.model.getEditorMode() == 'card-editor') {
+      return (
+        <PropsGroup label='Card'>
+          <CardEditorPanel
+            model={this.model}
+          />
+        </PropsGroup>
+      );
+    }
+
+    return (
+      <>
+        <PropsGroup label='Grid' padding={false}>
+          <DropDownPropItem2
+            margin
+            label='Source'
+            value={this.state.source}
+            values={sources}
+            onSelect={this.setSource}
+          />
+          <PropItem
+            label='Rows'
+            value={`${this.model.getGrid().getTotalRowsCount()} (${this.state.source?.rows.length || ''})`}
+          />
+          <Tabs defaultSelect='appr'>
+            <Tab icon='fa fa-paint-brush' id='appr'>
+              <GridApprTab
+                grid={this.model.getGrid() ? this.model : undefined}
+              />
+            </Tab>
+            <Tab icon='fa fa-id-card-o' id='card'>
+              <GridCardsTab
+                grid={this.model.getGrid() ? this.model : undefined}
+              />
+            </Tab>
+          </Tabs>
+        </PropsGroup>
+        <PropsGroup label='Sort'>
+          <GridPanelSort
+            model={this.model}
+          />
+        </PropsGroup>
+        <GridPanelFilter
+          model={this.model}
+        />
+        <div style={{ marginRight: 5, textAlign: 'right' }}>
+          <CSSIcon
+            icon='fa fa-rocket'
+            onClick={() => {
+              this.updateProgress();
+            }}
+          />
+        </div>
+      </>
+    );
+  }
+
   render() {
     return (
-      <div style={{
+      <div
+        style={{
           position: 'absolute',
           left: 0, top: 0, right: 0, bottom: 0,
           display: 'flex',
@@ -154,47 +214,7 @@ class Dummy extends React.Component<{}, State> {
       >
         <div style={{ display: 'flex', position: 'relative', flexGrow: 1}}>
           <PropSheet defaultWidth={200} resize>
-            <PropsGroup label='Grid' padding={false}>
-              <DropDownPropItem2
-                margin
-                label='Source'
-                value={this.state.source}
-                values={sources}
-                onSelect={this.setSource}
-              />
-              <PropItem
-                label='Rows'
-                value={`${this.model.getGrid().getTotalRowsCount()} (${this.state.source?.rows.length || ''})`}
-              />
-              <Tabs defaultSelect='appr'>
-                <Tab icon='fa fa-paint-brush' id='appr'>
-                  <GridApprTab
-                    grid={this.model.getGrid() ? this.model : undefined}
-                  />
-                </Tab>
-                <Tab icon='fa fa-id-card-o' id='card'>
-                  <GridCardsTab
-                    grid={this.model.getGrid() ? this.model : undefined}
-                  />
-                </Tab>
-              </Tabs>
-            </PropsGroup>
-            <PropsGroup label='Sort'>
-              <GridPanelSort
-                model={this.model}
-              />
-            </PropsGroup>
-            <GridPanelFilter
-              model={this.model}
-            />
-            <div style={{ marginRight: 5, textAlign: 'right' }}>
-              <CSSIcon
-                icon='fa fa-rocket'
-                onClick={() => {
-                  this.updateProgress();
-                }}
-              />
-            </div>
+            {this.renderProps()}
           </PropSheet>
           <div style={{ position: 'relative', flexGrow: 1 }}>
             {this.renderView()}

@@ -19,7 +19,10 @@ import {
   FilterHolder,
   DBColType
 } from '../panel/filter-panel-decl';
+import { BoxLayoutEditorModel } from '../box-layout/box-layout-editor-model';
+import { getTextFilter } from '../panel/filter-panel-decl';
 
+export type EditorMode = 'grid' | 'card-editor';
 export type EventType = string;
 export type GridRequestorT = GridRequestor<ArrCell>;
 export type ColType = 'integer' | 'numeric' | 'string' | 'text';
@@ -31,7 +34,8 @@ export interface ColAndType {
 interface GridViewArgs {
   selType: SelectType;
 }
- 
+
+let linkTgtCounter = 0;
 export class GridViewModel extends Publisher<EventType> {
   private grid = new GridLoadableModel();
   private req?: GridRequestorT;
@@ -41,11 +45,16 @@ export class GridViewModel extends Publisher<EventType> {
     descAttrs: ['rows', 'columns']
   };
   private colTypes = new Map<string, ColType>(); 
-  private allCols = Array<string>();
+  private allTableCols = Array<string>();
+  private allFilterCols = Array<string>();
   private viewCols = Array<string>();
   private appr = new ApprObject<GridViewAppr>(getGridViewApprDefault());
   private filters?: FilterArgs;
   private filterPanel = new FilterPanel([]);
+  private mode: EditorMode = 'grid';
+  private editRow: number = 0;
+  private cardEditor = new BoxLayoutEditorModel();
+  private linkTgt = 'link-tgt-' + (++linkTgtCounter);
 
   constructor(args?: GridViewArgs) {
     super();
@@ -73,6 +82,10 @@ export class GridViewModel extends Publisher<EventType> {
     if (args) {
       this.grid.setSelectType(args.selType);
     }
+  }
+
+  getLinkTgt() {
+    return this.linkTgt;
   }
 
   setDefaultAppr(appr: GridViewAppr) {
@@ -126,6 +139,38 @@ export class GridViewModel extends Publisher<EventType> {
     return this.req;
   }
 
+  setEditorMode(mode: EditorMode) {
+    if (this.mode == mode)
+      return;
+
+    this.mode = mode;
+    if (this.mode == 'grid') {
+      this.setApprChange({ cardsView: { boxArr: this.cardEditor.getBoxArr() } });
+    }
+  
+    this.delayedNotify();
+  }
+
+  getEditorMode() {
+    return this.mode;
+  }
+
+  getEditRow() {
+    return this.editRow;
+  }
+
+  setEditRow(row: number) {
+    if (this.editRow == row)
+      return;
+
+    this.editRow = row;
+    this.delayedNotify();
+  }
+
+  getCardEditor() {
+    return this.cardEditor;
+  }
+
   reload() {
     this.grid.reload();
   }
@@ -135,16 +180,29 @@ export class GridViewModel extends Publisher<EventType> {
   }
 
   getAllColumns() {
-    return this.allCols;
+    return this.allTableCols;
   }
 
-  setAllColumns(cols: Array<ColAndType>) {
+  getAllColumnsForFilter() {
+    return this.allFilterCols;
+  }
+
+  setAllColumns(cols: Array<ColAndType>, filterCols?: Array<ColAndType>) {
     this.colTypes.clear();
     cols.forEach(col => {
       this.colTypes.set(col.name, col.type);
     });
+    this.viewCols = this.allTableCols = cols.map(c => c.name);
 
-    this.viewCols = this.allCols = cols.map(c => c.name);
+    if (filterCols) {
+      filterCols.forEach(col => {
+        this.colTypes.set(col.name, col.type);
+      });
+      this.allFilterCols = filterCols.map(c => c.name);
+    } else {
+      this.allFilterCols = this.allTableCols.slice();
+    }
+
     updateFilterColumns(this);
 
     this.delayedNotify();
@@ -202,7 +260,7 @@ export class GridViewModel extends Publisher<EventType> {
     this.grid.setReverse(appr.sort.reverse);
 
     if (appr.viewType == 'rows' && appr.colsOrder.length) {
-      const allCols = new Set(this.allCols);
+      const allCols = new Set(this.allTableCols);
       const cols = appr.colsOrder.filter(c => allCols.has(c));
       if (cols.length)
         viewArgs.columns = cols;
@@ -361,7 +419,11 @@ function updateFilterColumns(grid: GridViewModel) {
       viewArgs.sorting = { cols: [{ name: 'value', asc: true }] };
 
     if (args.filters.length) {
-      const filter = await req.createView({ filter: convertFilters(args.filters) });
+      const colArr = column.split('.');
+      const filter = await req.createView({
+        viewId: colArr.length == 3 ? `${colArr[0]}.${colArr[1]}` : undefined,
+        filter: convertFilters(args.filters)
+      });
       viewArgs.viewId = filter.viewId;
     }
 
@@ -414,7 +476,7 @@ function updateFilterColumns(grid: GridViewModel) {
     };
   }
 
-  filter.setColumns(grid.getAllColumns().map(makeColItem));
+  filter.setColumns(grid.getAllColumnsForFilter().map(makeColItem));
   filter.subscribe(() => {
     grid.setFilters( convertFilters(filter.getFiltersArr('include')) );
   }, 'change-filter-values');
@@ -452,6 +514,7 @@ function convertFilters(filters: Array<FilterHolder>): FilterArgs | undefined {
   filters.forEach(f => {
     const cat = getCatFilter(f.filter);
     const range = getRangeFilter(f.filter);
+    const text = getTextFilter(f.filter);
     if (cat) {
       if (cat.values.length == 1)
         filter.children.push({ column: f.column.name, value: cat.values[0] });
@@ -464,6 +527,11 @@ function convertFilters(filters: Array<FilterHolder>): FilterArgs | undefined {
           range.range[0] ?? range.rangeFull[0],
           range.range[1] ?? range.rangeFull[1]
         ]
+      });
+    } else if (text) {
+      filter.children.push({
+        column: f.column.name,
+        substr: text.filterText
       });
     }
   });

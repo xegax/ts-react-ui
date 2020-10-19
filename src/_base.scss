@@ -371,6 +371,75 @@ $bg-color-1: #d2e2ec;
   }
 }
 
+.bg-img-contain {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.simple-drop-down {
+  &-box {
+    cursor: pointer;
+    display: inline-block;
+    padding-left: 2px;
+    padding-right: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    &:hover {
+      background-color: rgba(192, 192, 192, 0.3);
+    }
+  }
+  &-border {
+    border: 1px solid silver;
+    border-radius: 3px;
+  }
+}
+
+.color-swatches {
+  display: inline-block;
+  padding: 4px;
+
+  &-row {
+    display: block;
+  }
+
+  &-item {
+    font-size: 0px;
+    display: inline-block;
+    border: 1px solid silver;
+    cursor: pointer;
+    &:hover {
+      border-color: gray;
+    }
+  }
+
+  &-color {
+    margin: 1px;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+  }
+}
+
+.font-size {
+  &-value {
+    cursor: pointer;
+    position: relative;
+    width: 30px;
+    outline: none;
+    user-select: none;
+    border: 1px solid silver;
+    border-radius: 3px;
+    padding-left: 2px;
+    padding-right: 2px;
+    text-align: center;
+    &:hover {
+      background-color: rgba(192, 192, 192, 0.3);
+    }
+  }
+}
+
 @import './files-drop-container';
 @import './drop-down';
 @import './list-view';
@@ -392,3 +461,4 @@ $bg-color-1: #d2e2ec;
 @import './layout2';
 @import './box-layout';
 @import './resizebox';
+@import './text-editor';

@@ -1,0 +1,25 @@
+.text-editor {
+  line-height: 1.5;
+
+  &-ent {
+    background-color: rgba(128, 128, 128, 0.2);
+    border-radius: 4px;
+    display: inline;
+    cursor: pointer;
+  }
+
+  &-focus-ent {
+    color: gray;
+  }
+
+  .public-DraftEditor-content {
+    ::selection {
+      background-color: #e0e0e0;
+    }
+    &:focus {
+      ::selection {
+        background-color: #bbd3fd;
+      }
+    }
+  }
+}

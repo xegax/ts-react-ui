@@ -8,6 +8,7 @@ export { FontAppr };
 
 interface Props {
   font: FontAppr;
+  label?: string;
   modified?: boolean;
   onChange?(font: Partial<FontAppr>): void;
   onReset?(): void;
@@ -15,7 +16,7 @@ interface Props {
 
 export const FontProp: React.SFC<Props> = props => {
   return (
-    <PropItem label='Font'>
+    <PropItem label={props.label || 'Font'}>
       <div className='horz-panel-1 flex popover-wrapper-flex'>
         <Popover position={Position.BOTTOM_RIGHT}>
           <FontValue

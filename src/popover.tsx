@@ -1,11 +1,12 @@
 import * as React from 'react';
 import * as bp from '@blueprintjs/core';
-import { Classes, Position } from '@blueprintjs/core';
+import { Classes, Position, PopoverInteractionKind } from '@blueprintjs/core';
 import { CSSIcon, Props as FontIconProps } from './cssicon';
 
 export {
   Classes,
-  Position
+  Position,
+  PopoverInteractionKind
 };
 
 export interface Props extends bp.IPopoverProps {
@@ -64,8 +65,7 @@ export class PopoverIcon extends React.Component<IconProps> {
           {...this.props}
           style={{
             borderRadius: 2,
-            color: open == this ? 'white' : undefined,
-            backgroundColor: open == this ? 'black' : undefined,
+            border: open == this ? '1px solid gray' : undefined,
             display: 'inline-flex',
             width: '1.2em',
             height: '1.2em',

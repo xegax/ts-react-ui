@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { BoxLayoutEditorModel, normalizeRect, getBoxRect, getBoxXAxis, getBoxYAxis } from './box-layout-editor-model';
-import { BoxLayout } from './box-layout';
+import { BoxLayout, RenderBoxResult } from './box-layout';
 import { Box } from './box-layout-decl';
 import { startDragging } from '../common/start-dragging';
 import { cn } from '../common/common';
@@ -17,8 +17,11 @@ const css = {
   select: 'select-boxitem'
 };
 
-interface Props {
+interface Props<T = any> {
   model?: BoxLayoutEditorModel;
+  data?: T;
+  renderBox?(box: Box, data?: T): RenderBoxResult;
+  createBox?(box: Box): void;
   size?: Size;
 }
 
@@ -27,7 +30,7 @@ interface State {
   notify?(): void;
 }
 
-export class BoxLayoutEditor extends React.Component<Props> {
+export class BoxLayoutEditor<T = any> extends React.Component<Props<T>> {
   private ref = React.createRef<HTMLDivElement>();
 
   state: State = {
@@ -127,15 +130,15 @@ export class BoxLayoutEditor extends React.Component<Props> {
       m.isSelect(box.key) && css.select
     );
 
+    const boxRes = this.props.renderBox?.(box, this.props.data);
     let jsx = (
       <div
-        className={className}
+        className={cn(className, boxRes?.className)}
         onMouseDown={this.startDraggingBox}
+        style={{...boxRes?.style}}
         {...{'data-boxkey': box.key}}
       >
-        <div style={{ cursor: 'default', userSelect: 'none' }}>
-          {box.key}
-        </div>
+        {boxRes?.jsx || box.key}
         {box.key == m.getActiveBoxKey() ? (
           <ResizeBox<{ x: string; y: string; }>
             rect={toCSSRect(normalizeRect(box.rect, this.props.size))}
@@ -212,7 +215,8 @@ export class BoxLayoutEditor extends React.Component<Props> {
             height: 50
           };
 
-          this.props.model.createBox({ rect });
+          const newBox = this.props.model.createBox({ rect });
+          this.props?.createBox(newBox);
         }}
       >
         <BoxLayout

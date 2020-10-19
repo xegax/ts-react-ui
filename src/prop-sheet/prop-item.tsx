@@ -56,6 +56,10 @@ function scrollIntoView(e: React.MouseEvent) {
     value.scrollIntoView(false);
 }
 
+export const PropSeparator: React.SFC = () => {
+  return <div style={{ marginTop: 5, marginBottom: 5, borderTop: '1px solid silver' }} />;
+};
+
 export const PropItem: React.SFC<Props> = (props: Props) => {
   const inline = props.inline != false;
 
@@ -311,15 +315,21 @@ export class DropDownPropItem2 extends React.Component<DropDownProps2, State> {
 }
 
 interface DDStringProps extends Props {
+  notSelected?: boolean;
   value?: string;
   values: string[];
+  labels?: Record<string, React.ReactChild>;
   onChange?(value: string): void;
 }
 
 export const DropDownString: React.SFC<DDStringProps> = props => {
-  const values = props.values.map(value => {
-    return { value };
-  });
+  const values: Array<Item> = props.notSelected ? [{ value: undefined, render: 'Not selected' }] : [];
+  values.push(...props.values.map(value => {
+    return {
+      value,
+      render: props.labels?.[value]
+    };
+  }));
 
   return (
     <DropDownPropItem2

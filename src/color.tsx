@@ -3,6 +3,26 @@ import { SketchPicker } from 'react-color';
 import { showModal } from './show-modal';
 import { Dialog } from './blueprint';
 
+function parseRGBA(s: string) {
+  if (!s)
+    return '#ffffff';
+
+  if (s[0] == '#')
+    return s;
+
+  if (!s.startsWith('rgba'))
+    return { r: 0, g: 0, b: 0, a: 1 };
+
+  const c = s.split('(');
+  const rgba = c[1].split(',');
+  return {
+    r: parseInt(rgba[0]),
+    g: parseInt(rgba[1]),
+    b: parseInt(rgba[2]),
+    a: parseFloat(rgba[3]) ?? 1
+  };
+}
+
 interface GetColorArgs {
   title?: string;
   color: string;
@@ -28,10 +48,11 @@ export function getColor(args: GetColorArgs) {
         style={{width: 'unset', height: 'unset', padding: 0}}
       >
         <SketchPicker
-          color={args.color}
+          color={parseRGBA(args.color)}
           onChangeComplete={color => {
-            newColor = color.hex;
-            args.onChanging && args.onChanging(color.hex);
+            const rgb = color.rgb;
+            newColor = `rgba(${rgb.r},${rgb.g},${rgb.b},${rgb.a})`;
+            args.onChanging && args.onChanging(newColor);
           }}
         />
       </Dialog>

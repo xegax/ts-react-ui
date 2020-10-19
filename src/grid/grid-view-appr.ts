@@ -1,12 +1,35 @@
 import { FontAppr, getFontApprDefault } from '../common/font-appr';
 import { copyKeys } from '../common/common';
 import { FiltersMap } from '../panel/filter-panel-decl';
+import { Box } from '../box-layout/box-layout-decl';
 
 export interface GridColumnAppr {
   icon?: string;
   label?: string;
   font?: Partial<FontAppr>;
   width?: number;
+}
+
+export type ValueType = 'custom' | 'table' | 'none';
+export interface ContentValue {
+  type: ValueType;
+  custom: string;
+  value: string;
+}
+
+export type BoxContentType = 'text' | 'image' | 'auto';
+export type Overflow = 'auto' | 'clip' | 'hidden' | 'scroll' | 'visible';
+export interface BoxAppr {
+  content: Partial<ContentValue>;
+  href: Partial<ContentValue>;
+  tooltip: Partial<ContentValue>;
+  
+  font: Partial<FontAppr>;
+  border: boolean;
+  background: string;
+  contentType: BoxContentType;
+  overflow: Overflow;
+  padding: number;
 }
 
 export interface GridCardsViewAppr {
@@ -16,6 +39,9 @@ export interface GridCardsViewAppr {
   padding: number;
   color: string;
   columns: Array<string>;
+  boxArr: Array<Box>;
+  boxAppr: Partial<BoxAppr>;
+  boxMap: {[key: string]: Partial<BoxAppr>};
 }
 
 export interface GridSortAppr {
@@ -76,7 +102,13 @@ export function getGridViewApprDefault(override?: Partial<GridViewAppr>) {
     border: true,
     padding: 5,
     color: '#ffffff',
-    columns: []
+    columns: [],
+    boxArr: [],
+    boxAppr: {
+      overflow: 'visible',
+      font: getFontApprDefault({ sizePx: 10, color: '#101010' })
+    },
+    boxMap: {}
   };
 
   const sort: GridSortAppr = {

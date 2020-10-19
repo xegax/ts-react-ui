@@ -35,6 +35,7 @@ export class InputGroup extends React.Component<Props> {
   render() {
     return (
       <BP.InputGroup
+        autoComplete='off'
         className={cn(BP.Classes.SMALL, this.props.className)}
         value={this.state.value}
         leftIcon={this.props.icon}

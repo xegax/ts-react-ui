@@ -3,11 +3,11 @@
 
   & .boxitem {
     padding: 5px;
-    border: 1px solid gray;
+    border: 1px solid #e3e3e3;
     background-color: white;
   }
 
   & .boxitem.select-boxitem {
-    border: 1px solid red;
+    border: 1px solid red !important;
   }
 }

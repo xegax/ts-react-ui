@@ -52,6 +52,19 @@ export class BoxLayoutEditorModel extends Publisher {
     return false;
   }
 
+  moveTo(dir: 'forward' | 'backward') {
+    if (this.select.size == 0)
+      return;
+
+    const sel = this.boxArr.filter(box => this.select.has(box.key));
+    this.boxArr = this.boxArr.filter(box => !this.select.has(box.key));
+    if (dir == 'forward')
+      this.boxArr.push(...sel);
+    else
+      this.boxArr.splice(0, 0, ...sel);
+    this.delayedNotify();
+  }
+
   selectBox(key: string) {
     if (this.select.has(key) && this.activeBoxKey == key)
       return;
@@ -78,8 +91,20 @@ export class BoxLayoutEditorModel extends Publisher {
     return Array.from(this.select.keys());
   }
 
+  getSelectNum() {
+    return this.select.size;
+  }
+
   getBoxArr() {
     return this.boxArr;
+  }
+
+  setBoxArr(arr: Array<Box>) {
+    this.boxArr = arr;
+    this.boxIdMap.clear();
+    arr.forEach(box => {
+      this.boxIdMap.set(box.key, box);
+    });
   }
 }
 

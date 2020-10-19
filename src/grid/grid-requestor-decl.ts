@@ -9,12 +9,17 @@ export interface FilterRange {
   range: number[];
 }
 
+export interface FilterSubstr {
+  column: string;
+  substr: string;
+}
+
 export interface FilterCompound {
-  children: Array<FilterValue | FilterRange | FilterCompound>;
+  children: Array<FilterArgs>;
   op: 'and' | 'or'
 }
 
-export type FilterArgs = FilterCompound | FilterValue | FilterRange;
+export type FilterArgs = FilterCompound | FilterValue | FilterSubstr | FilterRange;
 
 export type InfoAttrs = 'rows' | 'columns' | 'types';
 

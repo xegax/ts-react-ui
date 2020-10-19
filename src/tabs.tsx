@@ -57,8 +57,10 @@ export class Tabs extends React.Component<Props, State> {
       return f?.className == css.TabCtrl;
     })?.getAttribute('data-tabid');
 
-    if (tabId)
+    if (tabId) {
       this.setState({ select: tabId });
+      this.props?.onSelect(tabId);
+    }
   };
 
   render() {

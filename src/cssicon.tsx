@@ -26,6 +26,7 @@ export interface Props {
 
   style?: React.CSSProperties;
   onClick?(e: React.MouseEvent): void;
+  onMouseDown?(e: React.MouseEvent): void;
 }
 
 export function CSSIcon(props: Props) {
@@ -36,7 +37,7 @@ export function CSSIcon(props: Props) {
     props.checked && css.checked,
     'checked' in props && !props.checked && css.unchecked,
     props.hidden && css.hidden,
-    props.onClick && css.clickable,
+    (props.onClick || props.onMouseDown) && css.clickable,
     props.displayFlex !== false && css.displayFlex,
     props.align
   );
@@ -51,6 +52,12 @@ export function CSSIcon(props: Props) {
           return;
 
         props.onClick && props.onClick(e);
+      }}
+      onMouseDown={e => {
+        if (props.disabled)
+          return;
+
+        props.onMouseDown && props.onMouseDown(e);
       }}
     >
       <i style={props.style} className={props.icon}/>
