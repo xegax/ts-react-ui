@@ -4,27 +4,35 @@ import { TextView } from '../src/rte/text-view';
 import { showEditor } from '../src/rte/show-editor';
 import { TextEditorJSON } from '../src/rte/text-editor';
 import { Subscriber, Publisher } from '../src/subscriber';
+import { showTemplateEditor } from '../src/rte/template-editor';
+import { getTextFromTemplate, TextTemplate } from '../src/common/text-template';
+import { prompt } from '../src/prompt';
+import { EntData } from '../src/rte/helpers';
 
 function renderEnt(type: string, data: any) {
   return <span>{type}</span>;
 }
 
-class TextData extends Publisher {
-  private json: TextEditorJSON;
+class PubData<T> extends Publisher {
+  private data: T;
 
-  set(json: TextEditorJSON) {
-    this.json = json;
+  constructor(data: T) {
+    super();
+
+    this.data = data;
+  }
+
+  set(data: T) {
+    this.data = data;
     this.delayedNotify();
   }
 
   get() {
-    return this.json;
+    return this.data;
   }
 }
 
-const m = new TextData();
-
-function edit() {
+function edit(m: PubData<TextEditorJSON>) {
   showEditor({ json: m.get() })
   .then(json => {
     m.set(json);
@@ -32,20 +40,58 @@ function edit() {
   .catch(() => {});
 }
 
+function editTemplate(m: PubData<TextTemplate>) {
+  const appendVar = () => {
+    return (
+      prompt({ title: 'Enter var name' })
+      .then(label => {
+        return { label };
+      })
+    );
+  };
+
+  const editVar = (v: EntData) => {
+    return (
+      prompt({ title: 'Edit var name', value: v.label })
+      .then(label => {
+        return { label };
+      })
+    );
+  };
+
+  showTemplateEditor({ template: m.get(), appendVar, editVar })
+  .then(tt => {
+    m.set(tt);
+  })
+  .catch(() => {});
+}
+
 storiesOf('Text editor', module)
-  .add('Text editor', () => (
-    <Subscriber
-      model = {m}
-      render={() => {
-        return (
-          <div onDoubleClick={edit}>
-            <TextView
-              placeholder='Double click on me'
-              json={m.get()}
-              renderEnt={renderEnt}
-            />
-          </div>
-        );
-      }}
-    />
-  ));
+  .add('Text editor', () => {
+    const m = new PubData<TextEditorJSON>(null);
+    return (
+      <Subscriber model = {m}>
+        {() => <TextView
+          onDoubleClick={() => edit(m)}
+          placeholder='Double click on me'
+          json={m.get()}
+          renderEnt={renderEnt}
+        />}
+      </Subscriber>
+    );
+  })
+  .add('Template editor', () => {
+    const m = new PubData<TextTemplate>([]);
+    return (
+      <Subscriber model = {m}>
+        {() => {
+          const text = getTextFromTemplate({ template: m.get(), getVar: ent => ent.label }) || '?';
+          return (
+            <div onDoubleClick={() => editTemplate(m)}>
+              {text}
+            </div>
+          );
+        }}
+      </Subscriber>
+    );
+  });

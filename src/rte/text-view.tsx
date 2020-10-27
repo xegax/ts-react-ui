@@ -13,7 +13,7 @@ const css = {
   ent: 'text-view-ent'
 };
 
-interface Props {
+interface Props extends React.HTMLProps<HTMLDivElement> {
   placeholder?: string;
   json?: TextEditorJSON;
   renderEnt?(type: string, data: any): JSX.Element;
@@ -87,10 +87,17 @@ export class TextView extends React.Component<Props, State> {
   }
 
   render() {
+    const {
+      renderEnt,
+      json,
+      placeholder,
+      ...divProps
+    } = this.props;
+
     return (
-      <div className={css.textView}>
+      <div {...divProps} className={css.textView}>
         <Editor
-          placeholder={this.props.placeholder}
+          placeholder={placeholder}
           readOnly
           onChange={() => {}}
           editorState={this.state.editor}

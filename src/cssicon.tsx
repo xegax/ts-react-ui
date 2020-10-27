@@ -14,6 +14,7 @@ const css = {
 
 export interface Props {
   icon: string;
+  show?: boolean;
 
   align?: 'left' | 'right';
   checked?: boolean;
@@ -30,6 +31,9 @@ export interface Props {
 }
 
 export function CSSIcon(props: Props) {
+  if (props.show == false)
+    return null;
+
   const className = cn(
     css.cssicon,
     props.disabled && css.disabled,

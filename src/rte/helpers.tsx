@@ -13,6 +13,7 @@ export interface EntProps {
 
 export interface EntData<T = any> {
   label: string;
+  key?: string;
   data?: T;
   styles?: Array<string>;
   className?: string;

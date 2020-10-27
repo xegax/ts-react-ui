@@ -28,7 +28,8 @@ export abstract class SubscriberOld<P extends PropsOld, S = {}> extends React.Co
 
 interface Props {
   model: Publisher;
-  render(): JSX.Element;
+  children?: JSX.Element | (() => JSX.Element);
+  render?(): JSX.Element;
 }
 
 interface State {
@@ -54,6 +55,12 @@ export class Subscriber extends React.Component<Props, State> {
   }
 
   render() {
-    return this.props.render();
+    if (this.props.render)
+      return this.props.render();
+
+    if (typeof this.props.children == 'function')
+      return this.props.children();
+
+    return this.props.children;
   }
 }

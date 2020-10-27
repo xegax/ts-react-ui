@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Editor } from 'draft-js';
 import { CSSIcon } from '../cssicon';
-import { showMenu } from '../menu';
 import { findParent } from '../common/dom';
 import * as DropDown from '../simple-drop-down';
 import * as Color from '../color-swatches';
@@ -24,11 +23,12 @@ const fontList = [
 interface State {
   key?: string;
   model?: TextEditorModel;
-  subscriber?: () => void;
+  subscriber?(): void;
 }
 
 interface Props {
   model?: TextEditorModel;
+  toolbar?: boolean | ((m: TextEditorModel) => JSX.Element);
 }
 
 export class TextEditor extends React.Component<Props, State> {
@@ -63,25 +63,16 @@ export class TextEditor extends React.Component<Props, State> {
     return null;
   }
 
+  componentDidMount() {
+    this.editor.current.focus();
+  }
+
   private onContextMenu = (e: React.MouseEvent) => {
     const m = this.state.model;
     const entKey = m.getSelEntKey();
     if (!entKey)
       return;
 
-    showMenu({ left: e.pageX, top: e.pageY }, [
-      {
-        name: 'change color',
-        cmd: () => {
-          //m.updateEnt(entKey, { color: entColor[Math.floor(Math.random() * entColor.length) % entColor.length] });
-        }
-      }, {
-        name: 'change text',
-        cmd: () => {
-          //m.updateEnt(entKey, { label: ` ${Math.random().toString(16).substr(2)} ` });
-        }
-      }
-    ]);
     e.preventDefault();
   };
 
@@ -92,33 +83,33 @@ export class TextEditor extends React.Component<Props, State> {
     return 'not-handled';
   };
 
-  render() {
+  private renderToolbar() {
+    if (this.props.toolbar == false)
+      return undefined;
+
+    const styles: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      marginBottom: 2
+    };
+
+    if (typeof this.props.toolbar == 'function') {
+      return (
+        <div
+          className='horz-panel1'
+          style={{...styles}}
+        >
+          {this.props.toolbar(this.state.model)}
+        </div>
+      );
+    }
+
     const cs = this.state.model.getCurrStyle();
-    const hiddenProps = { preserveSelectionOnBlur: true };
     return (
       <div
-        onMouseDown={e => {
-          if (findParent(e.target as HTMLDivElement, this.ref.current))
-            return;
-
-          e.stopPropagation();
-          e.preventDefault();
-        }}
-      >
-        <div
           className='horz-panel-1'
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            marginBottom: 2
-          }}
+          style={{...styles}}
         >
-          <CSSIcon
-            icon='fa fa-plus'
-            onMouseDown={e => {
-              this.state.model.insertEnt('IMAGE', { label: ' xxxyyyzzz ', data: { src: 'xxxyyyzz' } });
-            }}
-          />
           <CSSIcon
             icon='fa fa-bold'
             checked={cs.bold}
@@ -175,7 +166,23 @@ export class TextEditor extends React.Component<Props, State> {
               this.state.model.clearStyles();
             }}
           />
-        </div>
+      </div>
+    );
+  }
+
+  render() {
+    const hiddenProps = { preserveSelectionOnBlur: true };
+    return (
+      <div
+        onMouseDown={e => {
+          if (findParent(e.target as HTMLDivElement, this.ref.current))
+            return;
+
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+      >
+        {this.renderToolbar()}
         <div
           className='text-editor'
           style={{ border: '1px solid gray', padding: 5 }}

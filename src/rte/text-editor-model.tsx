@@ -226,6 +226,21 @@ export class TextEditorModel extends Publisher {
     return this.selEnt;
   }
 
+  getSelEnt(): { type: string; key: string; data: EntData } | undefined {
+    if (!this.selEnt)
+      return undefined;
+
+    const ent = this.state.getCurrentContent().getEntity(this.selEnt);
+    if (!ent)
+      return undefined;
+
+    return {
+      type: ent.getType(),
+      key: this.selEnt,
+      data: ent.getData()
+    };
+  }
+
   getKey() {  
     return this.key;
   }
@@ -358,6 +373,11 @@ export class TextEditorModel extends Publisher {
       });
     }
     return entKeys;
+  }
+
+  focus() {
+    this.state = EditorState.forceSelection(this.state, makeSelectionFrom(this.state.getSelection()));
+    this.delayedNotify();
   }
 
   private updateSelEnt() {
