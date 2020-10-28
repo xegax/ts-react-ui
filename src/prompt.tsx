@@ -28,12 +28,20 @@ interface Props extends PromptArgs {
 export class Prompt extends React.Component<Props, {}> {
   private input: React.RefObject<HTMLInputElement> = React.createRef();
 
-  onOk = () => {
+  private onOk = () => {
     this.props.onOk(this.input.current.value);
   };
 
-  onCancel = () => {
+  private onCancel = () => {
     this.props.onCancel();
+  };
+
+  private keyDown = (e: React.KeyboardEvent) => {
+    if (e.key == 'Enter') {
+      this.onOk();
+    } else if (e.key == 'Escape') {
+      this.onCancel();
+    }
   };
 
   render() {
@@ -49,6 +57,7 @@ export class Prompt extends React.Component<Props, {}> {
               placeholder={this.props.placeholder}
               className={cn(cs.INPUT, cs.LARGE, cs.FILL)}
               defaultValue={this.props.value}
+              onKeyDown={this.keyDown}
             />
           </FormGroup>
         </div>

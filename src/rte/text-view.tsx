@@ -6,7 +6,7 @@ import {
   CompositeDecorator
 } from 'draft-js';
 import type { TextEditorJSON } from './text-editor-model';
-import { EntProps, EntData, makeEntFindStrategy } from './helpers';
+import { EntProps, EntData, makeEntFindStrategy, EntRenderProps } from './helpers';
 
 const css = {
   textView: 'text-view',
@@ -16,6 +16,7 @@ const css = {
 interface Props extends React.HTMLProps<HTMLDivElement> {
   placeholder?: string;
   json?: TextEditorJSON;
+  entRenderMap?: Record<string, React.SFC<EntRenderProps>>;
   renderEnt?(type: string, data: any): JSX.Element;
 }
 
@@ -36,8 +37,18 @@ export class TextView extends React.Component<Props, State> {
         strategy: makeEntFindStrategy(),
         component: (props: EntProps) => {
           const ent = props.contentState.getEntity(props.entityKey);
+          const type = ent.getType();
           const data: EntData = ent.getData();
-          return this.renderEnt(ent.getType(), data, props);
+          const EntComponent = (this.props.entRenderMap || {})[type];
+          if (typeof EntComponent == 'function') {
+            return (
+              <EntComponent data={data.data} styles={{}}>
+                {data.label}
+              </EntComponent>
+            );
+          }
+
+          return this.renderEnt(type, data, props);
         }
       }
     ]);

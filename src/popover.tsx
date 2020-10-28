@@ -38,11 +38,15 @@ export function Popover(props: Props): JSX.Element {
 export interface IconProps extends FontIconProps {
   children: React.ReactChild;
   position?: bp.Position;
+  show?: boolean;
 }
 
 let open: React.Component = null;
 export class PopoverIcon extends React.Component<IconProps> {
   render() {
+    if (this.props.show == false)
+      return null;
+
     return (
       <Popover
         position={this.props.position}

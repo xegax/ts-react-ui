@@ -19,11 +19,28 @@ export interface EntData<T = any> {
   className?: string;
 }
 
-export function makeEntFindStrategy() {
+export interface EntEditor<T = any> {
+  icon: string;
+  name: string;
+  css?: string;
+  append(): Promise<EntData<T>>;
+  edit(ent: EntData<T>): Promise<EntData<T>>;
+}
+
+export interface EntRenderProps<T = any> {
+  data: T;
+  styles: React.CSSProperties;
+}
+
+export function makeEntFindStrategy(type?: string) {
   return (block: ContentBlock, callback: (start: number, end: number) => void, state: ContentState) => {
     block.findEntityRanges(metadata => {
       const entKey = metadata.getEntity();
-      return (entKey != null && state.getEntity(entKey).getType() != null);
+      if (entKey == null)
+        return false;
+
+      const entType = state.getEntity(entKey).getType();
+      return type != null ? entType == type : entType != null;
     }, callback);
   };
 }

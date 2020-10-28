@@ -13,7 +13,12 @@ import {
 import { Publisher } from 'objio';
 import { cn, clone } from '../common/common';
 import { OrderedSet } from 'immutable';
-import { EntProps, EntData, makeEntFindStrategy } from './helpers';
+import { EntProps, EntEditor, EntData, makeEntFindStrategy } from './helpers';
+
+const css = {
+  ent: 'text-editor-ent',
+  selectEnt: 'text-editor-focus-ent'
+};
 
 interface SelState {
   anchorOffset: number;
@@ -85,6 +90,7 @@ export interface TextEditorJSON {
 export class TextEditorModel extends Publisher {
   private state: EditorState;
   private decorator: CompositeDecorator;
+  private entEditorMap = new Map<string, EntEditor>();
   private selEnt?: string;
   private selBlock?: string;
   private key = 0;
@@ -105,12 +111,28 @@ export class TextEditorModel extends Publisher {
       {
         strategy: makeEntFindStrategy(),
         component: (props: EntProps) => {
-          const data = props.contentState.getEntity(props.entityKey).getData();
-          return this.renderEnt(data, props);
+          const ent = props.contentState.getEntity(props.entityKey);
+          const data = ent.getData();
+          const type = ent.getType();
+          return this.renderEnt(type, data, props);
         }
       }
     ]);
     this.state = content ? EditorState.createWithContent(content, this.decorator) : EditorState.createEmpty(this.decorator);
+  }
+
+  appendEntEditor(entType: string, editor: EntEditor) {
+    this.entEditorMap.set(entType, editor);
+  }
+
+  getEntEditorsMap() {
+    const map: Record<string, EntEditor> = {};
+    Array.from(this.entEditorMap.keys())
+    .forEach(key => {
+      map[key] = this.entEditorMap.get(key);
+    });
+
+    return map;
   }
 
   static create(json?: TextEditorJSON): TextEditorModel {
@@ -119,12 +141,17 @@ export class TextEditorModel extends Publisher {
     return m;
   }
 
-  private renderEnt(data: EntData, props: EntProps): React.ReactChild {
+  private renderEnt(type: string, data: EntData, props: EntProps): React.ReactChild {
+    const entcss = this.entEditorMap.get(type)?.css;
     return (
       <div
         data-offset-key={props.offsetKey}
-        className={cn('text-editor-ent', props.entityKey == this.selEnt && 'text-editor-focus-ent', data.className)}
-        // style={data.style}
+        className={cn(
+          css.ent,
+          props.entityKey == this.selEnt && css.selectEnt,
+          data.className,
+          entcss
+        )}
       >
         {props.children}
       </div>
@@ -384,7 +411,6 @@ export class TextEditorModel extends Publisher {
     const selEnt = this.findSelEntKey();
     if (this.selEnt != selEnt) {
       this.selEnt = selEnt;
-      console.log(selEnt);
       this.updateMacro();
     } else {
       this.delayedNotify();

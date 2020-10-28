@@ -6,6 +6,10 @@ import * as DropDown from '../simple-drop-down';
 import * as Color from '../color-swatches';
 import { FontSize } from '../font-size';
 import { TextEditorJSON, TextEditorModel } from './text-editor-model';
+import { EntEditor } from './helpers';
+import { PopoverIcon, Classes } from '../popover';
+import { ListView, Item } from '../list-view2';
+import { Position } from '@blueprintjs/core';
 
 export { TextEditorModel, TextEditorJSON };
 
@@ -28,6 +32,7 @@ interface State {
 
 interface Props {
   model?: TextEditorModel;
+  entEditorMap?: Record<string, EntEditor>;
   toolbar?: boolean | ((m: TextEditorModel) => JSX.Element);
 }
 
@@ -48,6 +53,11 @@ export class TextEditor extends React.Component<Props, State> {
     };
 
     m.subscribe(this.state.subscriber);
+
+    Object.keys(props.entEditorMap || {})
+    .forEach(k => {
+      m.appendEntEditor(k, props.entEditorMap[k]);
+    });
   }
 
   static getDerivedStateFromProps(props: Props, state: State): State | null {
@@ -83,6 +93,71 @@ export class TextEditor extends React.Component<Props, State> {
     return 'not-handled';
   };
 
+  private renderEntTools() {
+    const m = this.state.model;
+    const editorMap = m.getEntEditorsMap();
+    const entArr = Object.keys(editorMap).map(k => {
+      return {
+        value: k,
+        render: editorMap[k].name
+      };
+    });
+
+    if (entArr.length == 0)
+      return null;
+
+    const appendEnt = (itemArr: Array<Item>) => {
+      const entType = itemArr[0].value;
+      if (!entType)
+        return;
+
+      editorMap[entType].append()
+      .then(ent => {
+        m.insertEnt(entType, ent);
+      })
+      .catch(() => {
+        m.focus();
+      });
+    };
+
+    const editEnt = () => {
+      const selEnt = m.getSelEnt();
+      const editor = editorMap[selEnt.type];
+      if (!editor)
+        return;
+
+      editor.edit(selEnt.data)
+      .then(ent => {
+        m.updateEnt(selEnt.key, ent);
+      })
+      .catch(() => {
+        m.focus();
+      });
+    };
+
+    return (
+      <>
+        <PopoverIcon
+          icon='fa fa-plus'
+          show={m.getSelEnt() == null}
+          position={Position.BOTTOM_LEFT}
+        >
+          <ListView
+            values={entArr}
+            className={Classes.POPOVER_DISMISS}
+            onSelect={appendEnt}
+          />
+        </PopoverIcon>
+        <CSSIcon
+          icon='fa fa-edit'
+          width='1.2em'
+          show={m.getSelEnt() != null}
+          onClick={editEnt}
+        />
+      </>
+    );
+  }
+
   private renderToolbar() {
     if (this.props.toolbar == false)
       return undefined;
@@ -107,65 +182,66 @@ export class TextEditor extends React.Component<Props, State> {
     const cs = this.state.model.getCurrStyle();
     return (
       <div
-          className='horz-panel-1'
-          style={{...styles}}
-        >
-          <CSSIcon
-            icon='fa fa-bold'
-            checked={cs.bold}
-            onMouseDown={e => {
-              this.state.model.toggleBold();
-            }}
-          />
-          <CSSIcon
-            icon='fa fa-italic'
-            checked={cs.italic}
-            onMouseDown={e => {
-              this.state.model.toggleItalic();
-            }}
-          />
-          <CSSIcon
-            icon='fa fa-underline'
-            checked={cs.underline}
-            onMouseDown={e => {
-              this.state.model.toggleUnderline();
-            }}
-          />
-          <Color.Button
-            cssIcon='fa fa-font'
-            color={cs.textColor}
-            onSelect={color => {
-              this.state.model.setStyle('color', color);
-            }}
-          />
-          <Color.Button
-            cssIcon='fa fa-square'
-            color={cs.bgColor}
-            onSelect={color => {
-              this.state.model.setStyle('backgroundColor', color);
-            }}
-          />
-          <DropDown.Control
-            className={DropDown.css.border}
-            width={100}
-            values={fontList}
-            value={{ value: cs.fontFamily }}
-            onSelect={font => {
-              this.state.model.setStyle('fontFamily', font.value);
-            }}
-          />
-          <FontSize
-            value={cs.fontSize}
-            onChange={v => {
-              this.state.model.setStyle('fontSize', v + 'px');
-            }}
-          />
-          <CSSIcon
-            icon='fa fa-trash'
-            onMouseDown={e => {
-              this.state.model.clearStyles();
-            }}
-          />
+        className='horz-panel-1'
+        style={{...styles}}
+      >
+        {this.renderEntTools()}
+        <CSSIcon
+          icon='fa fa-bold'
+          checked={cs.bold}
+          onMouseDown={e => {
+            this.state.model.toggleBold();
+          }}
+        />
+        <CSSIcon
+          icon='fa fa-italic'
+          checked={cs.italic}
+          onMouseDown={e => {
+            this.state.model.toggleItalic();
+          }}
+        />
+        <CSSIcon
+          icon='fa fa-underline'
+          checked={cs.underline}
+          onMouseDown={e => {
+            this.state.model.toggleUnderline();
+          }}
+        />
+        <Color.Button
+          cssIcon='fa fa-font'
+          color={cs.textColor}
+          onSelect={color => {
+            this.state.model.setStyle('color', color);
+          }}
+        />
+        <Color.Button
+          cssIcon='fa fa-square'
+          color={cs.bgColor}
+          onSelect={color => {
+            this.state.model.setStyle('backgroundColor', color);
+          }}
+        />
+        <DropDown.Control
+          className={DropDown.css.border}
+          width={100}
+          values={fontList}
+          value={{ value: cs.fontFamily }}
+          onSelect={font => {
+            this.state.model.setStyle('fontFamily', font.value);
+          }}
+        />
+        <FontSize
+          value={cs.fontSize}
+          onChange={v => {
+            this.state.model.setStyle('fontSize', v + 'px');
+          }}
+        />
+        <CSSIcon
+          icon='fa fa-trash'
+          onMouseDown={e => {
+            this.state.model.clearStyles();
+          }}
+        />
       </div>
     );
   }

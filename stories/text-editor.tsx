@@ -7,7 +7,16 @@ import { Subscriber, Publisher } from '../src/subscriber';
 import { showTemplateEditor } from '../src/rte/template-editor';
 import { getTextFromTemplate, TextTemplate } from '../src/common/text-template';
 import { prompt } from '../src/prompt';
-import { EntData } from '../src/rte/helpers';
+import { EntData, EntEditor, EntRenderProps } from '../src/rte/helpers';
+import { linkEditor, Link } from '../src/rte/ent-link';
+
+const entEditorMap: Record<string, EntEditor> = {
+  'ENT-LINK': linkEditor()
+};
+
+const entRenderMap: Record<string, React.SFC<EntRenderProps>> = {
+  'ENT-LINK': Link
+};
 
 function renderEnt(type: string, data: any) {
   return <span>{type}</span>;
@@ -33,7 +42,7 @@ class PubData<T> extends Publisher {
 }
 
 function edit(m: PubData<TextEditorJSON>) {
-  showEditor({ json: m.get() })
+  showEditor({ json: m.get(), entEditorMap })
   .then(json => {
     m.set(json);
   })
@@ -71,12 +80,15 @@ storiesOf('Text editor', module)
     const m = new PubData<TextEditorJSON>(null);
     return (
       <Subscriber model = {m}>
-        {() => <TextView
-          onDoubleClick={() => edit(m)}
-          placeholder='Double click on me'
-          json={m.get()}
-          renderEnt={renderEnt}
-        />}
+        {() => (
+          <TextView
+            entRenderMap={entRenderMap}
+            onDoubleClick={() => edit(m)}
+            placeholder='Double click on me'
+            json={m.get()}
+            renderEnt={renderEnt}
+          />
+        )}
       </Subscriber>
     );
   })

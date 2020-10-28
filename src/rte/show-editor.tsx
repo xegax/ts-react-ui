@@ -7,10 +7,12 @@ import {
   Classes as cs
 } from '@blueprintjs/core';
 import { TextEditor, TextEditorModel, TextEditorJSON } from './text-editor';
+import { EntEditor } from './helpers';
 
 export interface EditorArgs {
   json?: TextEditorJSON;
   title?: string;
+  entEditorMap?: Record<string, EntEditor>;
 }
 
 export function showEditor(args: EditorArgs): Promise<TextEditorJSON> {
@@ -30,7 +32,10 @@ export function showEditor(args: EditorArgs): Promise<TextEditorJSON> {
     const res = showModal(
       <Dialog isOpen isCloseButtonShown={false} title={title}>
         <div className={cs.DIALOG_BODY}>
-          <TextEditor model={m}/>
+          <TextEditor
+            model={m}
+            entEditorMap={args.entEditorMap}
+          />
         </div>
         <div className={cs.DIALOG_FOOTER}>
           <div className={cs.DIALOG_FOOTER_ACTIONS}>

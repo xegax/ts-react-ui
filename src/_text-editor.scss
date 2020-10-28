@@ -15,6 +15,13 @@
     color: gray;
   }
 
+  .ent-link {
+    background-color: transparent;
+    color: #106ba3;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
   .public-DraftEditor-content {
     ::selection {
       background-color: #e0e0e0;
