@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { prompt } from '../prompt';
+import { promptRecord } from '../prompt';
 import { EntEditor, EntRenderProps } from './helpers';
 
 export interface LinkData {
@@ -24,20 +24,21 @@ export function linkEditor(): EntEditor<LinkData> {
     css: 'ent-link',
     edit: ent => {
       return (
-        prompt({ title: 'Edit link', value: ent.data.href })
-        .then(href => ({
+        promptRecord({ title: 'Edit link', value: { Text: ent.label, URL: ent.data.href } })
+        .then(res => ({
           ...ent,
-          data: { href }
+          label: res.Text,
+          data: { href: res.URL }
         }))
       );
     },
     append: () => {
       return (
-        prompt({ title: 'Append link' })
-        .then(href => {
+        promptRecord({ title: 'Append link', value: { Text: '', URL: '' } })
+        .then(res => {
           return {
-            label: 'link',
-            data: { href }
+            label: res.Text,
+            data: { href: res.URL }
           };
         })
       );

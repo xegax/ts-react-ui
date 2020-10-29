@@ -6,7 +6,14 @@ import {
   CompositeDecorator
 } from 'draft-js';
 import type { TextEditorJSON } from './text-editor-model';
-import { EntProps, EntData, makeEntFindStrategy, EntRenderProps } from './helpers';
+import {
+  EntProps,
+  EntData,
+  LeafProps,
+  makeEntFindStrategy,
+  EntRenderProps,
+  makeStyle
+} from './helpers';
 
 const css = {
   textView: 'text-view',
@@ -40,9 +47,10 @@ export class TextView extends React.Component<Props, State> {
           const type = ent.getType();
           const data: EntData = ent.getData();
           const EntComponent = (this.props.entRenderMap || {})[type];
+          const leaf = React.Children.toArray(props.children)[0] as React.ReactElement<LeafProps>;
           if (typeof EntComponent == 'function') {
             return (
-              <EntComponent data={data.data} styles={{}}>
+              <EntComponent data={data.data} styles={makeStyle(leaf.props.styleSet, this.props.json.styles)}>
                 {data.label}
               </EntComponent>
             );

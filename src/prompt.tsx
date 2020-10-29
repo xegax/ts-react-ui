@@ -12,24 +12,46 @@ import { cn } from './common/common';
 
 export { Intent };
 
-export interface PromptArgs {
+type PromptRecord = Record<string, number | string>;
+export interface PromptArgs<T> {
   title?: string;
-  value?: string;
+  value?: T;
   prompt?: string;
   placeholder?: string;
   type?: 'password';
 }
 
-interface Props extends PromptArgs {
-  onOk(value: string);
-  onCancel();
+interface Props extends PromptArgs<PromptRecord> {
+  onOk(res: PromptRecord): void;
+  onCancel(): void;
 }
 
-export class Prompt extends React.Component<Props, {}> {
-  private input: React.RefObject<HTMLInputElement> = React.createRef();
+interface State {
+  values: PromptRecord;
+}
+
+export class Prompt extends React.Component<Props, State> {
+  private inputRef: Record<string, React.RefObject<HTMLInputElement>> = {};
+
+  constructor(props: Props) {
+    super(props);
+
+    this.state = {
+      values: {...this.props.value}
+    };
+
+    Object.keys(this.props.value).forEach(key => {
+      this.inputRef[key] = React.createRef();
+    });
+  }
 
   private onOk = () => {
-    this.props.onOk(this.input.current.value);
+    let res: PromptRecord = {};
+    Object.keys(this.state.values)
+    .forEach(key => {
+      res[key] = this.inputRef[key].current.value;
+    });
+    this.props.onOk(res);
   };
 
   private onCancel = () => {
@@ -45,21 +67,27 @@ export class Prompt extends React.Component<Props, {}> {
   };
 
   render() {
+    const form = Object.keys(this.state.values).map((key, n) => {
+      const value = this.state.values[key];
+      const label = this.props.prompt;
+      return (
+        <FormGroup label={label != null ? label : key} labelFor={key}>
+          <input
+            autoFocus={n == 0}
+            ref={this.inputRef[key]}
+            id={key}
+            className={cn(cs.INPUT, cs.FILL)}
+            defaultValue={`${value ?? ''}`}
+            onKeyDown={this.keyDown}
+          />
+        </FormGroup>
+      );
+    });
+
     return (
       <Dialog isOpen isCloseButtonShown={false} title={this.props.title}>
         <div className={cs.DIALOG_BODY}>
-          <FormGroup label={this.props.prompt} labelFor='prompt'>
-            <input
-              autoFocus
-              ref={this.input}
-              id='prompt'
-              type={this.props.type}
-              placeholder={this.props.placeholder}
-              className={cn(cs.INPUT, cs.LARGE, cs.FILL)}
-              defaultValue={this.props.value}
-              onKeyDown={this.keyDown}
-            />
-          </FormGroup>
+          {form}
         </div>
         <div className={cs.DIALOG_FOOTER}>
           <div className={cs.DIALOG_FOOTER_ACTIONS}>
@@ -72,11 +100,11 @@ export class Prompt extends React.Component<Props, {}> {
   }
 }
 
-export function prompt(args: PromptArgs): Promise<string> {
+export function promptRecord<T extends PromptRecord>(args: PromptArgs<T>): Promise<T> {
   return new Promise((resolve, reject) => {
-    const onOk = (text: string) => {
+    const onOk = (res: PromptRecord) => {
       dlg.close();
-      resolve(text);
+      resolve(res as T);
     };
 
     const onCancel = () => {
@@ -88,12 +116,47 @@ export function prompt(args: PromptArgs): Promise<string> {
   });
 }
 
-export interface SelectArgs extends PromptArgs {
+export function prompt(args: PromptArgs<string>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const onOk = (res: { str: string }) => {
+      dlg.close();
+      resolve(res.str);
+    };
+
+    const onCancel = () => {
+      dlg.close();
+      reject();
+    };
+
+    const props: PromptArgs<{ str: string }> = {
+      prompt: '',
+      ...args,
+      value: { str: args.value }
+    };
+
+    const dlg = showModal(
+      <Prompt
+        {...props}
+        onOk={onOk}
+        onCancel={onCancel}
+      />
+    );
+  });
+}
+
+export interface SelectArgs extends PromptArgs<string> {
   items: Array<string>;
 }
 
-interface SelectProps extends Props {
+interface SelectProps {
+  title?: string;
+  value?: string;
+  prompt?: string;
+  placeholder?: string;
   items: Array<string>;
+
+  onOk(value: string): void;
+  onCancel(): void;
 }
 
 export class Select extends React.Component<SelectProps, {}> {
@@ -116,7 +179,7 @@ export class Select extends React.Component<SelectProps, {}> {
               ref={this.input}
               id='prompt'
               placeholder={this.props.placeholder}
-              className={cn(cs.SELECT, cs.LARGE, cs.FILL)}
+              className={cn(cs.SELECT, cs.FILL)}
             >
               {this.props.items.map((item, i) => {
                 return <option key={i} value={item}>{item}</option>

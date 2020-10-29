@@ -10,6 +10,7 @@ import { EntEditor } from './helpers';
 import { PopoverIcon, Classes } from '../popover';
 import { ListView, Item } from '../list-view2';
 import { Position } from '@blueprintjs/core';
+import { isEquals } from '../common/common';
 
 export { TextEditorModel, TextEditorJSON };
 
@@ -128,7 +129,10 @@ export class TextEditor extends React.Component<Props, State> {
 
       editor.edit(selEnt.data)
       .then(ent => {
-        m.updateEnt(selEnt.key, ent);
+        if (!isEquals(selEnt.data, ent))
+          m.updateEnt(selEnt.key, ent);
+        else
+          m.focus();
       })
       .catch(() => {
         m.focus();

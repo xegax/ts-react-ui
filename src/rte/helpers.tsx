@@ -3,12 +3,19 @@ import {
   ContentBlock,
   ContentState
 } from 'draft-js';
+import { OrderedSet } from 'immutable';
+
+export interface LeafProps {
+  text: string;
+  styleSet: OrderedSet<string>;
+}
 
 export interface EntProps {
-  children: JSX.Element;
+  children: Array<React.ReactElement<LeafProps>>;
   contentState: ContentState;
   entityKey: string;
   offsetKey: string;
+  blockKey: string;
 }
 
 export interface EntData<T = any> {
@@ -43,4 +50,18 @@ export function makeEntFindStrategy(type?: string) {
       return type != null ? entType == type : entType != null;
     }, callback);
   };
+}
+
+let predefinedStyle: Record<string, React.CSSProperties> = {
+  'BOLD': { fontWeight: 'bold' },
+  'ITALIC': { fontStyle: 'italic' },
+  'UNDERLINE': { textDecoration: 'underline' }
+};
+
+export function makeStyle(styleSet: OrderedSet<string>, styles: Record<string, React.CSSProperties>): React.CSSProperties {
+  let res: React.CSSProperties = {};
+  styleSet.toArray().forEach(key => {
+    res = {...res, ...predefinedStyle[key], ...styles[key]};
+  });
+  return res;
 }
