@@ -255,7 +255,7 @@ export class TextEditor extends React.Component<Props, State> {
     return (
       <div
         onMouseDown={e => {
-          if (findParent(e.target as HTMLDivElement, this.ref.current))
+          if (findParent(e.target as HTMLDivElement, this.ref.current.firstChild as HTMLDivElement))
             return;
 
           e.stopPropagation();

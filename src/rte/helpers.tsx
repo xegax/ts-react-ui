@@ -22,7 +22,6 @@ export interface EntData<T = any> {
   label: string;
   key?: string;
   data?: T;
-  styles?: Array<string>;
   className?: string;
 }
 
@@ -37,6 +36,7 @@ export interface EntEditor<T = any> {
 export interface EntRenderProps<T = any> {
   data: T;
   styles: React.CSSProperties;
+  onChanged(): void;
 }
 
 export function makeEntFindStrategy(type?: string) {

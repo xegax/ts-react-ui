@@ -9,13 +9,16 @@ import { getTextFromTemplate, TextTemplate } from '../src/common/text-template';
 import { prompt } from '../src/prompt';
 import { EntData, EntEditor, EntRenderProps } from '../src/rte/helpers';
 import { linkEditor, Link } from '../src/rte/ent-link';
+import { imageEditor, ImageToEdit } from '../src/rte/ent-image';
 
 const entEditorMap: Record<string, EntEditor> = {
-  'ENT-LINK': linkEditor()
+  'ENT-LINK': linkEditor(),
+  'ENT-IMG': imageEditor()
 };
 
-const entRenderMap: Record<string, React.SFC<EntRenderProps>> = {
-  'ENT-LINK': Link
+const entRenderMap: Record<string, React.SFC<EntRenderProps> | React.ComponentClass<EntRenderProps>> = {
+  'ENT-LINK': Link,
+  'ENT-IMG': ImageToEdit
 };
 
 function renderEnt(type: string, data: any) {
@@ -38,6 +41,28 @@ class PubData<T> extends Publisher {
 
   get() {
     return this.data;
+  }
+}
+
+class EntEditorPub extends PubData<TextEditorJSON> {
+  private entKey?: string;
+  private key = 0;
+
+  selectEnt(entKey?: string) {
+    if (entKey == this.entKey)
+      return;
+
+    this.entKey = entKey;
+    this.key++;
+    this.delayedNotify();
+  }
+
+  getSelectEnt() {
+    return this.entKey;
+  }
+
+  getKey() {
+    return this.key;
   }
 }
 
@@ -77,18 +102,25 @@ function editTemplate(m: PubData<TextTemplate>) {
 
 storiesOf('Text editor', module)
   .add('Text editor', () => {
-    const m = new PubData<TextEditorJSON>(null);
+    const m = new EntEditorPub(null);
     return (
       <Subscriber model = {m}>
-        {() => (
-          <TextView
-            entRenderMap={entRenderMap}
-            onDoubleClick={() => edit(m)}
-            placeholder='Double click on me'
-            json={m.get()}
-            renderEnt={renderEnt}
-          />
-        )}
+        {() => {
+          return (
+            <TextView
+              editorKey={m.getKey()}
+              entRenderMap={entRenderMap}
+              onDoubleClick={() => edit(m)}
+              placeholder='Double click on me'
+              json={m.get()}
+              renderEnt={renderEnt}
+              onChanged={json => {
+                console.log(json);
+                m.set(json);
+              }}
+            />
+        );
+      }}
       </Subscriber>
     );
   })

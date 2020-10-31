@@ -38,4 +38,29 @@
   &-ent {
     display: inline;
   }
+
+  .ent-img-wrapper {
+    display: inline-block;
+    position: relative;
+    font-size: 0px;
+
+    img {
+      height: fit-content;
+    }
+
+    > .resizer {
+      position: absolute;
+      left: 0px;
+      right: 0px;
+      bottom: 0px;
+      height: 5px;
+      background-color: #106ba3;
+      opacity: 0;
+      cursor: s-resize;
+
+      &:hover {
+        opacity: 0.3;
+      }
+    }
+  }
 }

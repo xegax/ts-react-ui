@@ -3,7 +3,9 @@ import {
   Editor,
   EditorState,
   convertFromRaw,
-  CompositeDecorator
+  CompositeDecorator,
+  SelectionState,
+  convertToRaw
 } from 'draft-js';
 import type { TextEditorJSON } from './text-editor-model';
 import {
@@ -14,6 +16,7 @@ import {
   EntRenderProps,
   makeStyle
 } from './helpers';
+import { OrderedSet } from 'immutable';
 
 const css = {
   textView: 'text-view',
@@ -21,10 +24,13 @@ const css = {
 };
 
 interface Props extends React.HTMLProps<HTMLDivElement> {
+  editorKey?: number;
   placeholder?: string;
   json?: TextEditorJSON;
-  entRenderMap?: Record<string, React.SFC<EntRenderProps>>;
-  renderEnt?(type: string, data: any): JSX.Element;
+  entRenderMap?: Record<string, React.SFC<EntRenderProps> | React.ComponentClass<EntRenderProps>>;
+  renderEnt?(type: string, data: any): JSX.Element; // render entity that there is not in entRenderMap
+
+  onChanged?(json: TextEditorJSON): void;
 }
 
 interface State {
@@ -48,20 +54,30 @@ export class TextView extends React.Component<Props, State> {
           const data: EntData = ent.getData();
           const EntComponent = (this.props.entRenderMap || {})[type];
           const leaf = React.Children.toArray(props.children)[0] as React.ReactElement<LeafProps>;
+
+          let entjsx: React.ReactChild | undefined;
           if (typeof EntComponent == 'function') {
-            return (
-              <EntComponent data={data.data} styles={makeStyle(leaf.props.styleSet, this.props.json.styles)}>
+            entjsx = (
+              <EntComponent
+                data={data.data}
+                styles={makeStyle(leaf.props.styleSet, this.props.json.styles)}
+                onChanged={this.onChanged}
+              >
                 {data.label}
               </EntComponent>
             );
+          } else {
+            entjsx = this.renderEnt(type, data, props, leaf.props.styleSet);
           }
 
-          return this.renderEnt(type, data, props);
+          return entjsx;
         }
       }
     ]);
 
-    this.state = { decorator };
+    this.state = {
+      decorator
+    };
   }
 
   static getDerivedStateFromProps(props: Props, state: State): State | null {
@@ -84,20 +100,18 @@ export class TextView extends React.Component<Props, State> {
     return null;
   }
 
-  private renderEnt(type: string, ent: EntData, props: EntProps) {
-    let style: React.CSSProperties = {};
-    Object.keys(ent.styles || {})
-    .forEach(s => {
-      style = {
-        ...style,
-        ...this.props.json.styles[s]
-      };
+  private onChanged = () => {
+    this.props.onChanged?.({
+      content: convertToRaw(this.state.editor.getCurrentContent()),
+      styles: this.props.json.styles
     });
+  };
 
+  private renderEnt(type: string, ent: EntData, props: EntProps, styleSet: OrderedSet<string>) {
     return (
       <div
         data-offset-key={props.offsetKey}
-        style={style}
+        style={makeStyle(styleSet, this.props.json.styles)}
         className={css.ent}
       >
         {this.props.renderEnt?.(type, ent.data) ?? ent.label}
@@ -110,12 +124,14 @@ export class TextView extends React.Component<Props, State> {
       renderEnt,
       json,
       placeholder,
+      entRenderMap,
       ...divProps
     } = this.props;
 
     return (
       <div {...divProps} className={css.textView}>
         <Editor
+          key={this.props.editorKey}
           placeholder={placeholder}
           readOnly
           onChange={() => {}}
