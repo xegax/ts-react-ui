@@ -13,7 +13,7 @@ import {
 import { Publisher } from 'objio';
 import { cn, clone } from '../common/common';
 import { OrderedSet } from 'immutable';
-import { EntProps, EntEditor, EntData, makeEntFindStrategy } from './helpers';
+import { EntProps, EntEditor, EntData, makeEntFindStrategy, findEntText } from './helpers';
 
 const css = {
   ent: 'text-editor-ent',
@@ -92,7 +92,10 @@ export class TextEditorModel extends Publisher {
   private decorator: CompositeDecorator;
   private entEditorMap = new Map<string, EntEditor>();
   private selEnt?: string;
-  private selBlock?: string;
+  private selBlockKey?: string;
+  private selBlock?: ContentBlock;
+  private selBlockTypes = new Set<string>();
+  
   private key = 0;
   private styleMap: StyleMap = {};
   private currStyle: StyleState = {
@@ -149,7 +152,6 @@ export class TextEditorModel extends Publisher {
         className={cn(
           css.ent,
           props.entityKey == this.selEnt && css.selectEnt,
-          data.className,
           entcss
         )}
       >
@@ -182,68 +184,86 @@ export class TextEditorModel extends Publisher {
   }
 
   setState(state: EditorState) {
-    if (!state.getSelection().getHasFocus()) {
+    if (!state.getSelection().getHasFocus())
       return;
-    }
 
     this.state = state;
     this.updateSelEnt();
     this.fixStyleOverride();
     this.updateCurrStyles();
-
-    const blockKey = this.state.getSelection().getStartKey();
-    if (blockKey != this.selBlock) {
-      this.selBlock = blockKey;
-      this.key++;
-      this.delayedNotify();
-    }
+    this.updateSelBlock();
   }
 
-  insertEnt<T>(type: string, data: EntData<T>) {
+  private updateSelBlock(force?: boolean) {
+    const sel = this.state.getSelection();
+    let blockKey = sel.getStartKey();
+    if (!force && blockKey == this.selBlockKey)
+      return;
+
+    this.selBlockKey = blockKey;
+    const cc = this.state.getCurrentContent();
+    this.selBlock = cc.getBlockForKey(blockKey);
+    this.selBlockTypes.clear();
+
+    if (this.selBlock) {
+      let block = this.selBlock;
+      while (block) {
+        this.selBlockTypes.add(block.getType());
+        blockKey = block.getKey();
+        if (blockKey == sel.getEndKey())
+          break;
+
+        block = cc.getBlockAfter(blockKey);
+      }
+    } else {
+      console.log('empty block');
+    }
+
+    this.key++;
+    this.delayedNotify();
+  }
+
+  insertEnt(type: string, text: string, data: EntData) {
     data = { ...data };
     let content = this.state.getCurrentContent().createEntity(type, 'IMMUTABLE', data);
     const entKey = content.getLastCreatedEntityKey();
 
     const sel = this.state.getSelection();
-    content = Modifier.insertText(content, sel, data.label, undefined, entKey);
+    content = Modifier.insertText(content, sel, text, undefined, entKey);
     this.state = EditorState.push(this.state, content, 'insert-fragment');
     this.moveCursorToEnt('end', entKey);
     this.updateMacro();
   }
 
-  updateEnt<T>(macroKey: string | undefined, newData: Partial<EntData<T>>) {
+  updateEnt(entKey: string | undefined, newText: string, newData: Partial<EntData>) {
     let content = this.state.getCurrentContent();
 
-    const ent = content.getEntity(macroKey);
+    const ent = content.getEntity(entKey);
     if (!ent)
       return;
 
-    const blockKey = this.findBlockForEnt(macroKey);
+    const blockKey = this.findBlockForEnt(entKey);
     if (!blockKey)
       return;
 
-    const entData: EntData<T> = ent.getData();
+    const entData: EntData = ent.getData();
     if (!entData)
       return;
 
     const entType = ent.getType();
     newData = {
       ...entData,
-      ...newData,
-      data: {
-        ...entData.data,
-        ...newData.data
-      }
+      ...newData
     };
     content = content.createEntity(entType, 'IMMUTABLE', newData);
     const lastEntKey = content.getLastCreatedEntityKey();
 
-    const entRange = this.getEntRange(macroKey, blockKey);
+    const entRange = this.getEntRange(entKey, blockKey);
     const block = content.getBlockForKey(blockKey);
     
     const sel = makeBlockSelection(blockKey, entRange);
 
-    content = Modifier.replaceText(content, sel, newData.label, block.getInlineStyleAt(entRange[0]), lastEntKey);
+    content = Modifier.replaceText(content, sel, newText, block.getInlineStyleAt(entRange[0]), lastEntKey);
     this.state = EditorState.push(this.state, content, 'insert-fragment');
 
     this.updateMacro();
@@ -253,7 +273,22 @@ export class TextEditorModel extends Publisher {
     return this.selEnt;
   }
 
-  getSelEnt(): { type: string; key: string; data: EntData } | undefined {
+  getSelBlockTypes() {
+    return this.selBlockTypes;
+  }
+
+  setBlockType(blockType: string) {
+    if (this.selBlock?.getType() == blockType)
+      return;
+
+    const sel = this.state.getSelection();
+    const content = Modifier.setBlockType(this.state.getCurrentContent(), sel, blockType);
+    this.state = EditorState.push(this.state, content, 'change-block-type');
+    this.updateSelBlock(true);
+    this.delayedNotify();
+  }
+
+  getSelEnt() {
     if (!this.selEnt)
       return undefined;
 
@@ -261,10 +296,13 @@ export class TextEditorModel extends Publisher {
     if (!ent)
       return undefined;
 
+    const sel = this.state.getSelection();
+    const block = this.state.getCurrentContent().getBlockForKey(sel.getAnchorKey());
     return {
       type: ent.getType(),
       key: this.selEnt,
-      data: ent.getData()
+      data: ent.getData(),
+      text: findEntText(block, this.selEnt)
     };
   }
 

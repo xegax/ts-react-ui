@@ -31,6 +31,7 @@ interface Props extends React.HTMLProps<HTMLDivElement> {
   renderEnt?(type: string, data: any): JSX.Element; // render entity that there is not in entRenderMap
 
   onChanged?(json: TextEditorJSON): void;
+  onClickEnt?(type: string, data: any, e: React.MouseEvent): void;
 }
 
 interface State {
@@ -55,22 +56,26 @@ export class TextView extends React.Component<Props, State> {
           const EntComponent = (this.props.entRenderMap || {})[type];
           const leaf = React.Children.toArray(props.children)[0] as React.ReactElement<LeafProps>;
 
-          let entjsx: React.ReactChild | undefined;
           if (typeof EntComponent == 'function') {
-            entjsx = (
+            return (
               <EntComponent
-                data={data.data}
+                data={data}
                 styles={makeStyle(leaf.props.styleSet, this.props.json.styles)}
                 onChanged={this.onChanged}
+                onClick={e => {
+                  this.props.onClickEnt?.(type, data, e);
+                }}
               >
-                {data.label}
+                {leaf.props.text}
               </EntComponent>
             );
-          } else {
-            entjsx = this.renderEnt(type, data, props, leaf.props.styleSet);
           }
 
-          return entjsx;
+          return (
+            this.renderLink(type, data as any, leaf.props.text, leaf.props.styleSet) ||
+            this.renderImg(type, data as any) || 
+            this.renderEnt(type, data, props, leaf.props.styleSet)
+          );
         }
       }
     ]);
@@ -107,6 +112,35 @@ export class TextView extends React.Component<Props, State> {
     });
   };
 
+  private renderLink(type: string, data: { href: string; }, text: string, styleSet: OrderedSet<string>) {
+    if (type != 'LINK')
+      return null;
+
+    return (
+      <a
+        href={data.href}
+        style={makeStyle(styleSet, this.props.json.styles)}
+        onClick={e => {
+          this.props.onClickEnt?.(type, data, e);
+        }}
+      >
+        {text}
+      </a>
+    );
+  }
+
+  private renderImg(type: string, data: { src: string; alt: string; }) {
+    if (type != 'IMAGE')
+      return null;
+
+    return (
+      <img
+        alt={data.alt}
+        src={data.src}
+      />
+    );
+  }
+
   private renderEnt(type: string, ent: EntData, props: EntProps, styleSet: OrderedSet<string>) {
     return (
       <div
@@ -125,6 +159,7 @@ export class TextView extends React.Component<Props, State> {
       json,
       placeholder,
       entRenderMap,
+      onClickEnt,
       ...divProps
     } = this.props;
 

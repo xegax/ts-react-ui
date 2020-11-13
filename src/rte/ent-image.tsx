@@ -72,7 +72,7 @@ function append(height: number) {
     ]))
     .then(([ name, base64img ]) => {
       return {
-        label: name,
+        text: name,
         data: { base64img, height }
       };
     })

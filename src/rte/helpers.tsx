@@ -18,24 +18,25 @@ export interface EntProps {
   blockKey: string;
 }
 
-export interface EntData<T = any> {
-  label: string;
-  key?: string;
-  data?: T;
-  className?: string;
+export type EntData = any;
+
+interface EntEditArgs<T> {
+  data: T;
+  text: string;
 }
 
 export interface EntEditor<T = any> {
   icon: string;
   name: string;
   css?: string;
-  append(): Promise<EntData<T>>;
-  edit(ent: EntData<T>): Promise<EntData<T>>;
+  append(): Promise<EntEditArgs<T>>;
+  edit(args: EntEditArgs<T>): Promise<EntEditArgs<T>>;
 }
 
 export interface EntRenderProps<T = any> {
   data: T;
   styles: React.CSSProperties;
+  onClick?(e: React.MouseEvent): void;
   onChanged(): void;
 }
 
@@ -50,6 +51,17 @@ export function makeEntFindStrategy(type?: string) {
       return type != null ? entType == type : entType != null;
     }, callback);
   };
+}
+
+export function findEntText(block: ContentBlock, entKey: string) {
+  let text = '';
+  block.findEntityRanges(metadata => {
+    return metadata.getEntity() == entKey;
+  }, (start, end) => {
+    text = block.getText().substr(start, end - start);
+  });
+
+  return text;
 }
 
 let predefinedStyle: Record<string, React.CSSProperties> = {

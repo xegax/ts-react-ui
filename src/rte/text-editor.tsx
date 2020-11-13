@@ -14,6 +14,11 @@ import { isEquals } from '../common/common';
 
 export { TextEditorModel, TextEditorJSON };
 
+const css = {
+  textEditor: 'text-editor',
+  textEditorWrapper: 'text-editor-wrapper'
+};
+
 const fontList = [
   'Arial',
   'Impact',
@@ -25,6 +30,21 @@ const fontList = [
   'Courier New'
 ].sort().map(value => ({ value }));
 
+const blockList = [
+  'unstyled',
+  'header-one',
+  'header-two',
+  'header-three',
+  'header-four',
+  'header-five',
+  'header-six',
+  'unordered-list-item',
+  'ordered-list-item',
+  'blockquote',
+  'code-block',
+  'atomic'
+].map(value => ({ value }));
+
 interface State {
   key?: string;
   model?: TextEditorModel;
@@ -32,6 +52,8 @@ interface State {
 }
 
 interface Props {
+  width?: number;
+  height?: number;
   model?: TextEditorModel;
   entEditorMap?: Record<string, EntEditor>;
   toolbar?: boolean | ((m: TextEditorModel) => JSX.Element);
@@ -113,8 +135,8 @@ export class TextEditor extends React.Component<Props, State> {
         return;
 
       editorMap[entType].append()
-      .then(ent => {
-        m.insertEnt(entType, ent);
+      .then(res => {
+        m.insertEnt(entType, res.text, res.data);
       })
       .catch(() => {
         m.focus();
@@ -127,10 +149,11 @@ export class TextEditor extends React.Component<Props, State> {
       if (!editor)
         return;
 
-      editor.edit(selEnt.data)
-      .then(ent => {
-        if (!isEquals(selEnt.data, ent))
-          m.updateEnt(selEnt.key, ent);
+      const args = { data: selEnt.data, text: selEnt.text };
+      editor.edit({...args})
+      .then(res => {
+        if (!isEquals(res, args))
+          m.updateEnt(selEnt.key, res.text, res.data);
         else
           m.focus();
       })
@@ -183,6 +206,8 @@ export class TextEditor extends React.Component<Props, State> {
       );
     }
 
+    const blockTypes = this.state.model.getSelBlockTypes();
+    const selBlockType = blockTypes.size == 1 ? Array.from(blockTypes)[0] : undefined;
     const cs = this.state.model.getCurrStyle();
     return (
       <div
@@ -246,6 +271,15 @@ export class TextEditor extends React.Component<Props, State> {
             this.state.model.clearStyles();
           }}
         />
+        <DropDown.Control
+          className={DropDown.css.border}
+          width={100}
+          values={blockList}
+          value={{ value: selBlockType }}
+          onSelect={block => {
+            this.state.model.setBlockType(block.value);
+          }}
+        />
       </div>
     );
   }
@@ -254,6 +288,7 @@ export class TextEditor extends React.Component<Props, State> {
     const hiddenProps = { preserveSelectionOnBlur: true };
     return (
       <div
+        className={css.textEditorWrapper}
         onMouseDown={e => {
           if (findParent(e.target as HTMLDivElement, this.ref.current.firstChild as HTMLDivElement))
             return;
@@ -263,26 +298,28 @@ export class TextEditor extends React.Component<Props, State> {
         }}
       >
         {this.renderToolbar()}
-        <div
-          className='text-editor'
-          style={{ border: '1px solid gray', padding: 5 }}
-          ref={this.ref}
-          onContextMenu={this.onContextMenu}
-        >
-          <Editor
-            {...hiddenProps}
-            key={this.state.model.getKey()}
-            ref={this.editor}
-            editorState={this.state.model.getState()}
-            onChange={state => {
-              this.state.model.setState(state);
-            }}
-            customStyleMap={this.state.model.getStyleMap()}
-            handleReturn={this.preventEntBreak}
-            handleBeforeInput={this.preventEntBreak}
-            onLeftArrow={this.state.model.onLeftArrow}
-            onRightArrow={this.state.model.onRightArrow}
-          />
+        <div style={{ position: 'relative', flexGrow: 1 }}>
+          <div
+            className={css.textEditor}
+            style={{ border: '1px solid gray' }}
+            ref={this.ref}
+            onContextMenu={this.onContextMenu}
+          >
+            <Editor
+              {...hiddenProps}
+              key={this.state.model.getKey()}
+              ref={this.editor}
+              editorState={this.state.model.getState()}
+              onChange={state => {
+                this.state.model.setState(state);
+              }}
+              customStyleMap={this.state.model.getStyleMap()}
+              handleReturn={this.preventEntBreak}
+              handleBeforeInput={this.preventEntBreak}
+              onLeftArrow={this.state.model.onLeftArrow}
+              onRightArrow={this.state.model.onRightArrow}
+            />
+          </div>
         </div>
       </div>
     );

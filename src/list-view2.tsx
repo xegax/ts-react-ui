@@ -11,8 +11,8 @@ import { ElementType, render } from './react-common';
 const DEFAULT_CARD_WIDTH = 200;
 const DEFAULT_CARD_HEIGHT = 300;
 
-export function renderItem(item: Item) {
-  return render(item.render, item) || item.value;
+export function renderItem(item: Item | undefined) {
+  return item == null ? <span style={{ opacity: 0 }}>?</span> : render(item.render, item) || item.value;
 }
 
 const classes = {

@@ -72,7 +72,7 @@ export function convertFromDraft(raw: RawDraftContentState): TextTemplate {
 
     const entArr = clone(block.entityRanges);
     entArr.sort((a, b) => b.offset - a.offset);
-    let ent: RawDraftEntityRange | undefined;;
+    let ent: RawDraftEntityRange | undefined;
 
     let prev = 0;
     while (ent = entArr.pop()) {
@@ -104,8 +104,8 @@ function appendVar(): Promise<EntData> {
 
 interface TemplateEditorArgs {
   template: TextTemplate;
-  appendVar(): Promise<EntData>;
-  editVar(ent: EntData): Promise<EntData>;
+  appendVar(): Promise<{ data: EntData; text: string }>;
+  editVar(ent: EntData, text: string): Promise<{ data: EntData; text: string }>;
 }
 
 export function showTemplateEditor(args: TemplateEditorArgs): Promise<TextTemplate> {
@@ -116,8 +116,8 @@ export function showTemplateEditor(args: TemplateEditorArgs): Promise<TextTempla
 
   const append = () => {
     args.appendVar()
-    .then(ent => {
-      m.insertEnt('VAR', ent);
+    .then(res => {
+      m.insertEnt('VAR', res.text, res.data);
     })
     .catch(() => {
       m.focus();
@@ -126,9 +126,9 @@ export function showTemplateEditor(args: TemplateEditorArgs): Promise<TextTempla
 
   const edit = () => {
     const ent = m.getSelEnt();
-    args.editVar(ent.data)
+    args.editVar(ent.data, ent.text)
     .then(res => {
-      m.updateEnt(ent.key, clone(res));
+      m.updateEnt(ent.key, res.text, clone(res.data));
     })
     .catch(() => {
       m.focus();
@@ -166,9 +166,13 @@ export function showTemplateEditor(args: TemplateEditorArgs): Promise<TextTempla
 
     const res = showModal(
       <Subscriber model={m}>
-        <Dialog isOpen isCloseButtonShown={false} title='Template editor'>
-          <div style={{ userSelect: 'none' }}>
-            <div className={cs.DIALOG_BODY}>
+        <Dialog
+          isOpen
+          isCloseButtonShown={false}
+          title='Template editor'
+          style={{ width: 500, height: 300 }}
+        >
+            <div className={cs.DIALOG_BODY} style={{ display: 'flex', userSelect: 'none' }}>
               <TextEditor
                 toolbar={toolbar}
                 model={m}
@@ -180,7 +184,6 @@ export function showTemplateEditor(args: TemplateEditorArgs): Promise<TextTempla
                 <Button text='Cancel' onClick={onCancel} />
               </div>
             </div>
-          </div>
         </Dialog>
       </Subscriber>
     );

@@ -13,6 +13,8 @@ export interface EditorArgs {
   json?: TextEditorJSON;
   title?: string;
   entEditorMap?: Record<string, EntEditor>;
+  width?: number;
+  height?: number;
 }
 
 export function showEditor(args: EditorArgs): Promise<TextEditorJSON> {
@@ -30,8 +32,16 @@ export function showEditor(args: EditorArgs): Promise<TextEditorJSON> {
     };
 
     const res = showModal(
-      <Dialog isOpen isCloseButtonShown={false} title={title}>
-        <div className={cs.DIALOG_BODY}>
+      <Dialog
+        isOpen
+        isCloseButtonShown={false}
+        title={title}
+        style={{
+          width: args.width || 600,
+          height: args.height || 500
+        }}
+      >
+        <div className={cs.DIALOG_BODY} style={{ display: 'flex' }}>
           <TextEditor
             model={m}
             entEditorMap={args.entEditorMap}

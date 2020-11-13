@@ -11,6 +11,7 @@ export const Link: React.SFC<EntRenderProps<LinkData>> = props => {
     <a
       style={props.styles}
       href={props.data.href}
+      onClick={props.onClick}
     >
       {props.children}
     </a>
@@ -22,12 +23,11 @@ export function linkEditor(): EntEditor<LinkData> {
     icon: 'fa fa-link',
     name: 'Link',
     css: 'ent-link',
-    edit: ent => {
+    edit: args => {
       return (
-        promptRecord({ title: 'Edit link', value: { Text: ent.label, URL: ent.data.href } })
+        promptRecord({ title: 'Edit link', value: { Text: args.text, URL: args.data.href } })
         .then(res => ({
-          ...ent,
-          label: res.Text,
+          text: res.Text,
           data: { href: res.URL }
         }))
       );
@@ -37,7 +37,7 @@ export function linkEditor(): EntEditor<LinkData> {
         promptRecord({ title: 'Append link', value: { Text: '', URL: '' } })
         .then(res => {
           return {
-            label: res.Text,
+            text: res.Text,
             data: { href: res.URL }
           };
         })

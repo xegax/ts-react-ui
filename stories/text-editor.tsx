@@ -12,13 +12,13 @@ import { linkEditor, Link } from '../src/rte/ent-link';
 import { imageEditor, ImageToEdit } from '../src/rte/ent-image';
 
 const entEditorMap: Record<string, EntEditor> = {
-  'ENT-LINK': linkEditor(),
-  'ENT-IMG': imageEditor()
+  'LINK': linkEditor(),
+  'IMAGE': imageEditor()
 };
 
 const entRenderMap: Record<string, React.SFC<EntRenderProps> | React.ComponentClass<EntRenderProps>> = {
-  'ENT-LINK': Link,
-  'ENT-IMG': ImageToEdit
+  'LINK': Link,
+  'IMAGE': ImageToEdit
 };
 
 function renderEnt(type: string, data: any) {
@@ -78,17 +78,17 @@ function editTemplate(m: PubData<TextTemplate>) {
   const appendVar = () => {
     return (
       prompt({ title: 'Enter var name' })
-      .then(label => {
-        return { label };
+      .then(text => {
+        return { text, data: {} };
       })
     );
   };
 
-  const editVar = (v: EntData) => {
+  const editVar = (data: EntData, text: string) => {
     return (
-      prompt({ title: 'Edit var name', value: v.label })
-      .then(label => {
-        return { label };
+      prompt({ title: 'Edit var name', value: text })
+      .then(text => {
+        return { text, data };
       })
     );
   };
@@ -104,24 +104,31 @@ storiesOf('Text editor', module)
   .add('Text editor', () => {
     const m = new EntEditorPub(null);
     return (
+      <div style={{ backgroundColor: 'silver', padding: 10 }}>
       <Subscriber model = {m}>
-        {() => {
-          return (
-            <TextView
-              editorKey={m.getKey()}
-              entRenderMap={entRenderMap}
-              onDoubleClick={() => edit(m)}
-              placeholder='Double click on me'
-              json={m.get()}
-              renderEnt={renderEnt}
-              onChanged={json => {
-                console.log(json);
-                m.set(json);
-              }}
-            />
-        );
-      }}
+        {() => (
+          <TextView
+            style={{ width: 500, backgroundColor: 'white', padding: 10 }}
+            editorKey={m.getKey()}
+            entRenderMap={entRenderMap}
+            onDoubleClick={() => edit(m)}
+            placeholder='Double click on me'
+            json={m.get()}
+            renderEnt={renderEnt}
+            onChanged={json => {
+              console.log(json);
+              m.set(json);
+            }}
+            /*onClickEnt={(type, data, e) => {
+              if (type == 'LINK') {
+                window.open(data.href, 'link');
+                e.preventDefault();
+              }
+            }}*/
+          />
+        )}
       </Subscriber>
+      </div>
     );
   })
   .add('Template editor', () => {
